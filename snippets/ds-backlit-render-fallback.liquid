@@ -1,0 +1,115 @@
+{%- comment -%}
+  snippets/ds-backlit-render-fallback.liquid
+
+  CSS-art rendering of a glowing "B" — placeholder hero visual when the
+  merchant hasn't uploaded an image. Container queries scale the type to
+  the parent (use the `container-type: inline-size` on the wrapper).
+
+  No parameters. Per the handoff doc §10, this is the editor-state fallback;
+  production hero should use a real video/image via the section's image_picker.
+{%- endcomment -%}
+
+<div class="ds-backlit-render">
+  <div class="ds-backlit-render__plate"></div>
+  <div class="ds-backlit-render__glow"></div>
+  <div class="ds-backlit-render__type">B</div>
+  <div class="ds-backlit-render__scan"></div>
+  <div class="ds-backlit-render__tag">BACKLIT_001</div>
+  <div class="ds-backlit-render__corner ds-backlit-render__corner--tl"></div>
+  <div class="ds-backlit-render__corner ds-backlit-render__corner--tr"></div>
+  <div class="ds-backlit-render__corner ds-backlit-render__corner--bl"></div>
+  <div class="ds-backlit-render__corner ds-backlit-render__corner--br"></div>
+</div>
+
+{% style %}
+  .ds-backlit-render {
+    position: relative;
+    width: min(94%, 480px);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    container-type: inline-size;
+  }
+  .ds-backlit-render__plate {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.10) 28%, transparent 60%),
+      linear-gradient(135deg, #1a1a1a 0%, #050505 100%);
+    border: 1px solid var(--color-border);
+  }
+  .ds-backlit-render__glow {
+    position: absolute;
+    width: 64%;
+    height: 64%;
+    background: radial-gradient(circle at 50% 50%, #FFFFFF 0%, transparent 65%);
+    filter: blur(40px);
+    opacity: 0.55;
+    animation: ds-backlit-glow-pulse 5s ease-in-out infinite;
+  }
+  @keyframes ds-backlit-glow-pulse {
+    0%, 100% { opacity: 0.8; transform: scale(1);   }
+    50%      { opacity: 1;   transform: scale(1.1); }
+  }
+  .ds-backlit-render__type {
+    position: relative;
+    font-weight: 700;
+    font-size: 64cqw;
+    line-height: 0.85;
+    letter-spacing: -0.06em;
+    color: #0a0a0a;
+    text-shadow:
+      0 0 24px  rgba(255,255,255,0.95),
+      0 0 60px  rgba(255,255,255,0.7),
+      0 0 120px rgba(255,255,255,0.45),
+      0 0 200px rgba(255,255,255,0.25);
+    -webkit-text-stroke: 1.5px #FFFFFF;
+  }
+  .ds-backlit-render__tag {
+    position: absolute;
+    top: var(--space-4);
+    left: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--color-fg);
+  }
+  .ds-backlit-render__tag::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    box-shadow: 0 0 6px var(--color-accent-glow);
+  }
+  .ds-backlit-render__corner {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 1px solid var(--color-fg);
+    opacity: 0.4;
+  }
+  .ds-backlit-render__corner--tl { top:    var(--space-4); left:  var(--space-4); border-right: 0; border-bottom: 0; }
+  .ds-backlit-render__corner--tr { top:    var(--space-4); right: var(--space-4); border-left:  0; border-bottom: 0; }
+  .ds-backlit-render__corner--bl { bottom: var(--space-4); left:  var(--space-4); border-right: 0; border-top:    0; }
+  .ds-backlit-render__corner--br { bottom: var(--space-4); right: var(--space-4); border-left:  0; border-top:    0; }
+  .ds-backlit-render__scan {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 3px,
+      rgba(255,255,255,0.015) 3px,
+      rgba(255,255,255,0.015) 4px
+    );
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-backlit-render__glow { animation: none; }
+  }
+{% endstyle %}

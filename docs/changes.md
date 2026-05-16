@@ -56,3 +56,28 @@ Every change to Horizon vendor files, every custom file added, every theme-setti
 
 ### Additional custom-add deviation from spec
 - `assets/ds-tokens.css` — Added `@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:...&family=JetBrains+Mono:...&display=swap')` at the top. Per handoff doc this should not be needed (it claimed Shopify has these fonts), but since Shopify's font library does NOT include Inter Tight or JetBrains Mono, we load via Google Fonts. One extra HTTP request as a result. Could be self-hosted in Phase 5 polish to eliminate the external request.
+
+---
+
+## 2026-05-16 — Phase 2 Batch 1: hero + trust marquee
+
+### Custom adds
+- `blocks/ds-eyebrow.liquid` — Small caps label with optional inline mono accent.
+- `blocks/ds-hero-title.liquid` — Display H1 with blurred white glow halo. Uses `escape | newline_to_br` to allow merchant-authored line breaks.
+- `blocks/ds-meta-strip.liquid` — 3 items separated by `/`, optional pulsing accent dot on the last item.
+- `blocks/ds-rich-text.liquid` — Brand-styled rich-text paragraph (caps at ~38ch).
+- `blocks/ds-button-row.liquid` — Primary button + secondary text-link with arrow.
+- `snippets/ds-backlit-render-fallback.liquid` — CSS-art glowing "B" placeholder for the hero visual when no image is uploaded. Self-contained with inline `{% style %}`.
+- `sections/ds-hero.liquid` — Two-column hero. Left = `{% content_for 'blocks' %}` (renders all hero blocks in order); right = image_picker or BACKLIT fallback.
+- `sections/ds-trust-marquee.liquid` — Scrolling marquee with section blocks (inline schema). Logos rendered twice via Liquid `(1..2)` loop for seamless `transform: translateX(-50%)` keyframe loop. Pauses on hover; disables with `prefers-reduced-motion`.
+
+### Deviations from handoff spec §7a
+The handoff doc shows `{% content_for 'blocks', type: 'X' %}` for per-type block routing into grid slots. **That syntax does not exist in Shopify Liquid.** Verified against actual Horizon sections (`sections/collection-list.liquid`, `sections/header.liquid`): only `{% content_for 'blocks' %}` (all blocks) and `{% content_for 'block', type: 'X', id: 'Y' %}` (single static block by ID) are valid. So:
+- **Hero**: Collapsed to two columns (content stack left, visual right). All content blocks render in their schema order via single `{% content_for 'blocks' %}`. Merchant controls order via editor reorder.
+- **Trust marquee**: Used SECTION blocks (inline definition in section schema) instead of theme blocks, because we need to iterate twice in Liquid for the seamless-loop trick.
+
+### Vendor edits
+- `assets/ds-tokens.css` — appended ~110 lines of component primitives: `.ds-btn` (variants: `--full`, `--lg`, `--secondary`, `--accent`), `.ds-button-row`, `.ds-meta-strip` (with pulsing dot), `.ds-rich-text`. Block-level shared styles only; section-specific CSS stays inline in `{% style %}`.
+
+### Setting overrides
+_(none — Phase 2 Batch 1 introduces no settings_data.json changes)_

@@ -1,0 +1,35 @@
+{%- comment -%}
+  blocks/ds-eyebrow.liquid
+
+  Small uppercase caps label with an optional inline mono accent. Used in
+  the hero and elsewhere as a "category" or "introducing" prefix.
+
+  Example: "Introducing BACKLIT v1.0"
+  where "BACKLIT v1.0" is the mono accent (orange in hero context).
+{%- endcomment -%}
+
+<div class="ds-eyebrow" {{ block.shopify_attributes }}>
+  {%- if block.settings.text != blank -%}{{ block.settings.text }}{%- endif -%}
+  {%- if block.settings.accent != blank %} <span class="ds-mono">{{ block.settings.accent }}</span>{%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Eyebrow",
+  "settings": [
+    {
+      "type": "text",
+      "id": "text",
+      "default": "Introducing",
+      "label": "Text",
+      "info": "Renders in ALL CAPS via CSS."
+    },
+    {
+      "type": "text",
+      "id": "accent",
+      "label": "Mono accent (optional)",
+      "info": "Appears after the main text in JetBrains Mono. Inherits accent color when used inside the hero. Leave empty to hide."
+    }
+  ]
+}
+{% endschema %}

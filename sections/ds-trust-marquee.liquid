@@ -1,0 +1,189 @@
+{%- comment -%}
+  sections/ds-trust-marquee.liquid
+
+  Scrolling trust marquee. Logos are SECTION blocks (defined inline in this
+  section's schema) — not theme blocks — because we need to iterate them
+  twice in Liquid for the seamless-loop trick. Section blocks support
+  `{% for block in section.blocks %}` iteration directly.
+
+  CSS keyframes translate the track by -50% over the configured duration.
+  Pauses on hover; disables entirely with prefers-reduced-motion.
+
+  "Logos" are text-only by design (no trademark issues + faster LCP).
+  Style modifier picks the typographic treatment.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme
+  assign duration = section.settings.duration_seconds | default: 40
+-%}
+
+<div class="ds-trust-marquee color-{{ cs }}" style="--ds-marquee-duration: {{ duration }}s;">
+  {%- if section.settings.label != blank -%}
+    <div class="ds-trust-marquee__label">{{ section.settings.label }}</div>
+  {%- endif -%}
+  <div class="ds-trust-marquee__track">
+    {%- comment -%} Render the logo list twice so the -50% keyframe loops seamlessly. {%- endcomment -%}
+    {%- for pass in (1..2) -%}
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'ds-trust-logo' -%}
+          {%- liquid
+            assign style_class = ''
+            if block.settings.style != 'default' and block.settings.style != blank
+              assign style_class = 'ds-trust-logo--' | append: block.settings.style
+            endif
+          -%}
+          <span class="ds-trust-logo {{ style_class }}"
+                {% if pass == 1 %}{{ block.shopify_attributes }}{% endif %}
+                {% if pass == 2 %}aria-hidden="true"{% endif %}>
+            {{ block.settings.text }}
+          </span>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endfor -%}
+  </div>
+</div>
+
+{% style %}
+  /* Stacked layout: label centered above the track. Track scrolls full width
+     below it. Mirrors the mockup's `.trust` / `.trust__label` / `.trust__track`
+     CSS at mockup lines 646-691. */
+  .ds-trust-marquee {
+    border-top:    1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-6) 0;
+    overflow: hidden;
+    position: relative;
+    background: var(--color-background);
+    color: var(--color-foreground);
+  }
+  .ds-trust-marquee__label {
+    font-size: var(--fs-micro);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    text-align: center;
+    margin-bottom: var(--space-5);
+  }
+  .ds-trust-marquee__track {
+    display: flex;
+    gap: clamp(40px, 7vw, 96px);
+    width: max-content;
+    animation: ds-marquee var(--ds-marquee-duration, 40s) linear infinite;
+    will-change: transform;
+  }
+  .ds-trust-marquee:hover .ds-trust-marquee__track {
+    animation-play-state: paused;
+  }
+  @keyframes ds-marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-trust-marquee__track { animation: none; }
+  }
+
+  /* Logo styling — varies by `style` setting */
+  .ds-trust-logo {
+    display: flex;
+    align-items: center;
+    height: 28px;
+    color: var(--color-fg);
+    opacity: 0.55;
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    transition: opacity var(--t-fast) var(--ease);
+    white-space: nowrap;
+  }
+  .ds-trust-logo:hover { opacity: 1; }
+  .ds-trust-logo--serif  { font-family: Georgia, serif; font-style: italic; font-weight: 400; }
+  .ds-trust-logo--mono   { font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .ds-trust-logo--bold   { font-weight: 800; letter-spacing: -0.02em; font-size: 20px; }
+  .ds-trust-logo--script { font-family: Georgia, serif; font-style: italic; font-weight: 600; letter-spacing: -0.02em; font-size: 22px; }
+  .ds-trust-logo--blocky { font-weight: 900; font-size: 16px; letter-spacing: 0.04em; }
+  .ds-trust-logo--thin   { font-weight: 300; font-size: 19px; letter-spacing: 0.16em; text-transform: uppercase; }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Trust marquee",
+  "tag": "section",
+  "class": "ds-section ds-section--trust-marquee",
+  "max_blocks": 24,
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "default": "Used by designers at",
+      "label": "Label"
+    },
+    {
+      "type": "range",
+      "id": "duration_seconds",
+      "label": "Loop duration",
+      "min": 20,
+      "max": 120,
+      "step": 5,
+      "default": 40,
+      "unit": "s",
+      "info": "Lower = faster scroll. Always pauses on hover and stops entirely with prefers-reduced-motion."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "ds-trust-logo",
+      "name": "Trust logo",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "default": "Brand",
+          "label": "Text",
+          "info": "Plain text. Pick a style below to vary the typographic treatment."
+        },
+        {
+          "type": "select",
+          "id": "style",
+          "default": "default",
+          "label": "Style",
+          "options": [
+            { "value": "default", "label": "Default (Inter Tight)" },
+            { "value": "bold",    "label": "Bold (heavy tracking)" },
+            { "value": "serif",   "label": "Serif italic" },
+            { "value": "blocky",  "label": "Blocky uppercase" },
+            { "value": "script",  "label": "Script italic" },
+            { "value": "mono",    "label": "Mono uppercase" },
+            { "value": "thin",    "label": "Thin spaced caps" }
+          ]
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Trust marquee",
+      "blocks": [
+        { "type": "ds-trust-logo", "settings": { "text": "Adobe"      } },
+        { "type": "ds-trust-logo", "settings": { "text": "Nike.",       "style": "bold"   } },
+        { "type": "ds-trust-logo", "settings": { "text": "Pentagram",   "style": "serif"  } },
+        { "type": "ds-trust-logo", "settings": { "text": "WARNER",      "style": "blocky" } },
+        { "type": "ds-trust-logo", "settings": { "text": "Vans",        "style": "script" } },
+        { "type": "ds-trust-logo", "settings": { "text": "ESPN",        "style": "mono"   } },
+        { "type": "ds-trust-logo", "settings": { "text": "Condé Nast",  "style": "thin"   } },
+        { "type": "ds-trust-logo", "settings": { "text": "Atlantic"   } },
+        { "type": "ds-trust-logo", "settings": { "text": "VICE",        "style": "bold"   } },
+        { "type": "ds-trust-logo", "settings": { "text": "Ogilvy",      "style": "serif"  } },
+        { "type": "ds-trust-logo", "settings": { "text": "Sony",        "style": "script" } },
+        { "type": "ds-trust-logo", "settings": { "text": "COMPLEX",     "style": "mono"   } }
+      ]
+    }
+  ]
+}
+{% endschema %}

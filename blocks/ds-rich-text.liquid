@@ -1,0 +1,24 @@
+{%- comment -%}
+  blocks/ds-rich-text.liquid
+
+  A brand-styled rich-text paragraph block. Width capped at ~38ch for
+  comfortable reading. <strong> brightens to the full fg color.
+{%- endcomment -%}
+
+<div class="ds-rich-text" {{ block.shopify_attributes }}>
+  {{ block.settings.text }}
+</div>
+
+{% schema %}
+{
+  "name": "Rich text",
+  "settings": [
+    {
+      "type": "richtext",
+      "id": "text",
+      "default": "<p><strong>BACKLIT</strong> is a Photoshop plugin that puts real backlight glow behind anything on your canvas. Type. Logos. Photos. No masks. No fiddling with layer styles. Thirty presets, one click.</p>",
+      "label": "Text"
+    }
+  ]
+}
+{% endschema %}

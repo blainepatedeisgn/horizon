@@ -1,0 +1,28 @@
+{%- comment -%}
+  blocks/ds-hero-title.liquid
+
+  Display H1 for the hero, with a blurred white duplicate behind to create
+  a subtle glow halo. Newlines in the merchant's source become <br>.
+{%- endcomment -%}
+
+{%- assign safe_text = block.settings.text | escape | newline_to_br -%}
+
+<h1 class="ds-hero-title" {{ block.shopify_attributes }}>
+  {{ safe_text }}
+  <span class="ds-hero-title__glow" aria-hidden="true">{{ safe_text }}</span>
+</h1>
+
+{% schema %}
+{
+  "name": "Hero title",
+  "settings": [
+    {
+      "type": "textarea",
+      "id": "text",
+      "default": "Real light.\nOne click.",
+      "label": "Headline",
+      "info": "Each line break renders as a <br>. A blurred white duplicate sits behind to form a glow halo."
+    }
+  ]
+}
+{% endschema %}

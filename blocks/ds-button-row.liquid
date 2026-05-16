@@ -1,0 +1,36 @@
+{%- comment -%}
+  blocks/ds-button-row.liquid
+
+  Pair of CTAs side-by-side: a primary button + an inline text-link with
+  arrow. Either may be left blank to hide. For more than two CTAs we'd
+  refactor to a container block that nests individual button blocks.
+{%- endcomment -%}
+
+<div class="ds-button-row" {{ block.shopify_attributes }}>
+  {%- if block.settings.primary_label != blank -%}
+    <a href="{{ block.settings.primary_url | default: '#' }}" class="ds-btn ds-btn--lg">
+      {{ block.settings.primary_label }}
+    </a>
+  {%- endif -%}
+  {%- if block.settings.secondary_label != blank -%}
+    <a href="{{ block.settings.secondary_url | default: '#' }}" class="ds-text-link">
+      {{ block.settings.secondary_label }}
+      <span class="ds-text-link__arrow" aria-hidden="true">→</span>
+    </a>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Button row",
+  "settings": [
+    { "type": "header", "content": "Primary button" },
+    { "type": "text", "id": "primary_label", "default": "Buy BACKLIT — $48", "label": "Label" },
+    { "type": "url",  "id": "primary_url",                                    "label": "Link" },
+
+    { "type": "header", "content": "Secondary link" },
+    { "type": "text", "id": "secondary_label", "default": "Watch the demo",   "label": "Label" },
+    { "type": "url",  "id": "secondary_url",                                  "label": "Link" }
+  ]
+}
+{% endschema %}

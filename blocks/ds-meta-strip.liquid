@@ -1,0 +1,41 @@
+{%- comment -%}
+  blocks/ds-meta-strip.liquid
+
+  Horizontal strip of up to 3 short labels separated by " / ". Optional
+  pulsing accent dot before the last item (e.g. "● Live now").
+{%- endcomment -%}
+
+<div class="ds-meta-strip" {{ block.shopify_attributes }}>
+  {%- if block.settings.item_1 != blank -%}
+    <span class="ds-meta-strip__item">{{ block.settings.item_1 }}</span>
+  {%- endif -%}
+  {%- if block.settings.item_2 != blank -%}
+    {%- if block.settings.item_1 != blank -%}<span class="ds-meta-strip__sep">/</span>{%- endif -%}
+    <span class="ds-meta-strip__item">{{ block.settings.item_2 }}</span>
+  {%- endif -%}
+  {%- if block.settings.item_3 != blank -%}
+    {%- if block.settings.item_1 != blank or block.settings.item_2 != blank -%}<span class="ds-meta-strip__sep">/</span>{%- endif -%}
+    <span class="ds-meta-strip__item">
+      {%- if block.settings.last_has_dot -%}<span class="ds-meta-strip__dot"></span>{%- endif -%}
+      {{ block.settings.item_3 }}
+    </span>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Meta strip",
+  "settings": [
+    { "type": "text",     "id": "item_1",       "default": "PS 2022+",   "label": "Item 1" },
+    { "type": "text",     "id": "item_2",       "default": "UXP plugin", "label": "Item 2" },
+    { "type": "text",     "id": "item_3",       "default": "Live now",   "label": "Item 3" },
+    {
+      "type": "checkbox",
+      "id": "last_has_dot",
+      "default": true,
+      "label": "Status dot before last item",
+      "info": "Pulsing accent-colored bullet before Item 3. Pauses automatically with prefers-reduced-motion."
+    }
+  ]
+}
+{% endschema %}
