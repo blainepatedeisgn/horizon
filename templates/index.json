@@ -2,9 +2,8 @@
  * ------------------------------------------------------------
  * Disrupted Studio homepage
  *
- * Wires the three custom sections built in Phase 2 Batches 1-2.
- * Phase 2 Batches 3-4 will append category teasers, newsletter card,
- * and the giant footer wordmark.
+ * Wires the five custom sections built in Phase 2 Batches 1-3.
+ * Phase 2 Batch 4 will append the giant footer wordmark.
  *
  * NB: This file is auto-managed by the Shopify admin theme editor —
  * direct edits there get saved here and may overwrite manual local
@@ -70,7 +69,19 @@
     },
     "product_grid": {
       "type": "ds-product-grid"
+    },
+    "category_teasers": {
+      "type": "ds-category-teasers",
+      "blocks": {
+        "tile_plugins":  { "type": "ds-category-tile", "settings": { "label": "Plugins",  "meta_line_1": "02 products",    "meta_line_2": "FROM $36" } },
+        "tile_fonts":    { "type": "ds-category-tile", "settings": { "label": "Fonts",    "meta_line_1": "02 families",    "meta_line_2": "FROM $28" } },
+        "tile_graphics": { "type": "ds-category-tile", "settings": { "label": "Graphics", "meta_line_1": "04 collections", "meta_line_2": "FROM $18" } }
+      },
+      "block_order": ["tile_plugins", "tile_fonts", "tile_graphics"]
+    },
+    "newsletter": {
+      "type": "ds-newsletter-card"
     }
   },
-  "order": ["hero", "trust_marquee", "product_grid"]
+  "order": ["hero", "trust_marquee", "product_grid", "category_teasers", "newsletter"]
 }

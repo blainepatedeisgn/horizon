@@ -99,3 +99,17 @@ _(none — Phase 2 Batch 1 introduces no settings_data.json changes)_
 
 ### Setting overrides
 _(none — Phase 2 Batch 2 introduces no settings_data.json changes)_
+
+---
+
+## 2026-05-16 — Phase 2 Batch 3: category teasers + newsletter card
+
+### Custom adds
+- `sections/ds-category-teasers.liquid` — Baseline-aligned vertical category rows: mono "/ NN" forloop index, big display title (clamp 36–76px), mono meta lines on the right, hover-nudged arrow. Title turns accent orange on hover; arrow translates up-right. Tiles are section blocks (inline schema) since they're category-teaser-specific and need forloop access for auto numbering. Meta lines auto-fall-back to `{products_count} products` and `FROM {price_min}` if left blank and a collection is set.
+- `sections/ds-newsletter-card.liquid` — Two-column bordered card on desktop (copy left, form right), stacks on <=800px. Eyebrow + multi-line title + sub. Uses `{% form 'customer' %}` for native Shopify customer subscription — no JavaScript. Optional `signup_tag` setting adds a tag to created customer records for segmentation. Success and error messages handled inline via `form.posted_successfully?` and `form.errors`.
+
+### Vendor edits
+- `templates/index.json` — Added two sections to homepage order: `category_teasers` (preset with Plugins / Fonts / Graphics tiles) and `newsletter`. Now 5 sections in total.
+
+### Setting overrides
+_(none — Phase 2 Batch 3 introduces no settings_data.json changes)_

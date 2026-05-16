@@ -1,0 +1,274 @@
+{%- comment -%}
+  sections/ds-category-teasers.liquid — Shop by category teasers
+
+  A vertical stack of full-width category links, each rendered as a baseline-
+  aligned row: mono "/ NN" number, big display title, mono meta lines on the
+  right, and an arrow that nudges on hover. Hovering shifts the title to
+  the accent color and the arrow translates up-right. Inspired by mockup
+  `.cat-teaser` (lines 1156-1226).
+
+  Tiles are section blocks (inline schema) since they're category-teaser-
+  specific and we want the forloop index for the "/ 01" numbering.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme
+-%}
+
+<section class="ds-category-teasers-section color-{{ cs }}">
+  <div class="ds-category-teasers-section__inner">
+
+    {%- if section.settings.heading != blank or section.settings.subhead != blank -%}
+      <div class="ds-section-head">
+        {%- if section.settings.heading != blank -%}
+          <h2 class="ds-section-head__title">
+            {{ section.settings.heading }}
+            {%- if section.settings.num_label != blank -%}
+              <span class="ds-section-head__num">{{ section.settings.num_label }}</span>
+            {%- endif -%}
+          </h2>
+        {%- endif -%}
+        {%- if section.settings.subhead != blank -%}
+          <p class="ds-section-head__sub">{{ section.settings.subhead }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div class="ds-category-teasers">
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'ds-category-tile' -%}
+          {%- liquid
+            assign label = block.settings.label
+            if label == blank and block.settings.collection != blank
+              assign label = block.settings.collection.title
+            endif
+            if label == blank
+              assign label = 'Category'
+            endif
+
+            assign meta_1 = block.settings.meta_line_1
+            if meta_1 == blank and block.settings.collection != blank
+              capture meta_1
+                echo block.settings.collection.products_count
+                echo ' '
+                if block.settings.collection.products_count == 1
+                  echo 'product'
+                else
+                  echo 'products'
+                endif
+              endcapture
+            endif
+
+            assign meta_2 = block.settings.meta_line_2
+            if meta_2 == blank and block.settings.collection != blank
+              capture meta_2
+                echo 'FROM '
+                echo block.settings.collection.price_min | money
+              endcapture
+            endif
+
+            assign num_str = forloop.index | prepend: '0' | slice: -2, 2
+
+            assign href = '/collections/all'
+            if block.settings.collection != blank
+              assign href = block.settings.collection.url
+            endif
+          -%}
+          <a href="{{ href }}" class="ds-cat-teaser" {{ block.shopify_attributes }}>
+            <span class="ds-cat-teaser__num">/ {{ num_str }}</span>
+            <span class="ds-cat-teaser__title">{{ label }}</span>
+            <span class="ds-cat-teaser__meta">
+              {%- if meta_1 != blank -%}
+                <span class="ds-cat-teaser__meta-line">{{ meta_1 }}</span>
+              {%- endif -%}
+              {%- if meta_2 != blank -%}
+                <span class="ds-cat-teaser__meta-line">{{ meta_2 }}</span>
+              {%- endif -%}
+            </span>
+            <span class="ds-cat-teaser__arrow" aria-hidden="true">↗</span>
+          </a>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+
+  </div>
+</section>
+
+{% style %}
+  .ds-category-teasers-section {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding-top: clamp(32px, 4vw, 56px);
+    padding-bottom: clamp(32px, 4vw, 56px);
+  }
+  .ds-category-teasers-section__inner {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+  .ds-cat-teaser {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: clamp(14px, 1.6vw, 22px) 0;
+    border-top: 1px solid var(--color-border);
+    transition:
+      padding var(--t-base) var(--ease),
+      color   var(--t-base) var(--ease);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+  }
+  .ds-cat-teaser:last-child {
+    border-bottom: 1px solid var(--color-border);
+  }
+  .ds-cat-teaser:hover {
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+  }
+  .ds-cat-teaser__num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg-faint);
+    width: 56px;
+    flex-shrink: 0;
+    letter-spacing: 0.08em;
+    align-self: center;
+  }
+  .ds-cat-teaser__title {
+    font-size: clamp(36px, 5.6vw, 76px);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    flex: 1;
+    transition:
+      transform var(--t-base) var(--ease),
+      color     var(--t-base) var(--ease);
+  }
+  .ds-cat-teaser:hover .ds-cat-teaser__title {
+    color: var(--color-accent);
+  }
+  .ds-cat-teaser__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg-muted);
+    width: 160px;
+    flex-shrink: 0;
+    letter-spacing: 0.04em;
+  }
+  .ds-cat-teaser__meta-line { line-height: 1; }
+  .ds-cat-teaser__arrow {
+    font-size: 22px;
+    margin-left: var(--space-4);
+    transition: transform var(--t-base) var(--ease);
+    flex-shrink: 0;
+    color: var(--color-fg-muted);
+    align-self: center;
+  }
+  .ds-cat-teaser:hover .ds-cat-teaser__arrow {
+    transform: translate(6px, -6px);
+    color: var(--color-accent);
+  }
+  @media (max-width: 700px) {
+    .ds-cat-teaser {
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px var(--space-3);
+      padding: var(--space-4) 0;
+    }
+    .ds-cat-teaser__num   { width: auto; font-size: 10px; }
+    .ds-cat-teaser__title { flex-basis: 100%; font-size: clamp(44px, 14vw, 64px); }
+    .ds-cat-teaser__meta {
+      width: auto;
+      flex-direction: row;
+      gap: 10px;
+      font-size: 11px;
+      align-items: center;
+    }
+    .ds-cat-teaser__arrow { display: none; }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Category teasers",
+  "tag": "section",
+  "class": "ds-section ds-section--category-teasers",
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    { "type": "header", "content": "Heading" },
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "By Category",
+      "label": "Title"
+    },
+    {
+      "type": "text",
+      "id": "num_label",
+      "default": "03",
+      "label": "Number badge",
+      "info": "Mono superscript number next to the title. Leave empty to hide."
+    },
+    {
+      "type": "text",
+      "id": "subhead",
+      "label": "Subhead",
+      "info": "Optional secondary text under the heading."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "ds-category-tile",
+      "name": "Category tile",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection",
+          "info": "The category this tile links to."
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label override",
+          "info": "Defaults to the collection's title."
+        },
+        {
+          "type": "text",
+          "id": "meta_line_1",
+          "label": "Meta line 1",
+          "info": "Defaults to \"{products_count} products\" if a collection is set."
+        },
+        {
+          "type": "text",
+          "id": "meta_line_2",
+          "label": "Meta line 2",
+          "info": "Defaults to \"FROM {price_min}\" if a collection is set."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Category teasers",
+      "blocks": [
+        { "type": "ds-category-tile", "settings": { "label": "Plugins",  "meta_line_1": "02 products",    "meta_line_2": "FROM $36" } },
+        { "type": "ds-category-tile", "settings": { "label": "Fonts",    "meta_line_1": "02 families",    "meta_line_2": "FROM $28" } },
+        { "type": "ds-category-tile", "settings": { "label": "Graphics", "meta_line_1": "04 collections", "meta_line_2": "FROM $18" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

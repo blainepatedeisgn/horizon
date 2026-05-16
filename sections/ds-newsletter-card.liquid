@@ -1,0 +1,230 @@
+{%- comment -%}
+  sections/ds-newsletter-card.liquid — Email signup card
+
+  Two-column card on desktop (copy left, form right), stacks on <=800px.
+  Bordered with a subtle radial gradient on the top-right per mockup.
+  Inline email form: `{% form 'customer' %}` posts to Shopify's customer
+  creation endpoint; success message shown after submit, errors inline.
+  No JavaScript required.
+
+  Eyebrow + multi-line title + sub paragraph + form. Email captured as a
+  customer record with the optional "newsletter" tag for segmentation.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme
+-%}
+
+<section class="ds-newsletter-section color-{{ cs }}">
+  <div class="ds-newsletter-section__inner">
+    <div class="ds-newsletter-card">
+      <div class="ds-newsletter-card__copy">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="ds-eyebrow ds-newsletter-card__eyebrow">{{ section.settings.eyebrow }}</p>
+        {%- endif -%}
+        {%- if section.settings.title != blank -%}
+          {%- assign safe_title = section.settings.title | escape | newline_to_br -%}
+          <h2 class="ds-newsletter-card__title">{{ safe_title }}</h2>
+        {%- endif -%}
+        {%- if section.settings.subhead != blank -%}
+          <p class="ds-newsletter-card__sub">{{ section.settings.subhead }}</p>
+        {%- endif -%}
+      </div>
+
+      <div class="ds-newsletter-card__form-wrap">
+        {%- form 'customer', class: 'ds-newsletter-card__form-inner' -%}
+          {%- if section.settings.signup_tag != blank -%}
+            <input type="hidden" name="contact[tags]" value="{{ section.settings.signup_tag }}">
+          {%- endif -%}
+
+          {%- if form.posted_successfully? -%}
+            <p class="ds-newsletter-card__success">{{ section.settings.success_message | default: 'Thanks. See you in your inbox.' }}</p>
+          {%- else -%}
+            <div class="ds-newsletter-card__form">
+              <input
+                class="ds-newsletter-card__input"
+                type="email"
+                name="contact[email]"
+                placeholder="{{ section.settings.placeholder | default: 'your@email.com' }}"
+                aria-label="{{ 'Email address' }}"
+                required
+              >
+              <button class="ds-newsletter-card__btn" type="submit">
+                {{ section.settings.button_label | default: 'Subscribe' }}
+              </button>
+            </div>
+            {%- if form.errors -%}
+              <p class="ds-newsletter-card__error">{{ form.errors | default_errors }}</p>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endform -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% style %}
+  .ds-newsletter-section {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding-top: clamp(32px, 4vw, 56px);
+    padding-bottom: clamp(32px, 4vw, 56px);
+  }
+  .ds-newsletter-section__inner {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+  .ds-newsletter-card {
+    border: 1px solid var(--color-border);
+    padding: clamp(28px, 3.5vw, 48px) clamp(24px, 4vw, 56px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: clamp(24px, 4vw, 56px);
+    background:
+      radial-gradient(circle at 90% 0%, rgba(255,255,255,0.04), transparent 50%),
+      var(--color-bg);
+  }
+  @media (max-width: 800px) {
+    .ds-newsletter-card {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+    }
+  }
+  .ds-newsletter-card__eyebrow {
+    margin: 0 0 var(--space-4);
+  }
+  .ds-newsletter-card__title {
+    font-size: var(--fs-h2);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-newsletter-card__sub {
+    font-size: var(--fs-small);
+    color: var(--color-fg-muted);
+    max-width: 36ch;
+    margin: 0;
+  }
+  .ds-newsletter-card__form {
+    display: flex;
+    border: 1px solid var(--color-border-strong);
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-newsletter-card__form:focus-within {
+    border-color: var(--color-fg);
+  }
+  .ds-newsletter-card__input {
+    flex: 1;
+    min-width: 0;
+    padding: 18px 20px;
+    background: transparent;
+    border: 0;
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    outline: none;
+  }
+  .ds-newsletter-card__input::placeholder {
+    color: var(--color-fg-faint);
+  }
+  .ds-newsletter-card__btn {
+    padding: 0 var(--space-6);
+    background: var(--color-fg);
+    color: var(--color-bg);
+    font-family: var(--font-sans);
+    font-size: var(--fs-caps);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border: 0;
+    cursor: pointer;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .ds-newsletter-card__btn:hover {
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+  }
+  .ds-newsletter-card__success {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--color-accent);
+    padding: 18px 0;
+    margin: 0;
+  }
+  .ds-newsletter-card__error {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-sale);
+    margin: var(--space-3) 0 0;
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Newsletter card",
+  "tag": "section",
+  "class": "ds-section ds-section--newsletter-card",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    { "type": "header", "content": "Copy" },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "default": "STAY IN THE LOOP",
+      "label": "Eyebrow",
+      "info": "Small uppercase label above the title. Leave empty to hide."
+    },
+    {
+      "type": "textarea",
+      "id": "title",
+      "default": "New releases.\nFree assets.\nProcess notes.",
+      "label": "Title",
+      "info": "Line breaks render as <br>."
+    },
+    {
+      "type": "text",
+      "id": "subhead",
+      "default": "Roughly twice a month. No spam, no upsells, no nonsense. Unsubscribe in one click.",
+      "label": "Subhead"
+    },
+    { "type": "header", "content": "Form" },
+    {
+      "type": "text",
+      "id": "placeholder",
+      "default": "your@email.com",
+      "label": "Email placeholder"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "default": "Subscribe",
+      "label": "Button label"
+    },
+    {
+      "type": "text",
+      "id": "signup_tag",
+      "default": "newsletter",
+      "label": "Customer tag",
+      "info": "Tag added to new customer records from this form (for segmentation). Leave empty for no tag."
+    },
+    {
+      "type": "text",
+      "id": "success_message",
+      "default": "Thanks. See you in your inbox.",
+      "label": "Success message"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Newsletter card"
+    }
+  ]
+}
+{% endschema %}
