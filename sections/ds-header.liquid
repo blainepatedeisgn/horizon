@@ -1,0 +1,409 @@
+{%- comment -%}
+  sections/ds-header.liquid — Disrupted Studio site-wide header
+
+  Full custom replacement for Horizon's stock header. Lives in
+  sections/header-group.json. Shows on every page above the announcement
+  bar (if announcement bar is also configured in header-group).
+
+  Layout (desktop):
+    [ LOGO ]    [ NAV (Shop, Plugins, Fonts, Graphics, About) ]    [ SEARCH ][ CART (n) ]
+
+  Mobile (≤900px):
+    [ HAMBURGER  LOGO ]   [ SEARCH icon ][ CART (n) ]
+    + slide-in drawer with full nav
+
+  Active nav item gets the orange underline. Cart count badge appears
+  whenever cart.item_count > 0.
+
+  Section settings:
+    color_scheme
+    logo_text          (text)       — fallback when no image logo
+    logo_image         (image)      — optional brand mark (replaces text)
+    main_menu          (link_list)  — pick a Shopify menu
+    show_search        (bool)
+    show_cart          (bool)
+    sticky             (bool)       — position: sticky on scroll
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+  assign logo_text = section.settings.logo_text | default: 'DISRUPTED STUDIO'
+  assign logo_image = section.settings.logo_image
+  assign main_menu = section.settings.main_menu
+  assign show_search = section.settings.show_search
+  assign show_cart = section.settings.show_cart
+  assign sticky = section.settings.sticky
+-%}
+
+<div class="ds-header color-{{ cs }}{% if sticky %} ds-header--sticky{% endif %}">
+  <div class="ds-header__inner">
+
+    <div class="ds-header__left">
+      {%- if main_menu != blank and linklists[main_menu].links.size > 0 -%}
+        <button class="ds-header__icon-btn ds-header__menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" data-ds-menu-toggle>
+          <svg viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <line x1="0" y1="2"  x2="22" y2="2"  stroke="currentColor" stroke-width="1.5"/>
+            <line x1="0" y1="8"  x2="22" y2="8"  stroke="currentColor" stroke-width="1.5"/>
+            <line x1="0" y1="14" x2="22" y2="14" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <span>Menu</span>
+        </button>
+      {%- endif -%}
+
+      <a href="{{ routes.root_url }}" class="ds-header__logo" aria-label="{{ shop.name | escape }} — home">
+        {%- if logo_image -%}
+          {{
+            logo_image
+            | image_url: width: 240
+            | image_tag:
+              widths: '120,180,240,360',
+              alt: shop.name,
+              class: 'ds-header__logo-img',
+              loading: 'eager'
+          }}
+        {%- else -%}
+          {{ logo_text }}
+        {%- endif -%}
+      </a>
+    </div>
+
+    {%- if main_menu != blank and linklists[main_menu].links.size > 0 -%}
+      <nav class="ds-header__nav" aria-label="Main navigation">
+        {%- for link in linklists[main_menu].links -%}
+          <a
+            href="{{ link.url }}"
+            class="ds-header__nav-link{% if link.active or link.child_active %} is-active{% endif %}"
+          >{{ link.title }}</a>
+        {%- endfor -%}
+      </nav>
+    {%- endif -%}
+
+    <div class="ds-header__actions">
+      {%- if show_search -%}
+        <a href="{{ routes.search_url }}" class="ds-header__icon-btn" aria-label="Search">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false" width="16" height="16">
+            <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <span>Search</span>
+        </a>
+      {%- endif -%}
+      {%- if show_cart -%}
+        <a href="{{ routes.cart_url }}" class="ds-header__icon-btn ds-header__cart-link" aria-label="Cart, {{ cart.item_count }} items">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false" width="16" height="16">
+            <path d="M3 4h2l1.6 9.4a1 1 0 0 0 1 .8h7.2a1 1 0 0 0 1-.8L17.5 7H6" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="8" cy="17" r="1.2" fill="currentColor"/>
+            <circle cx="15" cy="17" r="1.2" fill="currentColor"/>
+          </svg>
+          <span>Cart</span>
+          {%- if cart.item_count > 0 -%}
+            <span class="ds-header__cart-count">{{ cart.item_count }}</span>
+          {%- endif -%}
+        </a>
+      {%- endif -%}
+    </div>
+  </div>
+
+  {%- comment -%} ----- MOBILE DRAWER ----- {%- endcomment -%}
+  {%- if main_menu != blank and linklists[main_menu].links.size > 0 -%}
+    <div class="ds-header__drawer" data-ds-drawer aria-hidden="true" role="dialog" aria-label="Menu">
+      <div class="ds-header__drawer-inner">
+        <div class="ds-header__drawer-head">
+          <span class="ds-header__drawer-eyebrow">[ Menu ]</span>
+          <button class="ds-header__drawer-close" type="button" aria-label="Close menu" data-ds-menu-toggle>×</button>
+        </div>
+        <nav class="ds-header__drawer-nav" aria-label="Mobile main navigation">
+          {%- for link in linklists[main_menu].links -%}
+            <a
+              href="{{ link.url }}"
+              class="ds-header__drawer-link{% if link.active or link.child_active %} is-active{% endif %}"
+            >{{ link.title }}</a>
+          {%- endfor -%}
+        </nav>
+      </div>
+    </div>
+  {%- endif -%}
+</div>
+
+{% style %}
+  /* ds-header — port of mockup .header (lines 211-320) */
+  .ds-header {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    border-bottom: 1px solid var(--color-border);
+    z-index: 50;
+  }
+  .ds-header--sticky {
+    position: sticky;
+    top: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .ds-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 64px;
+    padding: 0 var(--pad-x);
+    gap: 40px;
+  }
+  .ds-header__left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  .ds-header__logo {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.005em;
+    color: var(--color-fg);
+    text-decoration: none;
+    white-space: nowrap;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+  }
+  .ds-header__logo-img {
+    display: block;
+    height: 32px;
+    width: auto;
+  }
+  .ds-header__nav {
+    display: flex;
+    gap: 32px;
+    flex: 1;
+    justify-content: flex-start;
+  }
+  .ds-header__nav-link {
+    font-family: var(--font-sans);
+    font-size: var(--fs-caps);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg);
+    opacity: 0.55;
+    padding-bottom: 4px;
+    border-bottom: 1px solid transparent;
+    text-decoration: none;
+    transition:
+      opacity      var(--t-fast) var(--ease),
+      border-color var(--t-fast) var(--ease);
+  }
+  .ds-header__nav-link:hover { opacity: 1; }
+  .ds-header__nav-link.is-active {
+    opacity: 1;
+    border-bottom-color: var(--color-accent);
+  }
+  .ds-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+  .ds-header__icon-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-caps);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg);
+    opacity: 0.7;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity var(--t-fast) var(--ease);
+    position: relative;
+    padding: 0;
+  }
+  .ds-header__icon-btn:hover { opacity: 1; }
+  .ds-header__icon-btn svg {
+    flex-shrink: 0;
+  }
+  .ds-header__cart-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0;
+    border-radius: 99px;
+    font-weight: 500;
+    margin-left: 4px;
+  }
+  .ds-header__menu-toggle { display: none; }
+
+  @media (max-width: 900px) {
+    .ds-header__nav { display: none; }
+    .ds-header__menu-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ds-header__icon-btn span:not(.ds-header__cart-count) {
+      display: none;
+    }
+    .ds-header__actions { gap: 8px; }
+    .ds-header__inner { gap: 16px; }
+    .ds-header__icon-btn {
+      min-width: 44px;
+      min-height: 44px;
+      justify-content: center;
+      opacity: 1;
+    }
+    .ds-header__menu-toggle { padding: 0 4px; }
+  }
+
+  /* Mobile drawer */
+  .ds-header__drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: var(--color-bg);
+    display: none;
+    opacity: 0;
+    transition: opacity var(--t-fast) var(--ease);
+  }
+  .ds-header__drawer.is-open {
+    display: block;
+    opacity: 1;
+  }
+  .ds-header__drawer-inner {
+    padding: var(--space-5) var(--pad-x) var(--space-7);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    height: 100%;
+  }
+  .ds-header__drawer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ds-header__drawer-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg-muted);
+    letter-spacing: 0.08em;
+  }
+  .ds-header__drawer-close {
+    background: none;
+    border: 0;
+    color: var(--color-fg);
+    font-size: 32px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ds-header__drawer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .ds-header__drawer-link {
+    font-family: var(--font-sans);
+    font-size: clamp(28px, 6vw, 40px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-fg);
+    text-decoration: none;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-header__drawer-link:hover,
+  .ds-header__drawer-link.is-active {
+    color: var(--color-accent);
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted header",
+  "tag": "header",
+  "class": "ds-section ds-section--header",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    { "type": "header", "content": "Logo" },
+    {
+      "type": "text",
+      "id": "logo_text",
+      "default": "DISRUPTED STUDIO",
+      "label": "Logo text",
+      "info": "Used when no image is uploaded. Renders in caps + brand weight."
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_image",
+      "label": "Logo image (optional)",
+      "info": "If uploaded, replaces the text logo. Recommend a wide SVG/PNG (32px high)."
+    },
+    { "type": "header", "content": "Navigation" },
+    {
+      "type": "link_list",
+      "id": "main_menu",
+      "default": "main-menu",
+      "label": "Main menu",
+      "info": "Pick a navigation menu (Online Store → Navigation). Recommend creating one with Shop / Plugins / Fonts / Graphics / About."
+    },
+    { "type": "header", "content": "Actions" },
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "default": true,
+      "label": "Show search"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cart",
+      "default": true,
+      "label": "Show cart"
+    },
+    { "type": "header", "content": "Behaviour" },
+    {
+      "type": "checkbox",
+      "id": "sticky",
+      "default": true,
+      "label": "Stick to top on scroll"
+    }
+  ],
+  "presets": [
+    { "name": "Disrupted header" }
+  ]
+}
+{% endschema %}
+
+<script>
+  (function () {
+    var toggles = document.querySelectorAll('[data-ds-menu-toggle]');
+    var drawer = document.querySelector('[data-ds-drawer]');
+    if (!drawer || toggles.length === 0) return;
+    toggles.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var isOpen = drawer.classList.toggle('is-open');
+        drawer.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        toggles.forEach(function (t) { t.setAttribute('aria-expanded', isOpen ? 'true' : 'false'); });
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      });
+    });
+  })();
+</script>

@@ -43,7 +43,13 @@
   assign candidates = source.products
 -%}
 
-{%- if candidates and candidates.size > 1 -%}
+{%- comment -%}
+  Show the section if there's at least one OTHER product in the whole
+  store (current product excluded). Section's internal loops fall back
+  from source collection → all products to fill the requested count.
+{%- endcomment -%}
+{%- assign total_products = collections.all.all_products_count -%}
+{%- if total_products > 1 -%}
 <section class="ds-pdp-related color-{{ cs }}">
   <div class="ds-pdp-related__inner">
 
@@ -54,19 +60,48 @@
           <span class="ds-section-head__num">{{ section.settings.num_label }}</span>
         {%- endif -%}
       </h2>
-      {%- if section.settings.subhead != blank -%}
-        <p class="ds-section-head__sub">{{ section.settings.subhead }}</p>
-      {%- endif -%}
+      <div class="ds-section-head__aside">
+        {%- if section.settings.subhead != blank -%}
+          <p class="ds-section-head__sub">{{ section.settings.subhead }}</p>
+        {%- endif -%}
+        {%- if section.settings.view_all_label != blank -%}
+          <a href="{{ section.settings.view_all_url | default: '/collections/all' }}" class="ds-section-head__viewall">
+            {{ section.settings.view_all_label }}
+            <span class="ds-section-head__viewall-arrow" aria-hidden="true">→</span>
+          </a>
+        {%- endif -%}
+      </div>
     </div>
 
     <div class="ds-pdp-related__grid">
       {%- assign rendered = 0 -%}
+      {%- assign seen_ids = ',' -%}
+
+      {%- comment -%} Pass 1: from product's source collection {%- endcomment -%}
       {%- for p in candidates -%}
-        {%- if p.id != product.id and rendered < products_to_show -%}
-          {% render 'ds-product-card', product: p %}
-          {%- assign rendered = rendered | plus: 1 -%}
+        {%- if rendered < products_to_show and p.id != product.id -%}
+          {%- assign marker = ',' | append: p.id | append: ',' -%}
+          {%- unless seen_ids contains marker -%}
+            {% render 'ds-product-card', product: p %}
+            {%- assign rendered = rendered | plus: 1 -%}
+            {%- assign seen_ids = seen_ids | append: p.id | append: ',' -%}
+          {%- endunless -%}
         {%- endif -%}
       {%- endfor -%}
+
+      {%- comment -%} Pass 2: fallback to all products if we need more {%- endcomment -%}
+      {%- if rendered < products_to_show -%}
+        {%- for p in collections.all.products -%}
+          {%- if rendered < products_to_show and p.id != product.id -%}
+            {%- assign marker = ',' | append: p.id | append: ',' -%}
+            {%- unless seen_ids contains marker -%}
+              {% render 'ds-product-card', product: p %}
+              {%- assign rendered = rendered | plus: 1 -%}
+              {%- assign seen_ids = seen_ids | append: p.id | append: ',' -%}
+            {%- endunless -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
     </div>
   </div>
 </section>
@@ -144,6 +179,20 @@
       "id": "collection_source",
       "label": "Source collection",
       "info": "Optional. If empty, auto-uses the product's first non-trivial collection."
+    },
+    { "type": "header", "content": "View all link" },
+    {
+      "type": "text",
+      "id": "view_all_label",
+      "default": "View all products",
+      "label": "Link label",
+      "info": "Renders on the right of the section heading, smaller + muted. Leave empty to hide."
+    },
+    {
+      "type": "url",
+      "id": "view_all_url",
+      "label": "Link URL",
+      "info": "Defaults to /collections/all if empty."
     }
   ],
   "presets": [

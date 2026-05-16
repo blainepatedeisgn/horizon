@@ -489,3 +489,172 @@ body {
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
+
+/* ============================================================
+   HEADER RESTYLE (Phase 4 Batch 1)
+   CSS-only overrides on Horizon's sections/header.liquid + nested
+   components. NO vendor file forks. Selectors chain Horizon's own
+   classes for higher specificity (per handoff doc — no !important).
+
+   To finish the brand chrome, you also need to configure in admin:
+     1. Online Store → Navigation → Main menu → add items in this order:
+          Shop / Plugins / Fonts / Graphics / About
+     2. Online Store → Themes → Customize → Header section:
+          - Set logo to TEXT (clear image upload), enter "DISRUPTED STUDIO"
+          - Or upload a brand logo SVG/PNG if you have one
+   ============================================================ */
+
+/* Header background: deep black, subtle hairline divider */
+.header.header__row,
+.header .header__row--top {
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Logo — text-style brutalist treatment */
+.header .header-logo a,
+.header .header-logo__heading {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-fg);
+  text-decoration: none;
+  line-height: 1;
+}
+
+/* Main menu — all caps, tracked, orange underline on hover/active */
+.header .header-menu .menu-list__link {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-fg);
+  padding-block: 6px;
+  border-bottom: 2px solid transparent;
+  transition:
+    border-color var(--t-fast) var(--ease),
+    color        var(--t-fast) var(--ease);
+}
+.header .header-menu .menu-list__link:hover {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-fg);
+}
+.header .header-menu .menu-list__link--active {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-fg);
+}
+
+/* Action area icons (search / account / cart / menu) */
+.header .header-actions__action {
+  color: var(--color-fg);
+}
+.header .header-actions__action:hover {
+  color: var(--color-accent);
+}
+
+/* Cart bubble — orange square with mono count */
+.header .cart-bubble__background {
+  background: var(--color-accent);
+  border-radius: 0;
+  border: 0;
+}
+.header .cart-bubble__text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-accent-fg);
+  letter-spacing: 0;
+}
+
+/* Drawer (mobile) menu items */
+.menu-drawer .menu-drawer__menu-item-text {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-fg);
+}
+.menu-drawer .menu-drawer__menu-item:hover .menu-drawer__menu-item-text {
+  color: var(--color-accent);
+}
+
+/* "SEARCH" + "CART" text labels (if shown) */
+.header .header-actions__text-style {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   SECTION HEAD — shared component (Phase 4 fix)
+   Was only in ds-product-grid's {% style %}; other sections that
+   use the same class names (ds-pdp-features, faq, related) need it
+   too. Hoisting to global.
+   ============================================================ */
+.ds-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: clamp(32px, 5vw, 56px);
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+.ds-section-head__title {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+}
+.ds-section-head__num {
+  font-family: var(--font-mono);
+  font-size: 0.5em;
+  vertical-align: super;
+  color: var(--color-fg-muted);
+  margin-left: 8px;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.ds-section-head__sub {
+  font-size: var(--fs-small);
+  color: var(--color-fg-muted);
+  max-width: 36ch;
+  line-height: 1.5;
+  margin: 0;
+}
+.ds-section-head__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  text-align: right;
+}
+.ds-section-head__viewall {
+  font-size: var(--fs-small);
+  color: var(--color-fg-muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid transparent;
+  transition:
+    color        var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease);
+}
+.ds-section-head__viewall:hover {
+  color: var(--color-fg);
+  border-bottom-color: var(--color-border-strong);
+}
+.ds-section-head__viewall-arrow {
+  display: inline-block;
+  transition: transform var(--t-fast) var(--ease);
+}
+.ds-section-head__viewall:hover .ds-section-head__viewall-arrow {
+  transform: translateX(3px);
+}

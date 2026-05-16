@@ -82,10 +82,7 @@
     },
     "newsletter": {
       "type": "ds-newsletter-card"
-    },
-    "wordmark": {
-      "type": "ds-wordmark"
     }
   },
-  "order": ["hero", "trust_marquee", "product_grid", "category_teasers", "newsletter", "wordmark"]
+  "order": ["hero", "trust_marquee", "product_grid", "category_teasers", "newsletter"]
 }
