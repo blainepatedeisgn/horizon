@@ -1,0 +1,216 @@
+{%- comment -%}
+  sections/ds-product-grid.liquid — Featured products grid
+
+  3-column grid on desktop, 2 on tablet (<=900px), 1 on phone (<=500px).
+  Renders the ds-product-card snippet for each product in the chosen
+  collection, capped by products_to_show.
+
+  Section heading uses the brutalist .ds-section-head pattern: H2 title with
+  optional mono "num" superscript + a short subhead paragraph.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme
+  assign collection = section.settings.collection
+  assign products_to_show = section.settings.products_to_show | default: 6
+
+  if collection != blank
+    assign products = collection.products
+  else
+    assign products = collections.all.products
+  endif
+-%}
+
+<div class="ds-product-grid-section color-{{ cs }}">
+  <div class="ds-product-grid-section__inner">
+
+    {%- if section.settings.heading != blank or section.settings.subhead != blank -%}
+      <div class="ds-section-head">
+        {%- if section.settings.heading != blank -%}
+          <h2 class="ds-section-head__title">
+            {{ section.settings.heading }}
+            {%- if section.settings.num_label != blank -%}
+              <span class="ds-section-head__num">{{ section.settings.num_label }}</span>
+            {%- endif -%}
+          </h2>
+        {%- endif -%}
+        {%- if section.settings.subhead != blank -%}
+          <p class="ds-section-head__sub">{{ section.settings.subhead }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div class="ds-product-grid">
+      {%- for product in products limit: products_to_show -%}
+        {% render 'ds-product-card', product: product %}
+      {%- else -%}
+        <div class="ds-product-grid__empty">
+          {%- if section.settings.collection == blank -%}
+            No products yet. Pick a collection in this section's settings, or add some products to the store.
+          {%- else -%}
+            This collection is empty.
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+    </div>
+
+    {%- if section.settings.show_view_all -%}
+      <div class="ds-product-grid-section__cta">
+        <a href="{{ section.settings.view_all_url | default: '/collections/all' }}" class="ds-text-link">
+          {{ section.settings.view_all_label | default: 'View all products' }}
+          <span class="ds-text-link__arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+    {%- endif -%}
+
+  </div>
+</div>
+
+{% style %}
+  .ds-product-grid-section {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding-top: clamp(32px, 4vw, 56px);
+    padding-bottom: clamp(32px, 4vw, 56px);
+  }
+  .ds-product-grid-section__inner {
+    /* Full-bleed with --pad-x padding to align with hero + trust marquee.
+       The mockup wraps the section in a 1600px-max .container, but the user
+       prefers all homepage sections to share the same edge alignment, so
+       we drop the max-width here. Revisit in Phase 5 polish if needed. */
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+  .ds-section-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: clamp(32px, 5vw, 56px);
+    gap: var(--space-5);
+    flex-wrap: wrap;
+  }
+  .ds-section-head__title {
+    font-size: var(--fs-h2);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin: 0;
+  }
+  .ds-section-head__num {
+    font-family: var(--font-mono);
+    font-size: 0.5em;
+    vertical-align: super;
+    color: var(--color-fg-muted);
+    margin-left: 4px;
+    letter-spacing: 0;
+  }
+  .ds-section-head__sub {
+    font-size: var(--fs-small);
+    color: var(--color-fg-muted);
+    max-width: 36ch;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .ds-product-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+  @media (max-width: 900px) {
+    .ds-product-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 500px) {
+    .ds-product-grid { grid-template-columns: 1fr; }
+  }
+  .ds-product-grid__empty {
+    grid-column: 1 / -1;
+    padding: var(--space-7);
+    color: var(--color-fg-muted);
+    text-align: center;
+    border: 1px dashed var(--color-border);
+    font-family: var(--font-mono);
+    font-size: var(--fs-small);
+    letter-spacing: 0.04em;
+  }
+  .ds-product-grid-section__cta {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-7);
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Product grid",
+  "tag": "section",
+  "class": "ds-section ds-section--product-grid",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    { "type": "header", "content": "Heading" },
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Featured Work",
+      "label": "Title"
+    },
+    {
+      "type": "text",
+      "id": "num_label",
+      "default": "06",
+      "label": "Number badge",
+      "info": "Mono superscript number next to the title (e.g. \"06\"). Leave empty to hide."
+    },
+    {
+      "type": "text",
+      "id": "subhead",
+      "default": "Hand-built plugins, original type, and ready-to-use asset packs — released in small batches.",
+      "label": "Subhead"
+    },
+    { "type": "header", "content": "Products" },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection",
+      "info": "Pick a collection to feature. If empty, shows products from across all collections."
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Products to show",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 6
+    },
+    { "type": "header", "content": "View all link" },
+    {
+      "type": "checkbox",
+      "id": "show_view_all",
+      "default": true,
+      "label": "Show \"View all\" link"
+    },
+    {
+      "type": "text",
+      "id": "view_all_label",
+      "default": "View all products",
+      "label": "Link label"
+    },
+    {
+      "type": "url",
+      "id": "view_all_url",
+      "label": "Link URL",
+      "info": "Defaults to /collections/all if empty."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product grid"
+    }
+  ]
+}
+{% endschema %}

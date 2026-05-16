@@ -81,3 +81,21 @@ The handoff doc shows `{% content_for 'blocks', type: 'X' %}` for per-type block
 
 ### Setting overrides
 _(none — Phase 2 Batch 1 introduces no settings_data.json changes)_
+
+---
+
+## 2026-05-16 — Phase 2 Batch 2: product card + grid + clean index.json
+
+### Custom adds
+- `snippets/ds-product-card.liquid` — Self-contained product card. Renders primary + optional secondary (hover-swap) images, auto-detects SALE/NEW badges (compare-at-price + tag-based), and shows title + category subline + mono price with strike-through compare-at.
+- `sections/ds-product-grid.liquid` — Featured products section. 3-col grid (2 on tablet, 1 on phone). Section heading uses brutalist `.ds-section-head` pattern (H2 with mono `num` superscript + subhead). Settings: color scheme, heading + num + subhead text, collection picker, products_to_show range (2–12), view-all link config.
+
+### Vendor edits
+- `assets/ds-tokens.css` — Appended ~90 lines of product-card CSS (`.ds-product-card`, `.ds-product-card__media`, hover-layer fade/scale, badge variants, meta + title-block + price + strike).
+- `templates/index.json` — **Fully replaced**. Stock Horizon homepage (288 lines of stock hero + multicolumn + image-with-text + etc.) replaced with a clean 3-section layout: ds-hero, ds-trust-marquee, ds-product-grid. All blocks pre-wired (no editor manipulation needed to see the brutalist homepage). Originally planned for Phase 2 Batch 4 but pulled forward so the dev preview at 127.0.0.1:9292 shows only our custom work.
+
+### Deviation from mockup
+- `.ds-product-grid-section__inner`: dropped the `max-width: var(--container-max); margin: 0 auto` constraint. Mockup wraps `.section` content in a 1600px `.container` for centering on wide viewports, but the user requested full-bleed alignment with the hero/marquee. Now uses only `padding-left/right: var(--pad-x)` matching hero. To revisit in Phase 5 polish: consider a unified container strategy.
+
+### Setting overrides
+_(none — Phase 2 Batch 2 introduces no settings_data.json changes)_

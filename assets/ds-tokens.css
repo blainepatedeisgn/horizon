@@ -266,3 +266,104 @@ body {
   transition: border-color var(--t-fast) var(--ease);
 }
 .ds-rich-text a:hover { border-color: var(--color-fg); }
+
+/* ============================================================
+   PRODUCT CARD (Phase 2 Batch 2)
+   Ported from mockup .product-card / .product-card__* (lines 740-808).
+   Used in: ds-product-grid section, related products on PDP, collection
+   page grid (when we restyle it in Phase 4).
+   ============================================================ */
+.ds-product-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+.ds-product-card__media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: block;
+  overflow: hidden;
+  background: var(--color-bg-elev);
+  border: 1px solid var(--color-border);
+  container-type: inline-size;
+}
+.ds-product-card__media-layer {
+  position: absolute;
+  inset: 0;
+  transition:
+    opacity   var(--t-base) var(--ease),
+    transform 800ms          var(--ease);
+  will-change: opacity, transform;
+}
+.ds-product-card__media-layer--hover { opacity: 0; }
+.ds-product-card:hover .ds-product-card__media-layer--primary { opacity: 0; }
+.ds-product-card:hover .ds-product-card__media-layer--hover   { opacity: 1; }
+.ds-product-card:hover .ds-product-card__media-layer          { transform: scale(1.02); }
+.ds-product-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ds-product-card__badge {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  background: var(--color-fg);
+  color: var(--color-bg);
+  z-index: 2;
+}
+.ds-product-card__badge--accent {
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+}
+.ds-product-card__meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  flex-wrap: wrap;
+}
+.ds-product-card__meta > .ds-product-card__title-block { flex: 1 1 60%; min-width: 0; }
+.ds-product-card__meta > .ds-product-card__price       { flex-shrink: 0; }
+.ds-product-card__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+}
+.ds-product-card__title {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+}
+.ds-product-card__category {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--color-fg-muted);
+  text-transform: uppercase;
+}
+.ds-product-card__price {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-fg);
+  flex-shrink: 0;
+  font-feature-settings: "tnum";
+}
+.ds-product-card__price-strike {
+  text-decoration: line-through;
+  color: var(--color-fg-faint);
+  margin-right: 6px;
+}

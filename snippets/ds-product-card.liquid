@@ -1,0 +1,101 @@
+{%- comment -%}
+  snippets/ds-product-card.liquid — Disrupted Studio product card
+
+  Required parameters
+    product               — a Shopify product object
+
+  Optional parameters
+    show_secondary_image  — bool, default true. When true and the product has
+                            a 2nd image, swap to it on hover.
+    show_category         — bool, default true. Renders product.type (or first
+                            collection title as fallback) as the mono caps subline.
+
+  Auto badge logic (no parameter)
+    - SALE  (accent orange) when compare_at_price > price
+    - NEW   (white)         when product.tags contains "new"/"New"/"NEW"
+    - none  otherwise
+
+  Usage example
+    {% render 'ds-product-card', product: product %}
+{%- endcomment -%}
+
+{%- liquid
+  if show_secondary_image == nil
+    assign show_secondary_image = true
+  endif
+  if show_category == nil
+    assign show_category = true
+  endif
+
+  assign secondary = product.images[1]
+
+  assign category = product.type
+  if category == blank
+    assign category = product.collections.first.title
+  endif
+
+  assign badge_text = ''
+  assign badge_modifier = ''
+  if product.compare_at_price > product.price
+    assign badge_text = 'SALE'
+    assign badge_modifier = 'ds-product-card__badge--accent'
+  elsif product.tags contains 'new' or product.tags contains 'New' or product.tags contains 'NEW'
+    assign badge_text = 'NEW'
+  endif
+-%}
+
+<a href="{{ product.url }}" class="ds-product-card" aria-label="{{ product.title | escape }}">
+  <div class="ds-product-card__media">
+    {%- if badge_text != blank -%}
+      <span class="ds-product-card__badge {{ badge_modifier }}">{{ badge_text }}</span>
+    {%- endif -%}
+
+    <div class="ds-product-card__media-layer ds-product-card__media-layer--primary">
+      {%- if product.featured_image != blank -%}
+        {{
+          product.featured_image
+          | image_url: width: 800
+          | image_tag:
+              widths: '300,600,900,1200',
+              sizes: '(min-width: 900px) 33vw, 50vw',
+              loading: 'lazy',
+              alt: product.title,
+              class: 'ds-product-card__img'
+        }}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'ds-product-card__img ds-product-card__img--placeholder' }}
+      {%- endif -%}
+    </div>
+
+    {%- if show_secondary_image and secondary != blank -%}
+      <div class="ds-product-card__media-layer ds-product-card__media-layer--hover" aria-hidden="true">
+        {{
+          secondary
+          | image_url: width: 800
+          | image_tag:
+              widths: '300,600,900,1200',
+              sizes: '(min-width: 900px) 33vw, 50vw',
+              loading: 'lazy',
+              alt: '',
+              class: 'ds-product-card__img'
+        }}
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="ds-product-card__meta">
+    <div class="ds-product-card__title-block">
+      <div class="ds-product-card__title">{{ product.title }}</div>
+      {%- if show_category and category != blank -%}
+        <div class="ds-product-card__category">{{ category }}</div>
+      {%- endif -%}
+    </div>
+    <div class="ds-product-card__price">
+      {%- if product.compare_at_price > product.price -%}
+        <span class="ds-product-card__price-strike">{{ product.compare_at_price | money }}</span>{{ product.price | money }}
+      {%- else -%}
+        {{ product.price | money }}
+      {%- endif -%}
+    </div>
+  </div>
+</a>
