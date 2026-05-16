@@ -113,3 +113,35 @@ _(none — Phase 2 Batch 2 introduces no settings_data.json changes)_
 
 ### Setting overrides
 _(none — Phase 2 Batch 3 introduces no settings_data.json changes)_
+
+---
+
+## 2026-05-16 — Phase 2 Batch 4: wordmark + Phase 2 complete
+
+### Custom adds
+- `sections/ds-wordmark.liquid` — Giant viewport-wide bold display wordmark with optional mono ® superscript. Single-line, centered, unselectable, overflow:hidden. clamp(56px, 18vw, 256px) at desktop; clamp(56px, 19vw, 200px) on phones with looser letter-spacing.
+
+### Vendor edits
+- `templates/index.json` — Added `wordmark` as the 6th and final section in the homepage order. Phase 2 homepage now complete: hero → trust marquee → product grid → category teasers → newsletter → wordmark.
+
+### Note on placement
+The handoff doc §6 specifies the wordmark goes "below the footer in index.json". Shopify renders template sections inside `<main>`, with footer-group rendered after via `theme.liquid`, so the wordmark literally cannot sit below the footer without either moving it into footer-group or editing theme.liquid. For now it sits as the last main-content section, above Horizon's footer. Phase 5 may revisit if we want it visually after the footer (would require footer-group integration).
+
+### Setting overrides
+_(none — Phase 2 Batch 4 introduces no settings_data.json changes)_
+
+---
+
+## Phase 2 summary
+
+All six brutalist homepage sections built + wired:
+- Hero (5 theme blocks)
+- Trust marquee (12 section blocks for logos)
+- Featured product grid + reusable product card snippet
+- Category teasers (3 section blocks for tiles)
+- Newsletter card (native `{% form 'customer' %}`)
+- Giant DISRUPTED® wordmark
+
+Vendor file touch count: `assets/ds-tokens.css` appended (component primitives + product card), `layout/theme.liquid` 1 line added, `config/settings_data.json` modified (Phase 1 only), `templates/index.json` fully rewritten.
+
+Custom files added: 5 sections, 5 blocks, 2 snippets.

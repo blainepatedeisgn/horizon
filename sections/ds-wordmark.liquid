@@ -1,0 +1,97 @@
+{%- comment -%}
+  sections/ds-wordmark.liquid — Giant footer-of-page wordmark
+
+  Single-line, viewport-wide bold display text with an optional small
+  mono ® superscript. Centered, unselectable, clipped on overflow.
+
+  Placement: per handoff doc §6, this lives "below the footer" — but
+  Shopify renders template sections inside <main>, before the footer
+  group. So this is the last section of index.json, sitting above
+  Horizon's footer. To literally render it after the footer, we'd need
+  to move it into footer-group; deferred to Phase 5 if it matters.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme
+  assign text = section.settings.text | default: 'DISRUPTED'
+-%}
+
+<div class="ds-wordmark color-{{ cs }}">
+  <div class="ds-wordmark__text" aria-hidden="true">
+    {{- text -}}
+    {%- if section.settings.show_registration_mark -%}
+      <span class="ds-wordmark__reg">®</span>
+    {%- endif -%}
+  </div>
+</div>
+
+{% style %}
+  .ds-wordmark {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding-top: clamp(16px, 2vw, 32px);
+    padding-bottom: clamp(16px, 2vw, 32px);
+  }
+  .ds-wordmark__text {
+    font-size: clamp(56px, 18vw, 256px);
+    font-weight: 700;
+    letter-spacing: -0.055em;
+    line-height: 0.82;
+    text-align: center;
+    margin-top: clamp(32px, 5vw, 56px);
+    padding: 0 var(--pad-x);
+    color: var(--color-fg);
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .ds-wordmark__reg {
+    font-size: 0.18em;
+    vertical-align: super;
+    font-family: var(--font-mono);
+    letter-spacing: 0;
+    color: var(--color-fg-muted);
+    margin-left: 8px;
+  }
+  @media (max-width: 640px) {
+    .ds-wordmark__text {
+      font-size: clamp(56px, 19vw, 200px);
+      letter-spacing: -0.045em;
+    }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Wordmark",
+  "tag": "section",
+  "class": "ds-section ds-section--wordmark",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "default": "DISRUPTED",
+      "label": "Text",
+      "info": "Brand wordmark, rendered at viewport-width scale. Bold display weight, slight negative letter-spacing."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_registration_mark",
+      "default": true,
+      "label": "Show ® mark",
+      "info": "Small mono superscript registration symbol after the wordmark."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Wordmark"
+    }
+  ]
+}
+{% endschema %}
