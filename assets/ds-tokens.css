@@ -1,0 +1,158 @@
+/* ============================================================
+   DISRUPTED STUDIO — DESIGN TOKENS
+   Source of truth: disrupted-studio-mockup.html lines 15–122
+   Spec: docs/disrupted-studio-horizon-handoff.md §5
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Brand fonts: Inter Tight + JetBrains Mono via Google Fonts CDN.
+   The handoff spec claimed these are in Shopify's font library but
+   they aren't — only `inter_*` is. So we load them ourselves.
+   Documented in docs/changes.md.
+   ------------------------------------------------------------ */
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300..800;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Color — these are the brand's own tokens. The Horizon-alias
+     block further down maps these onto Horizon's component vars. */
+  --color-bg:               #000000;
+  --color-bg-elev:          #0A0A0A;
+  --color-bg-elev-2:        #131313;
+  --color-fg:               #F2F0EC;
+  --color-fg-muted:         #8C8A85;
+  --color-fg-faint:         #4A4A47;
+  --color-border:           rgba(242, 240, 236, 0.16);
+  --color-border-strong:    rgba(242, 240, 236, 0.30);
+  --color-accent:           #FF4D1F;     /* BACKLIT orange */
+  --color-accent-glow:      rgba(255, 77, 31, 0.45);
+  --color-accent-fg:        #0A0A0A;
+  --color-button:           #F2F0EC;
+  --color-button-text:      #0A0A0A;
+  --color-button-hover:     #FFFFFF;
+  --color-sale:             #FF4444;
+
+  /* Type */
+  --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  --fs-display: clamp(56px, 9vw, 112px);
+  --fs-h1:      clamp(34px, 4.4vw, 52px);
+  --fs-h2:      clamp(24px, 2.8vw, 36px);
+  --fs-h3:      clamp(20px, 1.6vw, 22px);
+  --fs-body:    16px;
+  --fs-small:   14px;
+  --fs-caps:    12px;
+  --fs-micro:   11px;
+
+  /* Spacing */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  48px;
+  --space-8:  64px;
+  --space-9:  96px;
+  --space-10: 128px;
+
+  /* Motion */
+  --t-fast:    140ms;
+  --t-base:    240ms;
+  --t-slow:    480ms;
+  --ease:      cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* Layout */
+  --container-max: 1280px;
+  --pad-x:         clamp(16px, 5vw, 80px);
+  --header-h:      72px;
+  --announce-h:    44px;
+
+  /* Section rhythm — keep these in sync with .section padding in the mockup */
+  --section-pad-y: clamp(32px, 4vw, 56px);
+}
+
+/* ------------------------------------------------------------
+   Horizon-alias layer
+   Map our brand tokens onto Horizon's component CSS variables.
+   Horizon's vendor sections (cart drawer, search, account, etc.)
+   consume vars like --color-foreground; by aliasing them here,
+   those sections inherit our palette without any per-component
+   overrides or fork edits.
+   ------------------------------------------------------------ */
+:root {
+  --color-foreground:        var(--color-fg);
+  --color-foreground-rgb:    242, 240, 236;
+  --color-background:        var(--color-bg);
+  --color-background-rgb:    0, 0, 0;
+  --color-button-background: var(--color-button);
+  --color-button-label:      var(--color-button-text);
+  --color-link:              var(--color-fg);
+  --color-link-hover:        var(--color-accent);
+}
+
+/* ------------------------------------------------------------
+   Base
+   ------------------------------------------------------------ */
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+}
+
+/* ------------------------------------------------------------
+   Utility classes (ds- prefixed; mirrors mockup utilities)
+   These are referenced by name in custom Liquid sections/blocks.
+   ------------------------------------------------------------ */
+
+.ds-eyebrow {
+  font-size: var(--fs-caps);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+.ds-mono { font-family: var(--font-mono); }
+
+.ds-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.ds-muted { color: var(--color-fg-muted); }
+
+.ds-hairline {
+  height: 1px;
+  background: var(--color-border);
+  border: 0;
+  margin: 0;
+}
+
+.ds-text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-caps);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-fg);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-border-strong);
+  transition: border-color var(--t-fast) var(--ease);
+}
+
+.ds-text-link__arrow {
+  display: inline-block;
+  transition: transform var(--t-fast) var(--ease);
+}
+
+.ds-text-link:hover { border-color: var(--color-fg); }
+.ds-text-link:hover .ds-text-link__arrow { transform: translateX(4px); }
