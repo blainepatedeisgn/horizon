@@ -132,6 +132,93 @@ _(none — Phase 2 Batch 4 introduces no settings_data.json changes)_
 
 ---
 
+## 2026-05-16 — Phase 3 Batch 1 v2: full custom PDP section
+
+After iterating on Horizon's `product-information` block scaffolding,
+decided to **replace it entirely** with a custom section. The block-by-
+block patching approach kept fighting the platform — Horizon's PDP is
+composed of dozens of nested generic blocks with auto-generated class
+suffixes, making targeted CSS overrides brittle and the gap to the
+mockup hard to close.
+
+### Custom adds
+- `sections/ds-product-main.liquid` — Full custom PDP section. Renders:
+  - Breadcrumb (auto-derived from product's first non-trivial collection)
+  - 7:5 grid: gallery left, info column right (sticky on desktop)
+  - Gallery: main image + up to 8 thumbnails below, vanilla JS thumb-swap
+  - Eyebrow row: `product.type` + optional orange NEW badge (tag-triggered)
+  - Title (clamp 36–72px, semibold, tight)
+  - Tagline (from metafield)
+  - Inline price row: price + compare-at strike + auto LAUNCH −X% tag
+  - ATC button (no quantity selector — single-add only)
+  - Variant `<select>` for multi-variant products; hidden for single
+  - Sub-CTA "Watch the demo →" (from metafield)
+  - Specs table (6 metafield rows; hides if all blank)
+  - Long description (`product.description`)
+
+### Vendor edits
+- `templates/product.json` — **Fully replaced**. Stock Horizon PDP
+  composition (400+ lines, ~30 nested blocks) → minimal 20-line template
+  referencing our custom section. All previous Batch 1 wiring (ds-eyebrow,
+  ds-tagline, ds-sub-cta, ds-sale-tag, gallery settings) becomes obsolete
+  because the custom section owns all of that internally.
+
+### Deferred CSS cleanup
+- `assets/ds-tokens.css` — ~100 lines of Horizon PDP overrides
+  (.product-information, .product-details, .price, .compare-at-price,
+  .add-to-cart-button, .quantity-selector, .sticky-add-to-cart) are now
+  unused because we don't render Horizon's PDP anymore. Leaving them
+  in place for now — they don't conflict and they'll be useful if we
+  ever revert. Phase 5 polish can prune.
+
+### Metafield setup required for full per-product content
+
+The custom section reads optional metafields from the `disrupted`
+namespace. Without these, the section still renders (just hides the
+optional rows). To enable per-product editing of tagline, specs,
+version, and demo URL, set up metafield definitions in admin:
+
+**Settings → Custom data → Products → Add definition**
+
+For each of the following, choose **Single line text** (or **URL** for
+demo_url) with namespace `disrupted`:
+
+| Key         | Type         | Example value                                  |
+|-------------|--------------|------------------------------------------------|
+| `tagline`   | Single line  | "Real backlight glow for Photoshop..."         |
+| `version`   | Single line  | "v1.0"                                         |
+| `demo_url`  | URL          | "https://youtube.com/watch?v=..."              |
+| `compat`    | Single line  | "Photoshop 2022+"                              |
+| `format`    | Single line  | "UXP / .ccx"                                   |
+| `file_size` | Single line  | "12.4 MB"                                      |
+| `license`   | Single line  | "Personal & commercial"                        |
+| `updates`   | Single line  | "Free, lifetime"                               |
+| `support`   | Single line  | "Direct, by email"                             |
+
+Once defined, each product's edit page in admin shows a "Metafields"
+section where you fill these in per-product.
+
+### NEW badge logic
+
+Auto-renders when product has tag "new" / "New" / "NEW". Reads
+`product.metafields.disrupted.version` for the version suffix
+(defaults to "v1.0" if metafield is empty).
+
+### What's still deferred to next batches
+
+- **Phase 3 Batch 2**: `sections/ds-pdp-features.liquid` — the
+  "Thirty presets, one click" feature strips below the buybox.
+- **Phase 3 Batch 3**: `sections/ds-pdp-faq.liquid` — FAQ accordion
+  using native `<details>`.
+- **Phase 3 Batch 4**: `templates/product.backlit.json` — alt template
+  for BACKLIT specifically (will compose ds-product-main + features +
+  FAQ in a unique order/config).
+- **Phase 5 polish**: upgrade the form to use Horizon's
+  `<product-form-component>` for AJAX add-to-cart + cart-drawer
+  integration. Currently the form submits natively (page reload).
+
+---
+
 ## Phase 2 summary
 
 All six brutalist homepage sections built + wired:

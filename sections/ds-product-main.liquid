@@ -1,0 +1,616 @@
+{%- comment -%}
+  sections/ds-product-main.liquid — Disrupted Studio custom PDP
+
+  Replaces Horizon's `product-information` section entirely. Renders the
+  full hero (breadcrumb + 7:5 grid of gallery left, info column right)
+  with everything brutalist-styled and editable per-product via standard
+  product fields + metafields. NO quantity selector. NO theme blocks —
+  this section owns all of its content.
+
+  ---
+  DATA SOURCES
+  ---
+
+  PRODUCT FIELDS (Shopify built-in, no setup needed):
+    product.title              → big H1 title
+    product.type               → eyebrow caps text (e.g. "Photoshop Plugin")
+    product.price              → main price (mono)
+    product.compare_at_price   → strikethrough + auto LAUNCH -X% tag
+    product.description        → long description below the form
+    product.media              → gallery main + thumbnails
+    product.collections        → first non-trivial collection = breadcrumb
+
+  PRODUCT METAFIELDS (namespace: "disrupted", optional, per-product):
+    badge_text       (string)  → orange badge text (e.g. "NEW · v1.0"); hidden if blank
+    tagline          (string)  → short paragraph under the title
+    demo_url         (url)     → "Watch the demo →" sub-CTA destination
+    compat           (string)  → spec row
+    format           (string)  → spec row
+    file_size        (string)  → spec row
+    license          (string)  → spec row
+    updates          (string)  → spec row
+    support          (string)  → spec row
+
+  All metafields are OPTIONAL. Rows without a value just don't render.
+  See docs/changes.md for the metafield definition setup steps.
+
+  ---
+  NOTES
+  ---
+  - Form submits natively (page reload). Phase 5 polish can upgrade to
+    Horizon's <product-form-component> for AJAX + cart-drawer integration.
+  - Variant picker is a simple <select> for multi-variant products; hidden
+    for single-variant. Selected variant's ID is what the form posts.
+  - Thumb-swap uses ~15 lines of vanilla JS at the bottom, scoped to this
+    section. Respects prefers-reduced-motion via CSS.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+
+  comment
+    Breadcrumb: prefer the product's first non-"all"/"frontpage" collection.
+  endcomment
+  assign crumb_collection = nil
+  for c in product.collections
+    if c.handle != 'all' and c.handle != 'frontpage'
+      assign crumb_collection = c
+      break
+    endif
+  endfor
+
+  comment
+    Eyebrow: product.type, fall back to crumb collection title.
+  endcomment
+  assign eyebrow_text = product.type
+  if eyebrow_text == blank and crumb_collection
+    assign eyebrow_text = crumb_collection.title
+  endif
+
+  comment
+    Badge: fully merchant-editable via the disrupted.badge_text metafield.
+    Type anything ("NEW · v1.0", "BESTSELLER", "LIMITED"), or leave blank
+    to hide entirely. No tag-based logic — explicit content control.
+  endcomment
+  assign badge_text = product.metafields.disrupted.badge_text.value
+
+  comment
+    Sale calc.
+  endcomment
+  assign on_sale = false
+  if product.compare_at_price > product.price
+    assign on_sale = true
+    assign saved = product.compare_at_price | minus: product.price
+    assign discount_percent = saved | times: 100.0 | divided_by: product.compare_at_price | round
+  endif
+
+  comment
+    Optional content metafields.
+  endcomment
+  assign tagline = product.metafields.disrupted.tagline.value
+  assign demo_url = product.metafields.disrupted.demo_url.value
+
+  comment
+    Specs (keys + display labels, in display order).
+  endcomment
+  assign spec_keys = 'compat,format,file_size,license,updates,support' | split: ','
+  assign spec_labels = 'Compat,Format,File size,License,Updates,Support' | split: ','
+
+  comment
+    Detect whether any specs exist (so we can hide the whole panel if not).
+  endcomment
+  assign has_specs = false
+  for key in spec_keys
+    assign v = product.metafields.disrupted[key].value
+    if v != blank
+      assign has_specs = true
+      break
+    endif
+  endfor
+
+  assign current_variant = product.selected_or_first_available_variant
+-%}
+
+<section class="ds-pdp color-{{ cs }}">
+  <div class="ds-pdp__inner">
+
+    {%- comment -%} ----- BREADCRUMB ----- {%- endcomment -%}
+    <nav class="ds-pdp__crumb" aria-label="Breadcrumb">
+      <a href="{{ routes.root_url }}" class="ds-pdp__crumb-link">Home</a>
+      <span class="ds-pdp__crumb-sep" aria-hidden="true">/</span>
+      {%- if crumb_collection -%}
+        <a href="{{ crumb_collection.url }}" class="ds-pdp__crumb-link">{{ crumb_collection.title }}</a>
+        <span class="ds-pdp__crumb-sep" aria-hidden="true">/</span>
+      {%- endif -%}
+      <span class="ds-pdp__crumb-current">{{ product.title }}</span>
+    </nav>
+
+    {%- comment -%} ----- HERO ----- {%- endcomment -%}
+    <div class="ds-pdp__hero">
+
+      {%- comment -%} ----- GALLERY ----- {%- endcomment -%}
+      <div class="ds-pdp__gallery">
+        <div class="ds-pdp__gallery-main">
+          {%- if product.featured_media -%}
+            {{
+              product.featured_media.preview_image
+              | image_url: width: 1600
+              | image_tag:
+                loading: 'eager',
+                fetchpriority: 'high',
+                widths: '600,900,1200,1600',
+                sizes: '(min-width: 900px) 56vw, 100vw',
+                alt: product.title,
+                class: 'ds-pdp__gallery-main-img',
+                id: 'ds-pdp-main-img-' | append: section.id
+            }}
+          {%- else -%}
+            {{ 'product-1' | placeholder_svg_tag: 'ds-pdp__gallery-main-img placeholder-svg' }}
+          {%- endif -%}
+        </div>
+        {%- if product.media.size > 1 -%}
+          <div class="ds-pdp__gallery-thumbs" data-target-id="ds-pdp-main-img-{{ section.id }}">
+            {%- for media in product.media limit: 8 -%}
+              <button
+                type="button"
+                class="ds-pdp__gallery-thumb{% if forloop.first %} is-active{% endif %}"
+                data-src="{{ media | image_url: width: 1600 }}"
+                aria-label="View image {{ forloop.index }}"
+              >
+                {{
+                  media.preview_image
+                  | image_url: width: 200
+                  | image_tag:
+                    loading: 'lazy',
+                    alt: '',
+                    class: 'ds-pdp__gallery-thumb-img'
+                }}
+              </button>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ----- INFO COLUMN ----- {%- endcomment -%}
+      <div class="ds-pdp__info">
+
+        {%- comment -%} EYEBROW + OPTIONAL BADGE {%- endcomment -%}
+        {%- if eyebrow_text != blank or badge_text != blank -%}
+          <div class="ds-pdp__info-eyebrow">
+            {%- if eyebrow_text != blank -%}
+              <span class="ds-pdp__info-cat">{{ eyebrow_text }}</span>
+            {%- endif -%}
+            {%- if badge_text != blank -%}
+              <span class="ds-pdp__info-badge">{{ badge_text }}</span>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+
+        {%- comment -%} TITLE {%- endcomment -%}
+        <h1 class="ds-pdp__info-title">{{ product.title }}</h1>
+
+        {%- comment -%} TAGLINE (metafield) {%- endcomment -%}
+        {%- if tagline != blank -%}
+          <p class="ds-pdp__info-tagline">{{ tagline }}</p>
+        {%- endif -%}
+
+        {%- comment -%} PRICE ROW (price + compare-at + sale tag inline) {%- endcomment -%}
+        <div class="ds-pdp__info-price-row">
+          <span class="ds-pdp__info-price">{{ current_variant.price | money }}</span>
+          {%- if on_sale -%}
+            <span class="ds-pdp__info-price-strike">{{ product.compare_at_price | money }}</span>
+            <span class="ds-pdp__info-sale-tag">Launch −{{ discount_percent }}%</span>
+          {%- endif -%}
+        </div>
+
+        {%- comment -%} BUY FORM (ATC, no quantity) {%- endcomment -%}
+        {%- form 'product', product, class: 'ds-pdp__info-form', novalidate: 'novalidate' -%}
+          {%- if product.has_only_default_variant -%}
+            <input type="hidden" name="id" value="{{ current_variant.id }}">
+          {%- else -%}
+            <div class="ds-pdp__info-variant">
+              <label class="ds-pdp__info-variant-label" for="ds-variant-{{ section.id }}">
+                {{ product.options.first | default: 'Variant' }}
+              </label>
+              <select
+                name="id"
+                id="ds-variant-{{ section.id }}"
+                class="ds-pdp__info-variant-select"
+              >
+                {%- for variant in product.variants -%}
+                  <option
+                    value="{{ variant.id }}"
+                    {% if variant.id == current_variant.id %}selected{% endif %}
+                    {% unless variant.available %}disabled{% endunless %}
+                  >
+                    {{ variant.title }} — {{ variant.price | money }}{% unless variant.available %} (sold out){% endunless %}
+                  </option>
+                {%- endfor -%}
+              </select>
+            </div>
+          {%- endif -%}
+
+          <button
+            type="submit"
+            name="add"
+            class="ds-btn ds-btn--lg ds-btn--full ds-pdp__info-cta"
+            {% unless current_variant.available %}disabled{% endunless %}
+          >
+            {%- if current_variant.available -%}
+              Add to cart — {{ current_variant.price | money }}
+            {%- else -%}
+              Sold out
+            {%- endif -%}
+          </button>
+        {%- endform -%}
+
+        {%- comment -%} SUB-CTA (metafield demo_url) {%- endcomment -%}
+        {%- if demo_url != blank -%}
+          <div class="ds-pdp__info-sub-cta">
+            <a href="{{ demo_url }}" class="ds-text-link">
+              Watch the demo
+              <span class="ds-text-link__arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        {%- endif -%}
+
+        {%- comment -%} SPECS TABLE (metafields) {%- endcomment -%}
+        {%- if has_specs -%}
+          <div class="ds-pdp__info-specs">
+            {%- for key in spec_keys -%}
+              {%- assign value = product.metafields.disrupted[key].value -%}
+              {%- if value != blank -%}
+                <div class="ds-pdp__info-spec">
+                  <span class="ds-pdp__info-spec-label">{{ spec_labels[forloop.index0] }}</span>
+                  <span class="ds-pdp__info-spec-value">{{ value }}</span>
+                </div>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- comment -%} LONG DESCRIPTION {%- endcomment -%}
+        {%- if product.description != blank -%}
+          <div class="ds-pdp__info-description">
+            {{ product.description }}
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% style %}
+  /* ds-pdp — port of mockup .pdp-* (lines 1528-1660) with ds- namespace */
+
+  .ds-pdp {
+    background: var(--color-background);
+    color: var(--color-foreground);
+  }
+  .ds-pdp__inner {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+
+  /* Breadcrumb */
+  .ds-pdp__crumb {
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-3);
+    font-size: var(--fs-caps);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .ds-pdp__crumb-link {
+    color: var(--color-fg-muted);
+    text-decoration: none;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-pdp__crumb-link:hover { color: var(--color-fg); }
+  .ds-pdp__crumb-sep { opacity: 0.4; }
+  .ds-pdp__crumb-current { color: var(--color-fg); }
+
+  /* Hero grid: 7fr gallery, 5fr info */
+  .ds-pdp__hero {
+    display: grid;
+    grid-template-columns: 7fr 5fr;
+    gap: var(--space-7);
+    padding-bottom: var(--space-9);
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .ds-pdp__hero {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+      padding-bottom: var(--space-7);
+    }
+  }
+
+  /* Gallery */
+  .ds-pdp__gallery {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-pdp__gallery-main {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    background: var(--color-bg-elev);
+    container-type: inline-size;
+  }
+  .ds-pdp__gallery-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .ds-pdp__gallery-main .placeholder-svg {
+    object-fit: contain;
+    padding: var(--space-7);
+    opacity: 0.4;
+  }
+  .ds-pdp__gallery-thumbs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  .ds-pdp__gallery-thumb {
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    transition: border-color var(--t-fast) var(--ease);
+    padding: 0;
+    border-radius: 0;
+  }
+  .ds-pdp__gallery-thumb:hover,
+  .ds-pdp__gallery-thumb.is-active {
+    border-color: var(--color-fg);
+  }
+  .ds-pdp__gallery-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Info column — sticky on desktop */
+  .ds-pdp__info {
+    position: sticky;
+    top: calc(var(--header-height, 64px) + var(--space-4));
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  @media (max-width: 900px) {
+    .ds-pdp__info { position: static; }
+  }
+
+  /* Eyebrow + NEW badge row */
+  .ds-pdp__info-eyebrow {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .ds-pdp__info-cat {
+    font-size: var(--fs-caps);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-pdp__info-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+  }
+
+  /* Title */
+  .ds-pdp__info-title {
+    font-size: clamp(36px, 5.5vw, 72px);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+    margin: 0;
+  }
+
+  /* Tagline */
+  .ds-pdp__info-tagline {
+    font-size: 18px;
+    color: var(--color-fg-muted);
+    line-height: 1.4;
+    max-width: 32ch;
+    margin: 0;
+  }
+
+  /* Price row */
+  .ds-pdp__info-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-family: var(--font-mono);
+    margin-top: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .ds-pdp__info-price {
+    font-size: 28px;
+    color: var(--color-fg);
+    font-weight: 500;
+  }
+  .ds-pdp__info-price-strike {
+    font-size: 18px;
+    color: var(--color-fg-muted);
+    text-decoration: line-through;
+  }
+  .ds-pdp__info-sale-tag {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-sale);
+    padding: 3px 6px;
+    border: 1px solid var(--color-sale);
+    font-family: var(--font-mono);
+  }
+
+  /* Form */
+  .ds-pdp__info-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin: 0;
+  }
+  .ds-pdp__info-variant {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .ds-pdp__info-variant-label {
+    font-size: var(--fs-micro);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-pdp__info-variant-select {
+    background: transparent;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-fg);
+    padding: 14px 16px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    border-radius: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    /* Caret arrow */
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 36px;
+  }
+  .ds-pdp__info-variant-select:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .ds-pdp__info-cta {
+    margin-top: var(--space-3);
+  }
+  .ds-pdp__info-cta:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Sub-CTA */
+  .ds-pdp__info-sub-cta {
+    text-align: center;
+  }
+
+  /* Specs */
+  .ds-pdp__info-specs {
+    border: 1px solid var(--color-border);
+    margin-top: var(--space-4);
+  }
+  .ds-pdp__info-spec {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    gap: var(--space-3);
+  }
+  .ds-pdp__info-spec:last-child { border-bottom: 0; }
+  .ds-pdp__info-spec-label {
+    color: var(--color-fg-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .ds-pdp__info-spec-value {
+    color: var(--color-fg);
+    text-align: right;
+  }
+
+  /* Long description */
+  .ds-pdp__info-description {
+    font-size: 14px;
+    color: var(--color-fg-muted);
+    line-height: 1.6;
+    margin-top: var(--space-4);
+  }
+  .ds-pdp__info-description p { margin: 0 0 var(--space-3); }
+  .ds-pdp__info-description p:last-child { margin-bottom: 0; }
+  .ds-pdp__info-description strong { color: var(--color-fg); font-weight: 500; }
+  .ds-pdp__info-description ul,
+  .ds-pdp__info-description ol {
+    padding-left: var(--space-4);
+    margin: var(--space-3) 0;
+  }
+  .ds-pdp__info-description li { margin-bottom: var(--space-2); }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted PDP main",
+  "tag": "section",
+  "class": "ds-section ds-section--pdp-main",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Disrupted PDP main"
+    }
+  ]
+}
+{% endschema %}
+
+<script>
+  // Thumbnail swap — minimal vanilla JS, scoped via data-target-id.
+  (function () {
+    var containers = document.querySelectorAll('.ds-pdp__gallery-thumbs');
+    containers.forEach(function (container) {
+      var targetId = container.getAttribute('data-target-id');
+      var mainImg = document.getElementById(targetId);
+      if (!mainImg) return;
+      container.addEventListener('click', function (e) {
+        var btn = e.target.closest('.ds-pdp__gallery-thumb');
+        if (!btn) return;
+        container.querySelectorAll('.ds-pdp__gallery-thumb').forEach(function (b) {
+          b.classList.remove('is-active');
+        });
+        btn.classList.add('is-active');
+        var src = btn.getAttribute('data-src');
+        if (src) {
+          mainImg.removeAttribute('srcset');
+          mainImg.removeAttribute('sizes');
+          mainImg.src = src;
+        }
+      });
+    });
+  })();
+</script>
