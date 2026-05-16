@@ -18,7 +18,20 @@
       "settings": {
         "color_scheme": "scheme-1"
       }
+    },
+    "features": {
+      "type": "ds-pdp-features",
+      "settings": {
+        "color_scheme": "scheme-1"
+      }
+    },
+    "faq": {
+      "type": "ds-pdp-faq",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Questions"
+      }
     }
   },
-  "order": ["main"]
+  "order": ["main", "features", "faq"]
 }

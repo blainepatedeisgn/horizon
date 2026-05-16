@@ -1,0 +1,213 @@
+{%- comment -%}
+  sections/ds-pdp-faq.liquid — Per-product FAQ accordion
+
+  Reads `product.metafields.disrupted.faq` (list of `faq_item` metaobjects).
+  Each metaobject:
+    question (single_line_text)    The question header
+    answer   (multi_line_text)     The body, supports line breaks
+
+  Uses native HTML `<details>` / `<summary>` for the accordion — no
+  JavaScript needed for the open/close behaviour. CSS handles the
+  rotate animation on the toggle icon. Respects prefers-reduced-motion.
+
+  If the product has no `faq` metafield value, the entire section is hidden.
+  See docs/changes.md for metaobject definition setup.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+  assign faq_items = product.metafields.disrupted.faq.value
+-%}
+
+{%- if faq_items and faq_items.size > 0 -%}
+<section class="ds-pdp-faq color-{{ cs }}">
+  <div class="ds-pdp-faq__inner">
+
+    {%- if section.settings.heading != blank or section.settings.subhead != blank -%}
+      <div class="ds-section-head ds-pdp-faq__head">
+        {%- if section.settings.heading != blank -%}
+          <h2 class="ds-section-head__title">
+            {{ section.settings.heading }}
+            {%- if section.settings.num_label != blank -%}
+              <span class="ds-section-head__num">{{ section.settings.num_label }}</span>
+            {%- endif -%}
+          </h2>
+        {%- endif -%}
+        {%- if section.settings.subhead != blank -%}
+          <p class="ds-section-head__sub">{{ section.settings.subhead }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div class="ds-pdp-faq__list">
+      {%- for item in faq_items -%}
+        {%- liquid
+          assign question = item.question.value
+          assign answer = item.answer.value
+          assign num_str = forloop.index | prepend: '0' | slice: -2, 2
+        -%}
+        {%- if question != blank -%}
+          <details class="ds-pdp-faq__item">
+            <summary class="ds-pdp-faq__q">
+              <span class="ds-pdp-faq__q-num">{{ num_str }}</span>
+              <span class="ds-pdp-faq__q-text">{{ question }}</span>
+              <span class="ds-pdp-faq__q-toggle" aria-hidden="true">+</span>
+            </summary>
+            {%- if answer != blank -%}
+              <div class="ds-pdp-faq__a">
+                <div class="ds-pdp-faq__a-inner">{{ answer | newline_to_br }}</div>
+              </div>
+            {%- endif -%}
+          </details>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{% style %}
+  /* ds-pdp-faq — port of mockup .faq (lines 1999-2045) */
+  .ds-pdp-faq {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding-top: clamp(56px, 7vw, 96px);
+    padding-bottom: clamp(56px, 7vw, 96px);
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-pdp-faq__inner {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+  .ds-pdp-faq__head {
+    margin-bottom: clamp(32px, 5vw, 56px);
+  }
+  .ds-pdp-faq__list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* native <details> reset */
+  .ds-pdp-faq__item {
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-pdp-faq__item:last-child {
+    border-bottom: 1px solid var(--color-border);
+  }
+  .ds-pdp-faq__item summary { list-style: none; cursor: pointer; }
+  .ds-pdp-faq__item summary::-webkit-details-marker { display: none; }
+  .ds-pdp-faq__item summary::marker { content: ''; }
+
+  /* Question row */
+  .ds-pdp-faq__q {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-5) 0;
+    font-size: clamp(18px, 1.8vw, 22px);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    text-align: left;
+    gap: var(--space-4);
+  }
+  .ds-pdp-faq__q-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-fg-muted);
+    letter-spacing: 0.08em;
+    margin-right: var(--space-4);
+    flex-shrink: 0;
+  }
+  .ds-pdp-faq__q-text {
+    flex: 1;
+  }
+  .ds-pdp-faq__q-toggle {
+    font-size: 20px;
+    color: var(--color-fg-muted);
+    transition:
+      transform var(--t-base) var(--ease),
+      color     var(--t-base) var(--ease);
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+    display: inline-block;
+  }
+  .ds-pdp-faq__item[open] .ds-pdp-faq__q-toggle {
+    transform: rotate(45deg);
+    color: var(--color-accent);
+  }
+
+  /* Answer */
+  .ds-pdp-faq__a {
+    font-size: var(--fs-body);
+    color: var(--color-fg-muted);
+    line-height: 1.6;
+    padding-left: calc(12px + var(--space-4) + 20px); /* num-width + num-margin + toggle-width */
+    overflow: hidden;
+  }
+  .ds-pdp-faq__a-inner {
+    padding-bottom: var(--space-5);
+    max-width: 60ch;
+  }
+  .ds-pdp-faq__a-inner a {
+    color: var(--color-fg);
+    border-bottom: 1px solid var(--color-border-strong);
+    text-decoration: none;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-pdp-faq__a-inner a:hover {
+    border-color: var(--color-fg);
+  }
+
+  /* Reduced-motion: drop the rotate transition */
+  @media (prefers-reduced-motion: reduce) {
+    .ds-pdp-faq__q-toggle { transition: none; }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted PDP FAQ",
+  "tag": "section",
+  "class": "ds-section ds-section--pdp-faq",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    { "type": "header", "content": "Heading" },
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Questions",
+      "label": "Title"
+    },
+    {
+      "type": "text",
+      "id": "num_label",
+      "label": "Number badge",
+      "info": "Optional mono superscript next to the title (e.g. \"06\")."
+    },
+    {
+      "type": "text",
+      "id": "subhead",
+      "label": "Subhead",
+      "info": "Optional secondary text below the title."
+    },
+    {
+      "type": "paragraph",
+      "content": "Q&A content comes from the `disrupted.faq` metafield on each product (a list of \"FAQ item\" metaobjects). See docs/changes.md for setup."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Disrupted PDP FAQ"
+    }
+  ]
+}
+{% endschema %}

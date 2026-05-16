@@ -206,16 +206,96 @@ Auto-renders when product has tag "new" / "New" / "NEW". Reads
 
 ### What's still deferred to next batches
 
-- **Phase 3 Batch 2**: `sections/ds-pdp-features.liquid` — the
-  "Thirty presets, one click" feature strips below the buybox.
-- **Phase 3 Batch 3**: `sections/ds-pdp-faq.liquid` — FAQ accordion
-  using native `<details>`.
-- **Phase 3 Batch 4**: `templates/product.backlit.json` — alt template
-  for BACKLIT specifically (will compose ds-product-main + features +
-  FAQ in a unique order/config).
+- **Phase 3 Batch 4**: `templates/product.backlit.json` — optional alt
+  template if a specific product needs a wildly unique layout.
 - **Phase 5 polish**: upgrade the form to use Horizon's
   `<product-form-component>` for AJAX add-to-cart + cart-drawer
   integration. Currently the form submits natively (page reload).
+
+---
+
+## 2026-05-16 — Phase 3 Batch 2 & 3: features + FAQ via metaobjects
+
+Built the two remaining PDP body sections. Both read content from
+**Shopify metaobjects** referenced via product list-metafields. This
+gives per-product editing in a clean admin UI: each product can have
+totally different features and FAQ items, all managed from the product
+admin page (no theme editor visits, no template juggling).
+
+### Custom adds
+- `sections/ds-pdp-features.liquid` — Iterates `product.metafields.disrupted.features`
+  (list of `feature` metaobjects). Each feature renders a full-width
+  strip: head (label + big title + body) + optional 3-col image grid
+  with mono captions. Hides entirely if no features set.
+- `sections/ds-pdp-faq.liquid` — Iterates `product.metafields.disrupted.faq`
+  (list of `faq_item` metaobjects). Renders a native `<details>` accordion
+  — no JavaScript needed for open/close. CSS handles the toggle rotate.
+  Section heading is configurable (defaults to "Questions").
+
+### Vendor edits
+- `templates/product.json` — Added `features` and `faq` sections after
+  `main`. Order: main → features → faq.
+
+### Metaobject setup walkthrough
+
+The two sections render NOTHING until you set up the metaobject
+definitions + product metafields. Once setup is done, you add features
+and FAQ items per product directly from the product admin page.
+
+#### Step 1: Define the "Feature" metaobject
+
+1. **Admin → Settings → Custom data → Metaobjects → Add definition**
+2. Name: `Feature`
+3. Auto-generated type handle: `feature` (leave as-is)
+4. Click **Add field** for each of these:
+   - `label` — Single line text — *optional* (e.g. "FEATURE 01"; auto-numbered if blank)
+   - `title` — Multi-line text — *optional* (big H2; line breaks render as `<br>`)
+   - `body` — Multi-line text — *optional* (supporting paragraph)
+   - `images` — File — **List** — *optional* — Accept: Image only (3 thumbnails per strip)
+   - `captions` — Single line text — **List** — *optional* (paired with images by order)
+5. **Save**
+
+#### Step 2: Define the "FAQ item" metaobject
+
+1. **Admin → Settings → Custom data → Metaobjects → Add definition**
+2. Name: `FAQ item`
+3. Auto-generated type handle: `faq_item`
+4. Add fields:
+   - `question` — Single line text — *required*
+   - `answer` — Multi-line text — *required*
+5. **Save**
+
+#### Step 3: Add the product metafield definitions
+
+1. **Admin → Settings → Custom data → Products → Add definition**
+2. **First definition**:
+   - Name: `Features`
+   - Namespace and key: `disrupted.features`
+   - Type: **Metaobject** → **List of entries** → pick `Feature`
+3. **Save**
+4. **Add definition** again:
+   - Name: `FAQ`
+   - Namespace and key: `disrupted.faq`
+   - Type: **Metaobject** → **List of entries** → pick `FAQ item`
+5. **Save**
+
+#### Step 4: Add content to a product
+
+1. **Admin → Products → click any product**
+2. Scroll past the description — you'll see the **Metafields** section
+3. Click `Features` → **Add Feature** → fill in label/title/body, upload images, add captions → **Save**
+4. Add up to 3 features per strip; multiple strips per product if needed
+5. Click `FAQ` → **Add FAQ item** → fill in question/answer → **Save**
+6. Repeat for each Q&A
+
+Refresh the PDP — features strips and FAQ accordion appear in the order you set.
+
+### What's still deferred
+
+- **Phase 3 Batch 4**: `templates/product.backlit.json` — only needed if a
+  specific product wants a wildly unique layout. Otherwise the metaobject
+  approach gives per-product content variation on a shared template.
+- **Phase 5 polish**: AJAX add-to-cart via Horizon's `<product-form-component>`.
 
 ---
 

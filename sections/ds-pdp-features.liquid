@@ -1,0 +1,200 @@
+{%- comment -%}
+  sections/ds-pdp-features.liquid — Per-product feature strips
+
+  Reads `product.metafields.disrupted.features` (list of `feature` metaobjects).
+  Each metaobject = one full-width feature strip. Each strip has:
+    label  (text)                  e.g. "FEATURE 01"
+    title  (multi-line text)       big H2; line breaks render as <br>
+    body   (multi-line text)       supporting paragraph
+    images (list.file_reference)   0-3 preview thumbnails
+    captions (list.single_line)    paired captions for those images
+
+  If the product has no `features` metafield value, the entire section is
+  hidden — no empty state, no placeholder. Gallery and FAQ work the same.
+
+  Section settings: color scheme + section-level toggle.
+  See docs/changes.md for metaobject definition setup.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+  assign features = product.metafields.disrupted.features.value
+-%}
+
+{%- if features and features.size > 0 -%}
+<section class="ds-pdp-features color-{{ cs }}">
+  <div class="ds-pdp-features__inner">
+    {%- for feature in features -%}
+      {%- liquid
+        assign label = feature.label.value
+        if label == blank
+          assign label_num = forloop.index | prepend: '0' | slice: -2, 2
+          capture label
+            echo '[ FEATURE '
+            echo label_num
+            echo ' ]'
+          endcapture
+        endif
+        assign title_html = feature.title.value | escape | newline_to_br
+        assign body = feature.body.value
+        assign images = feature.images.value
+        assign captions = feature.captions.value
+      -%}
+      <article class="ds-pdp-features__strip">
+        <header class="ds-pdp-features__head">
+          <div>
+            {%- if label != blank -%}
+              <div class="ds-pdp-features__num">{{ label }}</div>
+            {%- endif -%}
+            {%- if title_html != blank -%}
+              <h2 class="ds-pdp-features__title">{{ title_html }}</h2>
+            {%- endif -%}
+          </div>
+          {%- if body != blank -%}
+            <p class="ds-pdp-features__sub">{{ body }}</p>
+          {%- endif -%}
+        </header>
+
+        {%- if images and images.size > 0 -%}
+          <div class="ds-pdp-features__images">
+            {%- for image in images limit: 3 -%}
+              <figure class="ds-pdp-features__img">
+                {{
+                  image
+                  | image_url: width: 800
+                  | image_tag:
+                    loading: 'lazy',
+                    widths: '400,600,800,1200',
+                    sizes: '(min-width: 800px) 33vw, 100vw',
+                    alt: '',
+                    class: 'ds-pdp-features__img-media'
+                }}
+                {%- assign caption = captions[forloop.index0] -%}
+                {%- if caption != blank -%}
+                  <figcaption class="ds-pdp-features__caption"><span>{{ caption }}</span></figcaption>
+                {%- endif -%}
+              </figure>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </article>
+    {%- endfor -%}
+  </div>
+</section>
+{%- endif -%}
+
+{% style %}
+  /* ds-pdp-features — port of mockup .feature-strip (lines 1709-1772) */
+  .ds-pdp-features {
+    background: var(--color-background);
+    color: var(--color-foreground);
+  }
+  .ds-pdp-features__inner {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+  .ds-pdp-features__strip {
+    padding-top: clamp(56px, 7vw, 96px);
+    padding-bottom: clamp(56px, 7vw, 96px);
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-pdp-features__head {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-7);
+    align-items: end;
+  }
+  @media (max-width: 800px) {
+    .ds-pdp-features__head { grid-template-columns: 1fr; }
+  }
+  .ds-pdp-features__num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--color-accent);
+    margin-bottom: var(--space-3);
+  }
+  .ds-pdp-features__title {
+    font-size: clamp(34px, 4.4vw, 56px);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    max-width: 16ch;
+    margin: 0;
+  }
+  .ds-pdp-features__sub {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--color-fg-muted);
+    max-width: 44ch;
+    margin: 0;
+  }
+  .ds-pdp-features__images {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+  }
+  @media (max-width: 700px) {
+    .ds-pdp-features__images { grid-template-columns: 1fr; }
+  }
+  .ds-pdp-features__img {
+    aspect-ratio: 4 / 5;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+    position: relative;
+    overflow: hidden;
+    margin: 0;
+  }
+  .ds-pdp-features__img-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .ds-pdp-features__caption {
+    position: absolute;
+    bottom: 12px;
+    left: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--color-fg);
+    z-index: 2;
+    margin: 0;
+  }
+  .ds-pdp-features__caption span {
+    display: inline-block;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    padding: 4px 8px;
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted PDP features",
+  "tag": "section",
+  "class": "ds-section ds-section--pdp-features",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "paragraph",
+      "content": "Content comes from the `disrupted.features` metafield on each product (a list of \"Feature\" metaobjects). See docs/changes.md for setup."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Disrupted PDP features"
+    }
+  ]
+}
+{% endschema %}
