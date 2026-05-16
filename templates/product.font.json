@@ -1,0 +1,60 @@
+/*
+ * ------------------------------------------------------------
+ * Disrupted Studio — FONT product template (Neue Portal, Rivet Mono)
+ *
+ * Used for font products (Neue Portal, Rivet Mono, etc.). Assigned
+ * per-product in admin via the "Theme template" dropdown.
+ *
+ * Section order:
+ *   main → typespecimen → faq → related
+ *
+ * Per-product content sources:
+ *   typespecimen → product.metafields.disrupted.font_file (.woff2 / .ttf / .otf)
+ *   faq          → product.metafields.disrupted.faq (list of FAQ item)
+ *   related      → product.collections.first (auto)
+ *
+ * The typespecimen section inlines @font-face with the product's uploaded
+ * font file, so the buyer sees actual sample text rendered in that typeface.
+ *
+ * See docs/changes.md for metaobject + metafield definition setup.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "ds-product-main",
+      "settings": {
+        "color_scheme": "scheme-1"
+      }
+    },
+    "specimen": {
+      "type": "ds-pdp-typespecimen",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Type specimen",
+        "specimen_quote": "The quick brown fox jumps over the lazy dog",
+        "show_alphabet": true,
+        "show_numbers": true,
+        "show_glyphs": true
+      }
+    },
+    "faq": {
+      "type": "ds-pdp-faq",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Common questions",
+        "num_label": "04"
+      }
+    },
+    "related": {
+      "type": "ds-pdp-related",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "More type",
+        "num_label": "03",
+        "products_to_show": 3
+      }
+    }
+  },
+  "order": ["main", "specimen", "faq", "related"]
+}

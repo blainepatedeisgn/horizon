@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------
- * Disrupted Studio product page template
+ * Disrupted Studio default product page template (graphics, misc)
  *
  * Uses our custom ds-product-main section (replaces Horizon's
  * product-information). Phase 3 Batches 2-3 will append features
@@ -31,7 +31,16 @@
         "color_scheme": "scheme-1",
         "heading": "Questions"
       }
+    },
+    "related": {
+      "type": "ds-pdp-related",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "You might also like",
+        "num_label": "03",
+        "products_to_show": 3
+      }
     }
   },
-  "order": ["main", "features", "faq"]
+  "order": ["main", "features", "faq", "related"]
 }

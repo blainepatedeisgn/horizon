@@ -1,0 +1,182 @@
+{%- comment -%}
+  sections/ds-pdp-cta-inset.liquid — Per-product CTA insets
+
+  Reads `product.metafields.disrupted.ctas` (list of `cta_inset` metaobjects).
+  Each metaobject:
+    eyebrow      (text)  — small orange caps eyebrow (e.g. "LAUNCH WEEK — 20% OFF")
+    heading      (text)  — H3 callout (e.g. "Try it before Sunday.")
+    body         (text)  — supporting paragraph (line breaks → <br>)
+    button_label (text)  — button label
+    button_url   (url)   — button destination
+    image        (file)  — optional visual on the left/right
+
+  Renders one card per metaobject entry. Multiple CTAs stack with spacing.
+  Image side alternates left/right between cards for visual rhythm.
+  Hides section entirely if no CTAs set on product.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+  assign ctas = product.metafields.disrupted.ctas.value
+-%}
+
+{%- if ctas and ctas.size > 0 -%}
+<section class="ds-pdp-cta color-{{ cs }}">
+  <div class="ds-pdp-cta__inner">
+    {%- for cta in ctas -%}
+      {%- liquid
+        assign eyebrow = cta.eyebrow.value
+        assign heading = cta.heading.value
+        assign body = cta.body.value
+        assign btn_label = cta.button_label.value
+        assign btn_url = cta.button_url.value
+        assign image = cta.image.value
+
+        assign reverse_class = ''
+        assign mod = forloop.index0 | modulo: 2
+        if mod == 1
+          assign reverse_class = ' ds-pdp-cta__card--reverse'
+        endif
+      -%}
+      <div class="ds-pdp-cta__card{{ reverse_class }}">
+        <div class="ds-pdp-cta__visual">
+          {%- if image -%}
+            {{
+              image
+              | image_url: width: 1200
+              | image_tag:
+                loading: 'lazy',
+                widths: '600,900,1200',
+                sizes: '(min-width: 800px) 50vw, 100vw',
+                alt: '',
+                class: 'ds-pdp-cta__visual-img'
+            }}
+          {%- endif -%}
+        </div>
+        <div class="ds-pdp-cta__copy">
+          {%- if eyebrow != blank -%}
+            <p class="ds-pdp-cta__eyebrow">{{ eyebrow }}</p>
+          {%- endif -%}
+          {%- if heading != blank -%}
+            <h3 class="ds-pdp-cta__heading">{{ heading | escape | newline_to_br }}</h3>
+          {%- endif -%}
+          {%- if body != blank -%}
+            <p class="ds-pdp-cta__body">{{ body }}</p>
+          {%- endif -%}
+          {%- if btn_label != blank -%}
+            <a href="{{ btn_url | default: '#' }}" class="ds-btn ds-pdp-cta__btn">{{ btn_label }}</a>
+          {%- endif -%}
+        </div>
+      </div>
+    {%- endfor -%}
+  </div>
+</section>
+{%- endif -%}
+
+{% style %}
+  /* ds-pdp-cta — port of mockup .cta-inset (lines 1948-1995) */
+  .ds-pdp-cta {
+    background: var(--color-background);
+    color: var(--color-foreground);
+  }
+  .ds-pdp-cta__inner {
+    padding: var(--space-7) var(--pad-x);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+  .ds-pdp-cta__card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+    overflow: hidden;
+  }
+  .ds-pdp-cta__card--reverse .ds-pdp-cta__visual { order: 2; }
+  .ds-pdp-cta__card--reverse .ds-pdp-cta__copy { order: 1; }
+  @media (max-width: 800px) {
+    .ds-pdp-cta__card { grid-template-columns: 1fr; }
+    .ds-pdp-cta__card--reverse .ds-pdp-cta__visual,
+    .ds-pdp-cta__card--reverse .ds-pdp-cta__copy { order: unset; }
+  }
+  .ds-pdp-cta__visual {
+    position: relative;
+    aspect-ratio: 5 / 3;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.18) 0%, transparent 60%), #050505;
+    container-type: inline-size;
+    overflow: hidden;
+  }
+  .ds-pdp-cta__visual-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .ds-pdp-cta__copy {
+    padding: clamp(28px, 4vw, 56px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+  .ds-pdp-cta__eyebrow {
+    font-size: var(--fs-caps);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin: 0;
+  }
+  .ds-pdp-cta__heading {
+    font-size: clamp(24px, 2.4vw, 32px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0;
+  }
+  .ds-pdp-cta__body {
+    font-size: var(--fs-small);
+    color: var(--color-fg-muted);
+    max-width: 36ch;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .ds-pdp-cta__body strong {
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+  .ds-pdp-cta__btn {
+    margin-top: var(--space-3);
+    align-self: flex-start;
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted PDP CTA inset",
+  "tag": "section",
+  "class": "ds-section ds-section--pdp-cta",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "paragraph",
+      "content": "Content comes from the `disrupted.ctas` metafield on each product (a list of \"CTA inset\" metaobjects). Image side alternates left/right when multiple CTAs are set. See docs/changes.md for setup."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Disrupted PDP CTA inset"
+    }
+  ]
+}
+{% endschema %}

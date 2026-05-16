@@ -1,0 +1,249 @@
+{%- comment -%}
+  sections/ds-pdp-video.liquid — Per-product video block
+
+  Reads `product.metafields.disrupted.video` (single `video` metaobject reference).
+  Metaobject fields (all optional):
+    url        (url)   — YouTube or Vimeo URL
+    file       (file)  — uploaded mp4
+    thumbnail  (file)  — poster image
+    heading    (text)  — section title (e.g. "See it in action")
+    subhead    (text)  — supporting paragraph
+    meta_text  (text)  — top-left mono label (e.g. "DEMO / BACKLIT V1.0")
+    duration   (text)  — used as the section-head num (e.g. "90s")
+
+  Behaviour priority:
+    1. If `file` is set → renders <video controls> with thumbnail as poster
+    2. Else if YouTube URL  → renders <iframe>
+    3. Else if Vimeo URL    → renders <iframe>
+    4. Else if thumbnail    → renders static thumbnail with play button overlay
+    5. Else                 → hides the section entirely
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+  assign video = product.metafields.disrupted.video.value
+-%}
+
+{%- if video -%}
+  {%- liquid
+    assign video_url = video.url.value
+    assign video_file = video.file.value
+    assign thumbnail = video.thumbnail.value
+    assign heading = video.heading.value
+    assign subhead = video.subhead.value
+    assign meta_text = video.meta_text.value
+    assign duration = video.duration.value
+
+    assign youtube_id = ''
+    assign vimeo_id = ''
+    if video_url contains 'youtube.com/watch'
+      assign youtube_id = video_url | split: 'v=' | last | split: '&' | first
+    elsif video_url contains 'youtu.be/'
+      assign youtube_id = video_url | split: 'youtu.be/' | last | split: '?' | first
+    elsif video_url contains 'vimeo.com/'
+      assign vimeo_id = video_url | split: 'vimeo.com/' | last | split: '?' | first | split: '/' | first
+    endif
+
+    assign has_playable = false
+    if video_file or youtube_id != blank or vimeo_id != blank or thumbnail
+      assign has_playable = true
+    endif
+  -%}
+
+  {%- if has_playable -%}
+    <section class="ds-pdp-video color-{{ cs }}">
+      <div class="ds-pdp-video__inner">
+
+        {%- if heading != blank or subhead != blank -%}
+          <div class="ds-section-head">
+            {%- if heading != blank -%}
+              <h2 class="ds-section-head__title">
+                {{ heading }}
+                {%- if duration != blank -%}
+                  <span class="ds-section-head__num">{{ duration }}</span>
+                {%- endif -%}
+              </h2>
+            {%- endif -%}
+            {%- if subhead != blank -%}
+              <p class="ds-section-head__sub">{{ subhead }}</p>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+
+        <div class="ds-pdp-video__block">
+          {%- if video_file -%}
+            <video
+              class="ds-pdp-video__media"
+              controls
+              preload="metadata"
+              {% if thumbnail %}poster="{{ thumbnail | image_url: width: 1600 }}"{% endif %}
+            >
+              <source src="{{ video_file.sources[0].url }}" type="{{ video_file.sources[0].mime_type | default: 'video/mp4' }}">
+              Your browser doesn't support HTML video.
+            </video>
+          {%- elsif youtube_id != blank -%}
+            <iframe
+              class="ds-pdp-video__media"
+              src="https://www.youtube.com/embed/{{ youtube_id }}"
+              title="{{ heading | default: 'Product video' | escape }}"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          {%- elsif vimeo_id != blank -%}
+            <iframe
+              class="ds-pdp-video__media"
+              src="https://player.vimeo.com/video/{{ vimeo_id }}"
+              title="{{ heading | default: 'Product video' | escape }}"
+              loading="lazy"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          {%- elsif thumbnail -%}
+            {{
+              thumbnail
+              | image_url: width: 1600
+              | image_tag:
+                loading: 'lazy',
+                widths: '800,1200,1600',
+                alt: heading,
+                class: 'ds-pdp-video__media'
+            }}
+            {%- comment -%} Decorative play-button overlay since no real video is set {%- endcomment -%}
+            <div class="ds-pdp-video__overlay" aria-hidden="true">
+              <div class="ds-pdp-video__play">
+                <span class="ds-pdp-video__play-icon"></span>
+              </div>
+            </div>
+          {%- endif -%}
+
+          {%- if meta_text != blank -%}
+            <div class="ds-pdp-video__meta">{{ meta_text }}</div>
+          {%- endif -%}
+          {%- if duration != blank and video_file == nil -%}
+            <div class="ds-pdp-video__time">{{ duration }}</div>
+          {%- endif -%}
+        </div>
+      </div>
+    </section>
+  {%- endif -%}
+{%- endif -%}
+
+{% style %}
+  /* ds-pdp-video — port of mockup .video-block (lines 2050-2119) */
+  .ds-pdp-video {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding: clamp(56px, 7vw, 96px) 0;
+  }
+  .ds-pdp-video__inner {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+  .ds-pdp-video__block {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--color-bg-elev);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    margin-top: var(--space-7);
+  }
+  .ds-pdp-video__media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border: 0;
+  }
+  .ds-pdp-video__overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .ds-pdp-video__play {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition:
+      transform  var(--t-fast) var(--ease),
+      background var(--t-fast) var(--ease);
+  }
+  .ds-pdp-video__block:hover .ds-pdp-video__play {
+    transform: translate(-50%, -50%) scale(1.08);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .ds-pdp-video__play-icon {
+    width: 0;
+    height: 0;
+    border-left: 20px solid var(--color-fg);
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+    margin-left: 4px;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-pdp-video__block:hover .ds-pdp-video__play-icon {
+    border-left-color: var(--color-accent-fg);
+  }
+  .ds-pdp-video__meta {
+    position: absolute;
+    bottom: var(--space-5);
+    left: var(--space-5);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg);
+    letter-spacing: 0.04em;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .ds-pdp-video__time {
+    position: absolute;
+    bottom: var(--space-5);
+    right: var(--space-5);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg);
+    letter-spacing: 0.04em;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 4px 8px;
+    pointer-events: none;
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted PDP video",
+  "tag": "section",
+  "class": "ds-section ds-section--pdp-video",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "paragraph",
+      "content": "Content comes from the `disrupted.video` metafield on each product (a single \"Video\" metaobject reference). Supports YouTube/Vimeo URLs or uploaded mp4. See docs/changes.md for setup."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Disrupted PDP video"
+    }
+  ]
+}
+{% endschema %}

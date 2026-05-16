@@ -292,10 +292,153 @@ Refresh the PDP — features strips and FAQ accordion appear in the order you se
 
 ### What's still deferred
 
-- **Phase 3 Batch 4**: `templates/product.backlit.json` — only needed if a
-  specific product wants a wildly unique layout. Otherwise the metaobject
-  approach gives per-product content variation on a shared template.
 - **Phase 5 polish**: AJAX add-to-cart via Horizon's `<product-form-component>`.
+
+---
+
+## 2026-05-16 — Phase 3 Batch 4: per-product-type templates + 4 new PDP sections
+
+Expanded the PDP architecture to support genuinely different layouts per
+product type while keeping content per-product editable. Plugin products
+(BACKLIT, FLUX) get an elaborate layout with multiple feature strips,
+promotional CTAs, and a video. Font products get a live type specimen
+that loads the actual font file. Graphics + other products use the default.
+
+### Custom adds — 4 new sections
+- `sections/ds-pdp-cta-inset.liquid` — Metaobject-driven CTA banner. Reads
+  `product.metafields.disrupted.ctas` (list of `cta_inset` metaobjects).
+  Multiple CTAs stack vertically with alternating image side (left/right).
+  Each card: eyebrow + heading + body + button + image.
+- `sections/ds-pdp-video.liquid` — Metaobject-driven video embed. Reads
+  `product.metafields.disrupted.video` (single `video` metaobject ref).
+  Priority: uploaded file > YouTube URL > Vimeo URL > static thumbnail
+  with decorative play overlay > section hides. Includes mono meta-text
+  + duration labels per mockup.
+- `sections/ds-pdp-related.liquid` — Related products grid. Pulls from
+  the product's first non-trivial collection (not Shopify's ML
+  recommendations API — simpler, server-rendered, no async fetch).
+  Uses our `ds-product-card` snippet for visual consistency with the
+  homepage Featured Work section. Excludes the current product.
+- `sections/ds-pdp-typespecimen.liquid` — Live type specimen for font
+  products. Reads `product.metafields.disrupted.font_file` (any of
+  .ttf/.otf/.woff/.woff2). Inlines `@font-face` with the file URL, then
+  renders a huge display quote + (optional) alphabet/numerals/symbols
+  rows in the actual loaded font. Hides if no font file uploaded.
+
+### Custom adds — 2 new templates
+- `templates/product.plugin.json` — Order: main → features → cta → video →
+  faq → related. For BACKLIT, FLUX, etc.
+- `templates/product.font.json` — Order: main → typespecimen → faq →
+  related. For Neue Portal, Rivet Mono, etc.
+
+### Vendor edits
+- `templates/product.json` — Default template now includes `related` as
+  the 4th section. Order: main → features → faq → related.
+
+### Per-product template assignment
+
+In admin → Products → [pick product] → look in the right sidebar for
+**"Theme template"** dropdown:
+- **BACKLIT, FLUX, future plugins**: choose `product.plugin`
+- **Neue Portal, Rivet Mono, future fonts**: choose `product.font`
+- **Chroma Vol. 01, Botanic Library, etc.**: leave as `product` (default)
+
+The dropdown only lists templates that exist in `/templates/`, so the
+new ones are picked up automatically.
+
+---
+
+### New metaobject + metafield setup walkthrough (Phase 3 Batch 4)
+
+You've already set up `Feature`, `FAQ item`, `disrupted.features`,
+`disrupted.faq` (Batch 3). Now adding 4 more for the new sections.
+
+#### Step 1: Define the "CTA inset" metaobject
+
+1. **Admin → Settings → Custom data → Metaobjects → Add definition**
+2. Name: `CTA inset`
+3. Auto-handle: `cta_inset`
+4. Add fields (all *optional*):
+   - `eyebrow` — Single line text
+   - `heading` — Multi-line text *(line breaks render as `<br>`)*
+   - `body` — Multi-line text
+   - `button_label` — Single line text
+   - `button_url` — URL
+   - `image` — File — Single (NOT list) — Accept: **Image only**
+5. Save
+
+#### Step 2: Define the "Video" metaobject
+
+1. **Add definition** again
+2. Name: `Video`
+3. Auto-handle: `video`
+4. Add fields (all *optional*):
+   - `url` — URL *(YouTube or Vimeo)*
+   - `file` — File — Single — Accept: **Video only**
+   - `thumbnail` — File — Single — Accept: **Image only** *(used as poster)*
+   - `heading` — Single line text *(section title)*
+   - `subhead` — Multi-line text *(section subhead)*
+   - `meta_text` — Single line text *(top-left mono label, e.g. "DEMO / BACKLIT V1.0")*
+   - `duration` — Single line text *(e.g. "90s" or "01:34")*
+5. Save
+
+#### Step 3: Define the 3 new Product metafields
+
+In **Admin → Settings → Custom data → Products → Add definition** for each:
+
+**Definition: `disrupted.ctas`**
+- Name: `CTAs`
+- Namespace and key: `disrupted.ctas`
+- Type: **Metaobject → List of entries → CTA inset**
+- Save
+
+**Definition: `disrupted.video`**
+- Name: `Video`
+- Namespace and key: `disrupted.video`
+- Type: **Metaobject → One entry → Video** *(One, NOT List — one video per product)*
+- Save
+
+**Definition: `disrupted.font_file`**
+- Name: `Font file`
+- Namespace and key: `disrupted.font_file`
+- Type: **File → One file**
+- Under "Accepted file types" pick **Other files** (since fonts aren't categorised as image/video). Or leave "Any file" — Shopify allows .woff2/.ttf/.otf uploads.
+- Save
+
+#### Step 4: Add content per product
+
+For a plugin product like BACKLIT (once you add it):
+1. Product admin → Theme template dropdown → pick `product.plugin`
+2. Scroll to Metafields:
+   - **Features** → Add 3-4 Feature entries
+   - **CTAs** → Add 1-2 CTA entries
+   - **Video** → Add a Video entry (set URL or file, plus heading/subhead/meta/duration)
+   - **FAQ** → Add 5+ FAQ items
+3. Save product
+
+For a font product like Neue Portal:
+1. Product admin → Theme template → `product.font`
+2. Upload the .woff2 to `disrupted.font_file` metafield
+3. Add FAQ items
+4. Save product
+
+For graphics products: just use the default template — fill in Features + FAQ.
+
+### Notes & limitations
+
+- **CTA inset interleaving**: The mockup has CTAs *between* feature strips
+  (Feature 1 → CTA 1 → Feature 2 → Feature 3 → CTA 2 → Feature 4). Our
+  current architecture puts all features in one section and all CTAs in
+  one section after them. To achieve true interleaving we'd need a more
+  complex "PDP block" polymorphic metaobject. Deferred to Phase 5 unless
+  it becomes critical.
+- **Font file CSP**: Shopify CDN serves font files cross-origin friendly,
+  but if the typespecimen doesn't load, check the browser console — some
+  ad blockers or custom CSPs may block `@font-face` URLs.
+- **Related products**: uses collection-based fallback (simpler than the
+  recommendations API which requires async fetch). Each product's first
+  non-"all"/"frontpage" collection is the source. If you want ML-based
+  recommendations, that's a Phase 5 upgrade.
 
 ---
 

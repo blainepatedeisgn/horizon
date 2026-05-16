@@ -1,0 +1,155 @@
+{%- comment -%}
+  sections/ds-pdp-related.liquid — Related products grid
+
+  Renders 2-6 other products from the current product's first collection,
+  excluding the current product itself. Uses our `ds-product-card` snippet
+  for brand-consistent styling (same look as homepage Featured Work).
+
+  Hides if the product has no collection or only the current product
+  exists in its collection. Choosing collection-based related is simpler
+  than Shopify's recommendations API (no async fetch needed) and works
+  on day one without any extra setup.
+
+  Section settings:
+    color_scheme
+    heading             (e.g. "You might also like")
+    num_label           (e.g. "03")
+    subhead             (optional)
+    products_to_show    (2-6)
+    collection_source   (auto-detect via product.collections, or pick one)
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+  assign products_to_show = section.settings.products_to_show | default: 3
+
+  comment
+    Source collection: if a specific one is picked in section settings, use
+    that. Otherwise, use the product's first non-"all" collection.
+  endcomment
+  assign source = section.settings.collection_source
+  if source == nil or source == empty
+    for c in product.collections
+      if c.handle != 'all' and c.handle != 'frontpage'
+        assign source = c
+        break
+      endif
+    endfor
+  endif
+
+  comment
+    Build a candidate list excluding the current product.
+  endcomment
+  assign candidates = source.products
+-%}
+
+{%- if candidates and candidates.size > 1 -%}
+<section class="ds-pdp-related color-{{ cs }}">
+  <div class="ds-pdp-related__inner">
+
+    <div class="ds-section-head">
+      <h2 class="ds-section-head__title">
+        {{ section.settings.heading | default: 'You might also like' }}
+        {%- if section.settings.num_label != blank -%}
+          <span class="ds-section-head__num">{{ section.settings.num_label }}</span>
+        {%- endif -%}
+      </h2>
+      {%- if section.settings.subhead != blank -%}
+        <p class="ds-section-head__sub">{{ section.settings.subhead }}</p>
+      {%- endif -%}
+    </div>
+
+    <div class="ds-pdp-related__grid">
+      {%- assign rendered = 0 -%}
+      {%- for p in candidates -%}
+        {%- if p.id != product.id and rendered < products_to_show -%}
+          {% render 'ds-product-card', product: p %}
+          {%- assign rendered = rendered | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{% style %}
+  .ds-pdp-related {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding: clamp(56px, 7vw, 96px) 0;
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-pdp-related__inner {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+  .ds-pdp-related__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+  @media (max-width: 900px) {
+    .ds-pdp-related__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 500px) {
+    .ds-pdp-related__grid { grid-template-columns: 1fr; }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted PDP related",
+  "tag": "section",
+  "class": "ds-section ds-section--pdp-related",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    { "type": "header", "content": "Heading" },
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "You might also like",
+      "label": "Title"
+    },
+    {
+      "type": "text",
+      "id": "num_label",
+      "default": "03",
+      "label": "Number badge"
+    },
+    {
+      "type": "text",
+      "id": "subhead",
+      "label": "Subhead"
+    },
+    { "type": "header", "content": "Products" },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Products to show",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "collection",
+      "id": "collection_source",
+      "label": "Source collection",
+      "info": "Optional. If empty, auto-uses the product's first non-trivial collection."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Disrupted PDP related products"
+    }
+  ]
+}
+{% endschema %}
