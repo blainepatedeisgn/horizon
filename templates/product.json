@@ -7,7 +7,7 @@
  * made to this file may be overwritten.
  * ------------------------------------------------------------
  */
- {
+{
   "sections": {
     "main": {
       "type": "product-information",
@@ -16,15 +16,15 @@
           "type": "_product-media-gallery",
           "static": true,
           "settings": {
-            "media_presentation": "grid",
+            "media_presentation": "carousel",
             "media_columns": "two",
             "image_gap": 4,
             "large_first_image": false,
             "icons_style": "arrow",
-            "slideshow_controls_style": "counter",
+            "slideshow_controls_style": "thumbnails",
             "slideshow_mobile_controls_style": "dots",
-            "thumbnail_position": "right",
-            "thumbnail_width": 44,
+            "thumbnail_position": "bottom",
+            "thumbnail_width": 64,
             "aspect_ratio": "adapt",
             "constrain_to_viewport": true,
             "media_fit": "contain",
@@ -107,6 +107,12 @@
                 "padding-inline-end": 0
               },
               "blocks": {
+                "ds_eyebrow_cat": {
+                  "type": "ds-eyebrow",
+                  "settings": {
+                    "text": "Photoshop Plugin"
+                  }
+                },
                 "text_xpVMaM": {
                   "type": "text",
                   "name": "t:names.title",
@@ -133,6 +139,12 @@
                   },
                   "blocks": {}
                 },
+                "ds_tagline": {
+                  "type": "ds-rich-text",
+                  "settings": {
+                    "text": "<p>A live pixel art plugin for Photoshop. Turn any layer into a pixel art grid with four shape variants and two color modes.</p>"
+                  }
+                },
                 "price_tVjtKg": {
                   "type": "price",
                   "settings": {
@@ -154,11 +166,20 @@
                     "padding-inline-end": 0
                   },
                   "blocks": {}
+                },
+                "ds_sale_tag": {
+                  "type": "ds-sale-tag",
+                  "settings": {
+                    "prefix": "LAUNCH"
+                  }
                 }
               },
               "block_order": [
+                "ds_eyebrow_cat",
                 "text_xpVMaM",
-                "price_tVjtKg"
+                "ds_tagline",
+                "price_tVjtKg",
+                "ds_sale_tag"
               ]
             },
             "divider_VJhene": {
@@ -221,6 +242,15 @@
               },
               "block_order": []
             },
+            "ds_sub_cta": {
+              "type": "ds-button-row",
+              "settings": {
+                "primary_label": "",
+                "primary_url": "",
+                "secondary_label": "Watch the 90-second demo",
+                "secondary_url": "#"
+              }
+            },
             "text_aEtTtq": {
               "type": "text",
               "name": "Product description",
@@ -253,6 +283,7 @@
             "divider_VJhene",
             "variant_picker_R3rGDr",
             "buy_buttons_eYQEYi",
+            "ds_sub_cta",
             "text_aEtTtq"
           ]
         }

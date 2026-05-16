@@ -367,3 +367,125 @@ body {
   color: var(--color-fg-faint);
   margin-right: 6px;
 }
+
+/* ============================================================
+   PDP RESTYLE (Phase 3 Batch 1)
+   CSS-only overrides on Horizon's product-information section +
+   its nested theme blocks (_product-details, _product-media-gallery,
+   buy-buttons-block, price, quantity-selector). NO vendor file forks.
+
+   We let Horizon's color-scheme variables flow through (background,
+   foreground, button colors come from scheme-1). Overrides below add
+   brutalist-specific traits the scheme system doesn't cover: bigger
+   display typography, mono price, all-caps tracking on the ATC button,
+   squared quantity selector, subtle border on the gallery container.
+
+   Verified class names by curl + grep on a rendered product page.
+   ============================================================ */
+
+/* Grid layout — wider gap, brand horizontal padding */
+.product-information.section {
+  padding-top: clamp(24px, 3vw, 48px);
+  padding-bottom: clamp(24px, 3vw, 48px);
+}
+.product-information__grid {
+  gap: clamp(24px, 4vw, 56px);
+}
+
+/* Media column — subtle border + elevated bg around the gallery */
+.product-information__media .product-media-container {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elev);
+}
+
+/* Product title — big, tight, brutalist display weight.
+   Horizon wraps the H1 in a .text-block with a type-preset class (e.g. .h3)
+   that controls size. We override at the H1 level so any preset is overridden. */
+.product-information h1,
+.product-information [class*="text-block"] h1 {
+  font-family: var(--font-sans);
+  font-size: clamp(40px, 4.8vw, 72px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  margin: 0;
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* Price — mono, large; compare-at struck through and muted */
+.product-information .price,
+.product-information [class^="price"] {
+  font-family: var(--font-mono);
+  font-size: var(--fs-h2);
+  font-weight: 500;
+  font-feature-settings: "tnum";
+}
+.product-information .compare-at-price {
+  font-family: var(--font-mono);
+  color: var(--color-fg-faint);
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+/* Buy button — brand-spec sizing/tracking. Colors stay from scheme. */
+.add-to-cart-button.button,
+.product-form-buttons .button {
+  font-family: var(--font-sans);
+  font-size: var(--fs-caps);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding-block: 20px;
+  border-radius: 0;
+  transition:
+    background var(--t-fast) var(--ease),
+    color      var(--t-fast) var(--ease),
+    transform  var(--t-fast) var(--ease);
+}
+.add-to-cart-button.button:hover,
+.product-form-buttons .button:hover {
+  transform: translateY(-1px);
+}
+
+/* Quantity selector — squared brutalist control */
+.quantity-selector,
+.quantity-selector-wrapper {
+  border-radius: 0;
+}
+.quantity-selector {
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+}
+.quantity-minus,
+.quantity-plus {
+  background: transparent;
+  color: var(--color-fg);
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  border-radius: 0;
+  transition:
+    background var(--t-fast) var(--ease),
+    color      var(--t-fast) var(--ease);
+}
+.quantity-minus:hover,
+.quantity-plus:hover {
+  background: var(--color-fg);
+  color: var(--color-bg);
+}
+
+/* Buy-buttons block group — remove any extra rounding the parent might apply */
+[class*="buy-buttons-block"] {
+  border-radius: 0;
+}
+
+/* Sticky ATC bar — match brutalist treatment if it appears on scroll */
+.sticky-add-to-cart__bar {
+  border-top: 1px solid var(--color-border);
+}
+.sticky-add-to-cart__button.button {
+  border-radius: 0;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}

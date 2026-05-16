@@ -1,0 +1,53 @@
+{%- comment -%}
+  blocks/ds-sale-tag.liquid — Auto sale-percentage tag
+
+  Renders an orange-outlined mono tag like "LAUNCH −20%" when the product
+  has a compare-at price higher than the current price. Hides itself
+  otherwise. Reads the product from `closest.product` (set by the
+  product-information section context).
+
+  Configurable prefix word (default "LAUNCH"). Use any short word —
+  "SALE", "DEAL", "OFF", etc.
+{%- endcomment -%}
+
+{%- liquid
+  assign p = closest.product
+-%}
+{%- if p and p.compare_at_price > p.price -%}
+  {%- liquid
+    assign saved = p.compare_at_price | minus: p.price
+    assign percent = saved | times: 100.0 | divided_by: p.compare_at_price | round
+  -%}
+  <span class="ds-sale-tag" {{ block.shopify_attributes }}>
+    {{ block.settings.prefix | default: 'LAUNCH' }} −{{ percent }}%
+  </span>
+{%- endif -%}
+
+{% style %}
+  .ds-sale-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Sale tag",
+  "settings": [
+    {
+      "type": "text",
+      "id": "prefix",
+      "default": "LAUNCH",
+      "label": "Tag prefix",
+      "info": "Renders as 'PREFIX −X%' (e.g. 'LAUNCH −20%'). Only appears when compare-at-price > price."
+    }
+  ]
+}
+{% endschema %}
