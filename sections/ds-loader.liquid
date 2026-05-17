@@ -144,8 +144,17 @@
     }
     .ds-loader__stage {
       position: relative;
-      width: min(80vw, 800px);
+      /* Desktop: cap at 1200px, otherwise 88vw — fills most of the
+         viewport on wide screens without bleeding edge-to-edge.
+         Mobile: drops to a slightly narrower 92vw at ≤700px so the
+         wordmark sits comfortably away from the screen edges. */
+      width: min(88vw, 1200px);
       aspect-ratio: 5 / 1;        /* matches the wordmark images' rough ratio */
+    }
+    @media (max-width: 700px) {
+      .ds-loader__stage {
+        width: 92vw;
+      }
     }
     .ds-loader__frame {
       position: absolute;
