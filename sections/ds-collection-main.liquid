@@ -47,9 +47,9 @@
   endif
 
   comment
-    Active-filter count — drives the mobile <summary> badge and the
-    "open by default" state.  Each active list-filter value counts 1;
-    a price range counts 1 if EITHER min or max is set.
+    Active-filter count — drives the mobile toggle-button badge and
+    the "open by default" state.  Each active list-filter value
+    counts 1; a price range counts 1 if EITHER min or max is set.
   endcomment
   assign active_filter_count = 0
   for f in collection.filters
@@ -108,40 +108,49 @@
       {%- comment -%}
         ----- FILTER SIDEBAR -----
 
-        Wrapped in <details> so mobile gets a collapsible toggle while
-        desktop keeps the always-visible sidebar.  The `open` attribute
-        is set when any filter is active so the user can see what's
-        applied without having to tap the toggle first.  On desktop the
-        <summary> button is `display: none` and the panel is forced
-        visible via `display: flex !important` to override the browser's
-        default "closed details hides everything except summary" rule.
+        Plain <div> wrapper + <button> toggle.  We tried <details>/
+        <summary> first but had compounding browser quirks: Safari
+        ignores `display: flex` on <summary>, and `display: contents`
+        on <details> (needed to keep it transparent to the desktop
+        grid layout) interacts unpredictably with the native open/
+        closed children-hiding behaviour.  A regular div + button +
+        tiny JS toggle has none of those problems and the markup is
+        trivial.
 
-        Native HTML — no JS — so the toggle works even with JS disabled.
+        Desktop (≥901px): toggle button is `display: none`; aside
+        renders normally as a grid sidebar column.
+        Mobile (≤900px): toggle button shows; clicking flips
+        `data-open` on the wrapper.  CSS hides the aside when
+        `data-open="false"`.  No filters active = closed by default;
+        any active = open by default.
       {%- endcomment -%}
       {%- if has_filters -%}
-        <details
+        {%- if active_filter_count > 0 -%}
+          {%- assign initial_open = 'true' -%}
+        {%- else -%}
+          {%- assign initial_open = 'false' -%}
+        {%- endif -%}
+        <div
           class="ds-collection__filters-wrap"
-          {% if active_filter_count > 0 %}open{% endif %}
+          data-ds-filters-wrap
+          data-open="{{ initial_open }}"
         >
-          <summary class="ds-collection__filters-summary" aria-label="Toggle filters">
-            {%- comment -%}
-              Inner span is required because Safari treats <summary>
-              as `display: list-item` internally and silently ignores
-              `display: flex` applied directly to it.  The wrapper
-              span carries the flex layout instead, which works
-              identically across Safari/Chromium/Firefox.
-            {%- endcomment -%}
-            <span class="ds-collection__filters-summary-inner">
-              <span class="ds-collection__filters-summary-label">Filters</span>
-              {%- if active_filter_count > 0 -%}
-                <span class="ds-collection__filters-summary-count">
-                  {{- active_filter_count }} active
-                </span>
-              {%- endif -%}
-              <span class="ds-collection__filters-summary-caret" aria-hidden="true">+</span>
-            </span>
-          </summary>
-        <aside class="ds-collection__filters" aria-label="Filters">
+          <button
+            type="button"
+            class="ds-collection__filters-toggle"
+            data-ds-filters-toggle
+            aria-expanded="{{ initial_open }}"
+            aria-controls="ds-filters-panel"
+          >
+            <span class="ds-collection__filters-toggle-label">Filters</span>
+            {%- if active_filter_count > 0 -%}
+              <span class="ds-collection__filters-toggle-count">
+                {{- active_filter_count }} active
+              </span>
+            {%- endif -%}
+            <span class="ds-collection__filters-toggle-caret" aria-hidden="true">+</span>
+          </button>
+        <aside id="ds-filters-panel" class="ds-collection__filters" aria-label="Filters">
           {%- for filter in collection.filters -%}
             <div class="ds-filter-group" data-filter-type="{{ filter.type }}">
               <div class="ds-filter-group__head">{{ filter.label }}</div>
@@ -225,7 +234,7 @@
             </a>
           {%- endif -%}
         </aside>
-        </details>
+        </div>
       {%- endif -%}
 
       {%- comment -%} ----- GRID + PAGINATION ----- {%- endcomment -%}
@@ -287,6 +296,22 @@
         url.searchParams.delete('page');     // drop pagination on sort change
         window.location.href = url.toString();
       });
+    });
+  })();
+
+  // Mobile filter toggle — flips data-open on the wrapper, syncs
+  // aria-expanded on the button.  CSS handles show/hide based on
+  // data-open + media query.  No-op on desktop (button is display:none
+  // so it can never be clicked).
+  (function () {
+    var toggle = document.querySelector('[data-ds-filters-toggle]');
+    var wrap   = document.querySelector('[data-ds-filters-wrap]');
+    if (!toggle || !wrap) return;
+    toggle.addEventListener('click', function () {
+      var open = wrap.getAttribute('data-open') === 'true';
+      var next = open ? 'false' : 'true';
+      wrap.setAttribute('data-open', next);
+      toggle.setAttribute('aria-expanded', next);
     });
   })();
 </script>
@@ -409,80 +434,71 @@
   }
 
   /* ===========================================================
-     Filter wrapper (<details>) — collapsible on mobile, always
-     open + summary hidden on desktop.  Native <details> behaviour:
-     when closed, only <summary> is rendered; everything else is
-     display: none.  We override that on desktop.
+     Filter wrapper — plain <div> + <button> toggle.
+     Desktop (≥901px): use `display: contents` so the inner <aside>
+       becomes the direct grid-column-1 child of .ds-collection__layout.
+       The toggle button is hidden.
+     Mobile (≤900px): wrapper is a normal block container.  Toggle
+       button shows; clicking flips data-open via tiny inline JS at
+       the bottom of the section.  data-open="false" hides the aside.
      =========================================================== */
   .ds-collection__filters-wrap {
-    /* details default: no list-style on its summary marker.  */
+    /* Mobile-default; desktop overrides to `display: contents` below. */
+    display: block;
   }
-  /* The <summary> element itself stays as a block-level "button".
-     Safari treats summary as `display: list-item` internally and
-     ignores `display: flex` applied directly — so we put the flex
-     layout on an inner span (.ds-collection__filters-summary-inner).
-     Suppress the native disclosure marker via list-style: none +
-     ::-webkit-details-marker. */
-  .ds-collection__filters-summary {
-    list-style: none;
-    display: none;        /* hidden on desktop, shown ≤900px below */
-    padding: 0;
-    margin: 0;
+
+  /* Toggle button — hidden on desktop, shown on mobile. */
+  .ds-collection__filters-toggle {
+    display: none;         /* hidden on desktop; mobile media query shows */
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 14px 16px;
     border: 1px solid var(--color-border-strong);
     background: transparent;
     cursor: pointer;
     user-select: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--color-fg);
     border-radius: 0;
     transition: border-color var(--t-fast) var(--ease),
                 background var(--t-fast) var(--ease);
   }
-  .ds-collection__filters-summary::-webkit-details-marker { display: none; }
-  .ds-collection__filters-summary::marker { display: none; }
-  .ds-collection__filters-summary:hover { border-color: var(--color-fg); }
-  .ds-collection__filters-summary:focus-visible {
+  .ds-collection__filters-toggle:hover { border-color: var(--color-fg); }
+  .ds-collection__filters-toggle:focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
-  /* Inner flex wrapper — does the actual layout work the summary
-     would have done if Safari weren't quirky. */
-  .ds-collection__filters-summary-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: 14px 16px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-  .ds-collection__filters-summary-label {
+  .ds-collection__filters-toggle-label {
     flex: 1;
+    text-align: left;
   }
-  .ds-collection__filters-summary-count {
+  .ds-collection__filters-toggle-count {
     color: var(--color-accent);
     font-size: 10px;
     letter-spacing: 0.12em;
     padding: 2px 6px;
     border: 1px solid var(--color-accent);
   }
-  /* Caret: + when closed, − when open via [open] selector below. */
-  .ds-collection__filters-summary-caret {
+  .ds-collection__filters-toggle-caret {
     display: inline-block;
     width: 16px;
     text-align: center;
     font-size: 16px;
     line-height: 1;
     color: var(--color-fg-muted);
+    transition: transform var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
   }
-  .ds-collection__filters-wrap[open] .ds-collection__filters-summary-caret { color: var(--color-fg); }
+  .ds-collection__filters-wrap[data-open="true"] .ds-collection__filters-toggle-caret {
+    color: var(--color-fg);
+    transform: rotate(45deg);  /* `+` becomes `×`-like — open indicator */
+  }
 
-  /* Filter sidebar — desktop layout (sticky column).  Wrapped in
-     the <details> element which natively hides non-summary children
-     when closed.  On desktop we always want the panel visible
-     regardless of details state, so we force display + override the
-     native closed-details collapse with !important. */
+  /* Filter sidebar — sticky column on desktop. */
   .ds-collection__filters {
     position: sticky;
     top: calc(var(--header-height, 64px) + var(--space-4));
@@ -491,21 +507,14 @@
     flex-direction: column;
     gap: var(--space-6);
   }
-  /* Desktop: the <details> wrapper must "disappear" from layout so
-     the inner <aside> can participate in the parent grid (which has
-     `grid-template-columns: 220px 1fr` — col 1 is the filter sidebar).
-     Without this, the details element itself takes col 1 but its
-     content collapses (summary is display:none, and the browser hides
-     non-summary children when details is closed), leaving an empty
-     column.  `display: contents` removes the details' own box from
-     layout while keeping the element + its open/close behaviour intact.
-     The `display: flex !important` then overrides the browser's native
-     "hide children when closed" rule so the aside renders regardless. */
+
+  /* Desktop: wrapper is `display: contents` so the inner aside
+     becomes the direct grid-column-1 child of the parent layout
+     (grid-template-columns: 220px 1fr).  No special "force visible"
+     rule needed because there's no native browser behaviour hiding
+     children — it's all plain HTML, plain CSS. */
   @media (min-width: 901px) {
     .ds-collection__filters-wrap { display: contents; }
-    .ds-collection__filters-wrap > .ds-collection__filters {
-      display: flex !important;
-    }
   }
   .ds-filter-group {
     display: flex;
@@ -732,15 +741,15 @@
       font-size: clamp(32px, 9vw, 56px);
     }
 
-    /* Show the <summary> toggle on mobile (was display:none for desktop).
-       Use `display: block` here — Safari treats summary as list-item
-       and ignores `display: flex` on it directly.  The internal flex
-       layout is on .ds-collection__filters-summary-inner. */
-    .ds-collection__filters-summary { display: block; }
+    /* Show the toggle button on mobile (was display:none for desktop). */
+    .ds-collection__filters-toggle { display: flex; }
 
-    /* The <aside> filter panel uses the details element's natural
-       open/closed behaviour: closed = hidden, open = visible.  No
-       overrides needed; just style the open state. */
+    /* Aside is hidden when wrapper is data-open="false".
+       The JS toggle at the bottom of the section flips this attribute. */
+    .ds-collection__filters-wrap[data-open="false"] .ds-collection__filters {
+      display: none;
+    }
+
     .ds-collection__filters {
       position: static;
       flex-direction: column;
