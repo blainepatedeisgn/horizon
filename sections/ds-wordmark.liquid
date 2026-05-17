@@ -61,10 +61,15 @@
   .ds-wordmark__svg {
     display: block;
     width: 100%;
+    max-width: 100%;    /* belt-and-braces: never exceed container width */
     height: auto;
     user-select: none;
-    overflow: visible;  /* don't clip glyphs from descenders/ascenders
-                           extending slightly past the bbox baseline */
+    /* No `overflow: visible` here — Mobile Safari has bugs where SVG
+       content with overflow:visible ignores the parent's overflow:hidden,
+       leading to text bleeding past the right edge of the viewport on
+       narrow widths.  The SVG's UA default `overflow: hidden` clips
+       content to the viewBox, which is fine because the JS adds a small
+       padding inset to the viewBox to absorb glyph-edge sub-pixels. */
   }
   .ds-wordmark__svg-text {
     fill: var(--color-fg);
@@ -102,10 +107,21 @@
         try {
           var bbox = text.getBBox();
           if (bbox.width > 0 && bbox.height > 0) {
+            // Small inset around the measured bbox.  getBBox doesn't
+            // always include the last glyph's right side-bearing when
+            // there's negative letter-spacing — without this padding
+            // the rightmost glyph would slip past the viewBox edge,
+            // visible as a 1–3px overflow on the right side of the
+            // wordmark on mobile.  3% of bbox height is enough to
+            // absorb the side-bearing without making the wordmark
+            // visibly smaller.
+            var pad = bbox.height * 0.03;
             svg.setAttribute(
               'viewBox',
-              bbox.x + ' ' + bbox.y + ' ' +
-              bbox.width + ' ' + bbox.height
+              (bbox.x - pad) + ' ' +
+              (bbox.y - pad) + ' ' +
+              (bbox.width + pad * 2) + ' ' +
+              (bbox.height + pad * 2)
             );
           }
         } catch (e) {
@@ -114,7 +130,12 @@
         }
       }
 
-      fit();
+      // Defer the first measurement to the next animation frame so
+      // layout is settled and getBBox returns accurate values.  On
+      // mobile Safari, calling getBBox during the parse phase (before
+      // first paint) can return stale dimensions based on the default
+      // SVG intrinsic size (300×150 px) rather than the styled text.
+      requestAnimationFrame(fit);
 
       if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(fit);
