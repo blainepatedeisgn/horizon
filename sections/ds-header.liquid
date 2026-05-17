@@ -1007,8 +1007,8 @@
   }
   .ds-cart__item {
     display: grid;
-    grid-template-columns: 72px 1fr auto;
-    gap: var(--space-3);
+    grid-template-columns: 96px 1fr auto;
+    gap: var(--space-4);
     align-items: start;
   }
   .ds-cart__item-media {
@@ -1017,7 +1017,7 @@
     background: var(--color-bg);
     overflow: hidden;
     display: block;
-    width: 72px;
+    width: 96px;
   }
   .ds-cart__item-img,
   .ds-cart__item-img-placeholder {
@@ -1031,7 +1031,11 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    /* Consistent 6px gap between every stacked element. Previous
+       version mixed 2px flex gap with 4px / 6px margin-tops on some
+       children — produced an uneven vertical rhythm that read as
+       awkward against the (now bigger) image. */
+    gap: 6px;
   }
   .ds-cart__item-title {
     font-family: var(--font-sans);
@@ -1053,12 +1057,11 @@
   .ds-cart__item-variant {
     font-size: 12px;
     color: var(--color-fg-muted);
-    margin-top: 4px;
   }
   .ds-cart__item-actions {
     display: flex;
     gap: var(--space-3);
-    margin-top: 6px;
+    margin-top: 2px;
   }
   .ds-cart__item-remove {
     background: transparent;
