@@ -13,13 +13,18 @@
 {%- liquid
   assign safe_text = block.settings.text | escape | newline_to_br
   assign spotlight = block.settings.spotlight
+  assign size_pct  = block.settings.size_pct | default: 100
   assign cls = 'ds-hero-title'
   if spotlight
     assign cls = 'ds-hero-title ds-hero-title--spotlight'
   endif
 -%}
 
-<h1 class="{{ cls }}" {{ block.shopify_attributes }}>
+<h1
+  class="{{ cls }}"
+  {%- if size_pct != 100 %} style="font-size: calc(var(--fs-display) * {{ size_pct }} / 100)"{% endif %}
+  {{ block.shopify_attributes }}
+>
   {{ safe_text }}
   <span class="ds-hero-title__glow" aria-hidden="true">{{ safe_text }}</span>
 </h1>
@@ -41,6 +46,17 @@
       "default": true,
       "label": "Animated backlight",
       "info": "Adds a warm spotlight that orbits behind the text — like a live BACKLIT demo. Respects prefers-reduced-motion."
+    },
+    {
+      "type": "range",
+      "id": "size_pct",
+      "label": "Size",
+      "min": 50,
+      "max": 180,
+      "step": 5,
+      "default": 100,
+      "unit": "%",
+      "info": "Multiplies the responsive default. 100% = unchanged; lower shrinks, higher enlarges. Mobile still scales down proportionally."
     }
   ]
 }
