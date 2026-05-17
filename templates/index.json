@@ -68,6 +68,9 @@
       "name": "Hero — Pixel Perfect",
       "settings": {
         "color_scheme": "",
+        "before_image": "shopify://shop_images/before.png",
+        "after_image": "shopify://shop_images/Artboard_3.png",
+        "starting_position": 50,
         "visual": "shopify://shop_images/Artboard_3.png"
       }
     },
