@@ -33,7 +33,7 @@
   assign cs           = section.settings.color_scheme
 -%}
 
-<div class="ds-hero color-{{ cs }}">
+<div class="ds-hero ds-hero--pp color-{{ cs }}">
   <div class="ds-hero__content">
     {%- content_for 'blocks' -%}
   </div>
@@ -350,6 +350,14 @@
       gap: var(--space-6);
       padding-top: var(--space-5);
       padding-bottom: var(--space-7);
+    }
+    /* PP hero only: flip the visual above the content on mobile so the
+       before/after slider is the first thing customers see — the demo
+       sells the product. Scoped to .ds-hero--pp so the BACKLIT hero
+       (which uses .ds-hero without the modifier) keeps its original
+       content-first stacking. */
+    .ds-hero--pp .ds-hero__visual {
+      order: -1;
     }
     .ds-hero__content {
       padding-right: var(--pad-x);
