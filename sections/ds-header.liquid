@@ -1196,16 +1196,18 @@
   .ds-cart__agreement {
     /* Grid is more predictable than flex for "icon + text" layouts —
        column-gap explicitly sizes the space between the checkbox box
-       and the agreement label, no chance of an out-of-flow hidden
-       input affecting interpretation. */
-    display: grid;
-    grid-template-columns: auto 1fr;
-    column-gap: 32px;
+       and the agreement label. Belt-and-suspenders: !important on
+       the gap + a backup padding-left on the .ds-cart__agreement-text
+       below, so neither cache nor any unexpected override can leave
+       the text crowded against the checkbox. */
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    column-gap: 32px !important;
     align-items: start;
     margin-bottom: var(--space-3);
     cursor: pointer;
     user-select: none;
-    padding: 14px 18px;
+    padding: 18px 20px;
     border: 1px solid var(--color-border);
     background: var(--color-bg-elev);
   }
@@ -1250,6 +1252,11 @@
     font-size: 12px;
     line-height: 1.4;
     letter-spacing: 0.02em;
+    /* Backup left padding in case grid column-gap is being overridden
+       somewhere. Padding on the text element itself is harder to
+       override than gap on the container, so this guarantees minimum
+       breathing room. Adds to the 32px column-gap, total ~40px. */
+    padding-left: 8px;
   }
   .ds-cart__agreement-link {
     color: inherit;
