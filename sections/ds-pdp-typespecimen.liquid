@@ -57,9 +57,13 @@
         </div>
       {%- endif -%}
 
-      <div class="ds-pdp-typespecimen__quote ds-pdp-typespecimen__live">
-        {{ specimen_quote }}
-      </div>
+      <div
+        class="ds-pdp-typespecimen__quote ds-pdp-typespecimen__live"
+        contenteditable="true"
+        spellcheck="false"
+        data-ds-specimen-default="{{ specimen_quote | escape }}"
+        aria-label="Editable specimen text — type to preview"
+      >{{ specimen_quote }}</div>
 
       {%- if section.settings.show_alphabet -%}
         <div class="ds-pdp-typespecimen__row">
@@ -96,8 +100,11 @@
           {%- endif -%}
         </div>
         <div class="ds-pdp-typespecimen__sliders" data-ds-specimen-controls>
-          <label class="ds-pdp-typespecimen__slider">
-            <span class="ds-pdp-typespecimen__slider-label">Size</span>
+          <div class="ds-pdp-typespecimen__control">
+            <div class="ds-pdp-typespecimen__control-head">
+              <span class="ds-pdp-typespecimen__control-label">Size</span>
+              <span class="ds-pdp-typespecimen__control-value" data-ds-specimen-value="size">96<span class="ds-pdp-typespecimen__unit">PX</span></span>
+            </div>
             <input
               type="range"
               min="32"
@@ -106,11 +113,14 @@
               step="1"
               data-ds-specimen-target="size"
               aria-label="Specimen size in pixels"
+              class="ds-pdp-typespecimen__range"
             >
-            <span class="ds-pdp-typespecimen__slider-value" data-ds-specimen-value="size">96<span class="ds-pdp-typespecimen__slider-unit">px</span></span>
-          </label>
-          <label class="ds-pdp-typespecimen__slider">
-            <span class="ds-pdp-typespecimen__slider-label">Spacing</span>
+          </div>
+          <div class="ds-pdp-typespecimen__control">
+            <div class="ds-pdp-typespecimen__control-head">
+              <span class="ds-pdp-typespecimen__control-label">Tracking</span>
+              <span class="ds-pdp-typespecimen__control-value" data-ds-specimen-value="spacing">-0.02<span class="ds-pdp-typespecimen__unit">EM</span></span>
+            </div>
             <input
               type="range"
               min="-80"
@@ -119,9 +129,12 @@
               step="2"
               data-ds-specimen-target="spacing"
               aria-label="Specimen letter spacing"
+              class="ds-pdp-typespecimen__range"
             >
-            <span class="ds-pdp-typespecimen__slider-value" data-ds-specimen-value="spacing">-0.02<span class="ds-pdp-typespecimen__slider-unit">em</span></span>
-          </label>
+          </div>
+          <button type="button" class="ds-pdp-typespecimen__reset" data-ds-specimen-reset aria-label="Reset specimen">
+            Reset
+          </button>
         </div>
       </div>
 
@@ -134,20 +147,61 @@
       sections.forEach(function (section) {
         var quote = section.querySelector('.ds-pdp-typespecimen__quote');
         var inputs = section.querySelectorAll('[data-ds-specimen-target]');
+        var resetBtn = section.querySelector('[data-ds-specimen-reset]');
         if (!quote || inputs.length === 0) return;
+
+        var defaults = {};
         inputs.forEach(function (input) {
-          var target = input.getAttribute('data-ds-specimen-target');
+          defaults[input.getAttribute('data-ds-specimen-target')] = input.value;
+        });
+        var defaultText = quote.getAttribute('data-ds-specimen-default') || '';
+
+        function updateValueDisplay(target, raw) {
           var valueEl = section.querySelector('[data-ds-specimen-value="' + target + '"]');
+          if (!valueEl) return;
+          if (target === 'size') {
+            valueEl.innerHTML = raw + '<span class="ds-pdp-typespecimen__unit">PX</span>';
+          } else if (target === 'spacing') {
+            var em = (parseInt(raw, 10) / 1000).toFixed(3);
+            valueEl.innerHTML = em + '<span class="ds-pdp-typespecimen__unit">EM</span>';
+          }
+        }
+
+        function applyValue(target, raw) {
+          if (target === 'size') {
+            quote.style.setProperty('--ds-specimen-size', raw + 'px');
+          } else if (target === 'spacing') {
+            var em = (parseInt(raw, 10) / 1000).toFixed(3);
+            quote.style.setProperty('--ds-specimen-spacing', em + 'em');
+          }
+          updateValueDisplay(target, raw);
+        }
+
+        inputs.forEach(function (input) {
           input.addEventListener('input', function () {
-            if (target === 'size') {
-              quote.style.setProperty('--ds-specimen-size', input.value + 'px');
-              if (valueEl) valueEl.innerHTML = input.value + '<span class="ds-pdp-typespecimen__slider-unit">px</span>';
-            } else if (target === 'spacing') {
-              var em = (parseInt(input.value, 10) / 1000).toFixed(3);
-              quote.style.setProperty('--ds-specimen-spacing', em + 'em');
-              if (valueEl) valueEl.innerHTML = em + '<span class="ds-pdp-typespecimen__slider-unit">em</span>';
-            }
+            applyValue(input.getAttribute('data-ds-specimen-target'), input.value);
           });
+        });
+
+        if (resetBtn) {
+          resetBtn.addEventListener('click', function () {
+            inputs.forEach(function (input) {
+              var t = input.getAttribute('data-ds-specimen-target');
+              input.value = defaults[t];
+              applyValue(t, defaults[t]);
+            });
+            if (defaultText) quote.textContent = defaultText;
+          });
+        }
+
+        // Prevent newlines / formatting in the editable quote
+        quote.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') e.preventDefault();
+        });
+        quote.addEventListener('paste', function (e) {
+          e.preventDefault();
+          var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+          document.execCommand('insertText', false, text);
         });
       });
     })();
@@ -175,6 +229,13 @@
     color: var(--color-fg);
     overflow-wrap: break-word;
     transition: font-size var(--t-fast) var(--ease), letter-spacing var(--t-fast) var(--ease);
+    outline: none;
+    cursor: text;
+    caret-color: var(--color-accent);
+  }
+  .ds-pdp-typespecimen__quote:focus {
+    outline: 1px dashed var(--color-border-strong);
+    outline-offset: 12px;
   }
   .ds-pdp-typespecimen__row {
     display: grid;
@@ -244,73 +305,124 @@
     transform: translateX(3px);
   }
 
-  /* Sliders */
+  /* Sliders — Pangram Pangram-inspired pro layout */
   .ds-pdp-typespecimen__sliders {
     display: flex;
-    gap: var(--space-5);
-    align-items: center;
+    gap: var(--space-6);
+    align-items: flex-end;
     flex-wrap: wrap;
   }
-  .ds-pdp-typespecimen__slider {
+  .ds-pdp-typespecimen__control {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 200px;
+  }
+  .ds-pdp-typespecimen__control-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
     gap: var(--space-3);
     font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.08em;
-    color: var(--color-fg-muted);
   }
-  .ds-pdp-typespecimen__slider-label {
+  .ds-pdp-typespecimen__control-label {
     text-transform: uppercase;
-    flex-shrink: 0;
+    color: var(--color-fg-muted);
+    font-weight: 500;
   }
-  .ds-pdp-typespecimen__slider input[type="range"] {
+  .ds-pdp-typespecimen__control-value {
+    color: var(--color-fg);
+    font-size: 13px;
+    font-weight: 500;
+    font-feature-settings: "tnum";
+    letter-spacing: 0;
+  }
+  .ds-pdp-typespecimen__unit {
+    color: var(--color-fg-muted);
+    margin-left: 4px;
+    font-size: 10px;
+  }
+  .ds-pdp-typespecimen__range {
     -webkit-appearance: none;
     appearance: none;
-    width: 120px;
-    height: 2px;
-    background: var(--color-border-strong);
+    width: 100%;
+    height: 4px;
+    background: var(--color-border);
     outline: none;
     cursor: pointer;
     padding: 0;
     margin: 0;
   }
-  .ds-pdp-typespecimen__slider input[type="range"]::-webkit-slider-thumb {
+  .ds-pdp-typespecimen__range::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 12px;
-    height: 12px;
-    background: var(--color-accent);
+    width: 16px;
+    height: 16px;
+    background: var(--color-fg);
     border-radius: 0;
     border: 0;
-    cursor: pointer;
+    cursor: grab;
+    transition: background var(--t-fast) var(--ease);
   }
-  .ds-pdp-typespecimen__slider input[type="range"]::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
+  .ds-pdp-typespecimen__range::-webkit-slider-thumb:active {
+    cursor: grabbing;
     background: var(--color-accent);
+  }
+  .ds-pdp-typespecimen__range::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--color-fg);
     border-radius: 0;
     border: 0;
-    cursor: pointer;
+    cursor: grab;
   }
-  .ds-pdp-typespecimen__slider input[type="range"]:focus-visible {
+  .ds-pdp-typespecimen__range::-moz-range-thumb:active {
+    cursor: grabbing;
+    background: var(--color-accent);
+  }
+  .ds-pdp-typespecimen__range:focus-visible {
     outline: 2px solid var(--color-accent);
-    outline-offset: 4px;
-  }
-  .ds-pdp-typespecimen__slider-value {
-    color: var(--color-fg);
-    min-width: 4ch;
-    text-align: right;
-    font-feature-settings: "tnum";
-  }
-  .ds-pdp-typespecimen__slider-unit {
-    color: var(--color-fg-muted);
-    margin-left: 2px;
+    outline-offset: 6px;
   }
 
-  @media (max-width: 600px) {
-    .ds-pdp-typespecimen__controls { flex-direction: column; align-items: flex-start; }
-    .ds-pdp-typespecimen__slider input[type="range"] { width: 100px; }
+  /* Reset button */
+  .ds-pdp-typespecimen__reset {
+    align-self: flex-end;
+    background: transparent;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition:
+      background var(--t-fast) var(--ease),
+      color      var(--t-fast) var(--ease),
+      border-color var(--t-fast) var(--ease);
+  }
+  .ds-pdp-typespecimen__reset:hover {
+    background: var(--color-fg);
+    color: var(--color-bg);
+    border-color: var(--color-fg);
+  }
+
+  @media (max-width: 700px) {
+    .ds-pdp-typespecimen__controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .ds-pdp-typespecimen__sliders {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-4);
+    }
+    .ds-pdp-typespecimen__control { min-width: 0; }
+    .ds-pdp-typespecimen__reset { align-self: flex-start; }
   }
 {% endstyle %}
 
