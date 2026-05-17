@@ -86,15 +86,72 @@
         </div>
       {%- endif -%}
 
-      {%- if section.settings.link_label != blank -%}
-        <a href="{{ section.settings.link_url | default: '#' }}" class="ds-pdp-typespecimen__link">
-          {{ section.settings.link_label }}
-          <span class="ds-pdp-typespecimen__link-arrow" aria-hidden="true">→</span>
-        </a>
-      {%- endif -%}
+      <div class="ds-pdp-typespecimen__controls">
+        <div class="ds-pdp-typespecimen__controls-left">
+          {%- if section.settings.link_label != blank -%}
+            <a href="{{ section.settings.link_url | default: '#' }}" class="ds-pdp-typespecimen__link">
+              {{ section.settings.link_label }}
+              <span class="ds-pdp-typespecimen__link-arrow" aria-hidden="true">→</span>
+            </a>
+          {%- endif -%}
+        </div>
+        <div class="ds-pdp-typespecimen__sliders" data-ds-specimen-controls>
+          <label class="ds-pdp-typespecimen__slider">
+            <span class="ds-pdp-typespecimen__slider-label">Size</span>
+            <input
+              type="range"
+              min="32"
+              max="220"
+              value="96"
+              step="1"
+              data-ds-specimen-target="size"
+              aria-label="Specimen size in pixels"
+            >
+            <span class="ds-pdp-typespecimen__slider-value" data-ds-specimen-value="size">96<span class="ds-pdp-typespecimen__slider-unit">px</span></span>
+          </label>
+          <label class="ds-pdp-typespecimen__slider">
+            <span class="ds-pdp-typespecimen__slider-label">Spacing</span>
+            <input
+              type="range"
+              min="-80"
+              max="80"
+              value="-20"
+              step="2"
+              data-ds-specimen-target="spacing"
+              aria-label="Specimen letter spacing"
+            >
+            <span class="ds-pdp-typespecimen__slider-value" data-ds-specimen-value="spacing">-0.02<span class="ds-pdp-typespecimen__slider-unit">em</span></span>
+          </label>
+        </div>
+      </div>
 
     </div>
   </section>
+
+  <script>
+    (function () {
+      var sections = document.querySelectorAll('.ds-pdp-typespecimen--{{ section.id }}');
+      sections.forEach(function (section) {
+        var quote = section.querySelector('.ds-pdp-typespecimen__quote');
+        var inputs = section.querySelectorAll('[data-ds-specimen-target]');
+        if (!quote || inputs.length === 0) return;
+        inputs.forEach(function (input) {
+          var target = input.getAttribute('data-ds-specimen-target');
+          var valueEl = section.querySelector('[data-ds-specimen-value="' + target + '"]');
+          input.addEventListener('input', function () {
+            if (target === 'size') {
+              quote.style.setProperty('--ds-specimen-size', input.value + 'px');
+              if (valueEl) valueEl.innerHTML = input.value + '<span class="ds-pdp-typespecimen__slider-unit">px</span>';
+            } else if (target === 'spacing') {
+              var em = (parseInt(input.value, 10) / 1000).toFixed(3);
+              quote.style.setProperty('--ds-specimen-spacing', em + 'em');
+              if (valueEl) valueEl.innerHTML = em + '<span class="ds-pdp-typespecimen__slider-unit">em</span>';
+            }
+          });
+        });
+      });
+    })();
+  </script>
 {%- endif -%}
 
 {% style %}
@@ -110,13 +167,14 @@
     padding-right: var(--pad-x);
   }
   .ds-pdp-typespecimen__quote {
-    font-size: clamp(48px, 8vw, 128px);
+    font-size: var(--ds-specimen-size, clamp(48px, 8vw, 128px));
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--ds-specimen-spacing, -0.02em);
     line-height: 0.95;
     margin: clamp(32px, 5vw, 56px) 0;
     color: var(--color-fg);
     overflow-wrap: break-word;
+    transition: font-size var(--t-fast) var(--ease), letter-spacing var(--t-fast) var(--ease);
   }
   .ds-pdp-typespecimen__row {
     display: grid;
@@ -150,12 +208,20 @@
     }
   }
 
-  /* "See the full specimen →" link */
+  /* Controls row: link on left, sliders on right */
+  .ds-pdp-typespecimen__controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin-top: var(--space-6);
+    flex-wrap: wrap;
+  }
+  .ds-pdp-typespecimen__controls-left { flex-shrink: 0; }
   .ds-pdp-typespecimen__link {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin-top: var(--space-5);
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 500;
@@ -176,6 +242,75 @@
   }
   .ds-pdp-typespecimen__link:hover .ds-pdp-typespecimen__link-arrow {
     transform: translateX(3px);
+  }
+
+  /* Sliders */
+  .ds-pdp-typespecimen__sliders {
+    display: flex;
+    gap: var(--space-5);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .ds-pdp-typespecimen__slider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--color-fg-muted);
+  }
+  .ds-pdp-typespecimen__slider-label {
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .ds-pdp-typespecimen__slider input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 120px;
+    height: 2px;
+    background: var(--color-border-strong);
+    outline: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+  }
+  .ds-pdp-typespecimen__slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--color-accent);
+    border-radius: 0;
+    border: 0;
+    cursor: pointer;
+  }
+  .ds-pdp-typespecimen__slider input[type="range"]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: var(--color-accent);
+    border-radius: 0;
+    border: 0;
+    cursor: pointer;
+  }
+  .ds-pdp-typespecimen__slider input[type="range"]:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+  .ds-pdp-typespecimen__slider-value {
+    color: var(--color-fg);
+    min-width: 4ch;
+    text-align: right;
+    font-feature-settings: "tnum";
+  }
+  .ds-pdp-typespecimen__slider-unit {
+    color: var(--color-fg-muted);
+    margin-left: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .ds-pdp-typespecimen__controls { flex-direction: column; align-items: flex-start; }
+    .ds-pdp-typespecimen__slider input[type="range"] { width: 100px; }
   }
 {% endstyle %}
 
