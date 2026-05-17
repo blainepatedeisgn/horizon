@@ -170,6 +170,91 @@
             </div>
           </dialog>
         </cart-drawer-component>
+
+        {%- comment -%}
+          Tier-upsell click handler. Lives here (rather than inside
+          snippets/ds-cart-products.liquid) so the listener attaches
+          during the initial document parse. Inline scripts that
+          arrive later via cart-drawer morphing don't re-execute in
+          browsers, so a snippet-level script would silently no-op
+          for anyone whose cart starts empty.
+
+          Uses document-level event delegation, so the handler still
+          fires for upgrade buttons that show up only after morph.
+        {%- endcomment -%}
+        <script>
+          (function () {
+            if (window.__dsCartUpsellInit) return;
+            window.__dsCartUpsellInit = true;
+
+            document.addEventListener('click', function (e) {
+              var btn = e.target.closest('[data-ds-cart-upsell]');
+              if (!btn || btn.disabled) return;
+              e.preventDefault();
+
+              btn.disabled = true;
+              btn.setAttribute('data-loading', '1');
+
+              var lineKey = btn.getAttribute('data-line-key');
+              var upgradeTo = parseInt(btn.getAttribute('data-upgrade-to'), 10);
+              if (!lineKey || !upgradeTo) {
+                btn.disabled = false;
+                btn.removeAttribute('data-loading');
+                return;
+              }
+
+              // Order: ADD the upgrade variant first, THEN remove the
+              // lower tier. If the order is reversed and the cart ends
+              // up empty between the two requests, some Shopify stores
+              // redirect /cart endpoints to the empty-cart page and the
+              // second request gets a 404. Add-then-remove is safer.
+              fetch('/cart/add.js', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: upgradeTo, quantity: 1 })
+              })
+              .then(function (r) {
+                if (!r.ok) throw new Error('Add failed (' + r.status + ')');
+                return fetch('/cart/change.js', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id: lineKey, quantity: 0 })
+                });
+              })
+              .then(function (r) {
+                if (!r.ok) throw new Error('Remove failed (' + r.status + ')');
+                try { sessionStorage.setItem('ds-cart-reopen-after-upgrade', '1'); } catch (e) {}
+                window.location.reload();
+              })
+              .catch(function (err) {
+                console.error('Tier upgrade failed:', err);
+                btn.disabled = false;
+                btn.removeAttribute('data-loading');
+              });
+            });
+
+            // After reload from an upgrade, re-open the cart drawer.
+            // The drawer trigger is the .ds-header__cart-link button
+            // — clicking it programmatically triggers Horizon's
+            // on:click="/open" declarative handler.
+            try {
+              if (sessionStorage.getItem('ds-cart-reopen-after-upgrade') === '1') {
+                sessionStorage.removeItem('ds-cart-reopen-after-upgrade');
+                var openDrawer = function () {
+                  var trigger = document.querySelector('.ds-header__cart-link');
+                  if (trigger) trigger.click();
+                };
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', function () {
+                    setTimeout(openDrawer, 80);
+                  });
+                } else {
+                  setTimeout(openDrawer, 80);
+                }
+              }
+            } catch (e) {}
+          })();
+        </script>
       {%- endif -%}
     </div>
   </div>
