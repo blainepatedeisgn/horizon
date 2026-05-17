@@ -522,37 +522,31 @@
     }
     .ds-header__menu-toggle { padding: 0 4px; }
 
-    /* The left chunk holds [hamburger + logo image].  Desktop sets
-       flex-shrink: 0 so the logo never compresses against nav links,
-       but on mobile that prevents the actions (search + cart) from
-       fitting — the logo's intrinsic width at 32px height plus the
-       hamburger pushes everything past the right edge.  Allow shrink
-       + cap the logo image so it always fits comfortably. */
-    .ds-header__left {
-      flex-shrink: 1;
-      min-width: 0;
-      overflow: hidden;
-    }
-    .ds-header__logo {
-      min-width: 0;
-      overflow: hidden;
-    }
+    /* The left chunk holds [hamburger + logo image].  Desktop's
+       flex-shrink: 0 prevents the logo from compressing against the
+       nav links, which works fine because the nav has plenty of room.
+       On mobile (no nav, just hamburger + logo + actions) the chunk
+       can stay flex-shrink: 0 — we instead constrain the LOGO IMAGE
+       itself via max-width so it doesn't push the actions off-screen.
+       Importantly NO overflow:hidden anywhere — the image's
+       max-width + object-fit:contain keeps it bounded without
+       clipping (clipping was the source of the previous "STUDI…"
+       cut-off bug). */
     .ds-header__logo-img {
       height: 22px;                 /* down from 32px on desktop */
-      max-width: 100%;
+      width: auto;
+      max-width: 45vw;              /* hard cap so a wide wordmark can't push the icons off-screen */
       object-fit: contain;
       object-position: left center;
     }
   }
 
-  /* Phones (≤480px): shrink the logo further so the actions row has
-     room on tightest screens.  Wordmark logos with a 5:1 ratio at
-     18px tall ≈ 90px wide, which leaves ~200px for hamburger + icons
-     on a typical 360px-wide phone. */
+  /* Phones (≤480px): logo shrinks further so [hamburger + logo +
+     gap + search + cart + 2×pad-x] all fit on a 360px viewport. */
   @media (max-width: 480px) {
     .ds-header__logo-img {
       height: 18px;
-      max-width: 55vw;
+      max-width: 40vw;              /* ~145px on a 360px phone */
     }
   }
 
