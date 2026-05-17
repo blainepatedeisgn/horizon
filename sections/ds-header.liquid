@@ -172,6 +172,92 @@
         </cart-drawer-component>
 
         {%- comment -%}
+          License-agreement gate. Disables every [name="checkout"]
+          button on the page until [data-ds-cart-agreement] is
+          checked. Consent persists in sessionStorage so the user
+          doesn't have to re-check on every cart morph or page nav
+          within their session. Lives here (not in the
+          ds-cart-agreement snippet) for the same reason the upsell
+          handler does — must be in initial document parse, otherwise
+          the button starts un-disabled after the first cart morph.
+
+          The MutationObserver below is critical: Horizon's cart
+          drawer morphs in fresh server-rendered Checkout buttons
+          (enabled by default) every time the cart updates. Without
+          the observer, the new button stays enabled until the user
+          interacts with the checkbox.
+        {%- endcomment -%}
+        <script>
+          (function () {
+            if (window.__dsCartAgreementInit) return;
+            window.__dsCartAgreementInit = true;
+
+            var STORAGE_KEY = 'ds-cart-license-agreed';
+
+            function getAgreed() {
+              try { return sessionStorage.getItem(STORAGE_KEY) === '1'; }
+              catch (e) { return false; }
+            }
+            function setAgreed(val) {
+              try {
+                if (val) sessionStorage.setItem(STORAGE_KEY, '1');
+                else sessionStorage.removeItem(STORAGE_KEY);
+              } catch (e) {}
+            }
+
+            // Walks every checkbox + every checkout button on the
+            // page and pulls them into the sessionStorage-backed
+            // source of truth. Cheap, idempotent.
+            function syncAll() {
+              var agreed = getAgreed();
+              document.querySelectorAll('[data-ds-cart-agreement]').forEach(function (cb) {
+                if (cb.checked !== agreed) cb.checked = agreed;
+              });
+              document.querySelectorAll('button[name="checkout"], input[name="checkout"]').forEach(function (btn) {
+                btn.disabled = !agreed;
+                btn.setAttribute('aria-disabled', String(!agreed));
+              });
+            }
+
+            // Delegated change handler — works for any checkbox the
+            // user toggles, including ones that arrive via morph.
+            document.addEventListener('change', function (e) {
+              var t = e.target;
+              if (t && t.matches && t.matches('[data-ds-cart-agreement]')) {
+                setAgreed(!!t.checked);
+                syncAll();
+              }
+            });
+
+            // Initial sync — defer to DOMContentLoaded if we're still
+            // parsing, otherwise run now.
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', syncAll);
+            } else {
+              syncAll();
+            }
+
+            // Horizon's cart-items / cart-drawer components dispatch
+            // this event after each cart morph. See assets/events.js
+            // (ThemeEvents.cartUpdate = 'cart:update').
+            document.addEventListener('cart:update', syncAll);
+
+            // Belt-and-suspenders: MutationObserver on the cart drawer
+            // catches any DOM injection (including fresh
+            // server-rendered Checkout buttons after morph) and
+            // re-syncs the gate. Without this, the button stays
+            // enabled on every initial cart open because Horizon
+            // morphs in a freshly-rendered (enabled-by-default)
+            // button without dispatching cart:update first time.
+            if ('MutationObserver' in window) {
+              var target = document.querySelector('cart-drawer-component') || document.body;
+              new MutationObserver(function () { syncAll(); })
+                .observe(target, { childList: true, subtree: true });
+            }
+          })();
+        </script>
+
+        {%- comment -%}
           Tier-upsell click handler. Lives here (rather than inside
           snippets/ds-cart-products.liquid) so the listener attaches
           during the initial document parse. Inline scripts that
@@ -1110,11 +1196,11 @@
   .ds-cart__agreement {
     display: flex;
     align-items: flex-start;
-    gap: 14px;
+    gap: 20px;
     margin-bottom: var(--space-3);
     cursor: pointer;
     user-select: none;
-    padding: 12px 14px;
+    padding: 14px 16px;
     border: 1px solid var(--color-border);
     background: var(--color-bg-elev);
   }

@@ -53,58 +53,12 @@
   </span>
 </label>
 
-<script>
-  (function () {
-    if (window.__dsCartAgreementInit) return;
-    window.__dsCartAgreementInit = true;
-
-    var STORAGE_KEY = 'ds-cart-license-agreed';
-
-    function getAgreed() {
-      try { return sessionStorage.getItem(STORAGE_KEY) === '1'; }
-      catch (e) { return false; }
-    }
-    function setAgreed(val) {
-      try {
-        if (val) sessionStorage.setItem(STORAGE_KEY, '1');
-        else sessionStorage.removeItem(STORAGE_KEY);
-      } catch (e) {}
-    }
-
-    /* Idempotent sync — runs on load, on cart updates, and after each
-       checkbox change. Walks every instance of the checkbox on the
-       page (drawer + cart page) and every checkout button, gating
-       them all from a single source of truth in sessionStorage. */
-    function syncAll() {
-      var agreed = getAgreed();
-      document.querySelectorAll('[data-ds-cart-agreement]').forEach(function (cb) {
-        if (cb.checked !== agreed) cb.checked = agreed;
-      });
-      document.querySelectorAll('button[name="checkout"], input[name="checkout"]').forEach(function (btn) {
-        btn.disabled = !agreed;
-        btn.setAttribute('aria-disabled', String(!agreed));
-      });
-    }
-
-    /* Delegated change handler — survives Horizon's morph rerenders
-       because it's attached to document, not to the markup itself. */
-    document.addEventListener('change', function (e) {
-      var t = e.target;
-      if (t && t.matches && t.matches('[data-ds-cart-agreement]')) {
-        setAgreed(!!t.checked);
-        syncAll();
-      }
-    });
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', syncAll);
-    } else {
-      syncAll();
-    }
-
-    /* Horizon's cart-items / cart-drawer components dispatch this on
-       document after each cart update + DOM morph. See assets/events.js
-       (ThemeEvents.cartUpdate = 'cart:update'). */
-    document.addEventListener('cart:update', syncAll);
-  })();
-</script>
+{%- comment -%}
+  The gating script for [data-ds-cart-agreement] lives in
+  sections/ds-header.liquid (with the rest of the cart-drawer logic)
+  so it runs from the initial document parse. Inline scripts that
+  arrive later via cart-drawer morphing don't re-execute, which is
+  what was breaking the initial disabled state on the Checkout
+  button. The header-level script also runs a MutationObserver so
+  the gate stays correct across every subsequent morph.
+{%- endcomment -%}
