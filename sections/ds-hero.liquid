@@ -179,18 +179,29 @@
       padding: 0 var(--pad-x);
     }
     /* When the inline script moves .ds-hero__visual INTO .ds-hero__content
-       (so the image sits right under the H1 title on mobile), zero its
-       own padding — the parent .ds-hero__content already handles the
-       horizontal padding via var(--pad-x), so the visual's own padding
-       would be doubled.  Use a contextual selector so this only applies
-       in the moved state. */
+       (so the image sits right under the H1 title on mobile):
+       - Zero its own padding — the parent .ds-hero__content already
+         handles horizontal padding via var(--pad-x) and we'd double up
+       - Cap the width so the 1:1 square placeholder doesn't dominate
+         the screen.  300px centered = comfortable presence under the
+         title without pushing the rest of the content way off-screen
+       - Drop the desktop radial-gradient backdrop.  It was designed for
+         the wide hero column on desktop; at mobile widths it bleeds
+         around the placeholder and reads as a stray gradient blob */
     .ds-hero__content > .ds-hero__visual {
       padding: 0;
+      max-width: 300px;
+      width: 100%;
+      margin: 0 auto;
+      background: none;
     }
   }
   @media (max-width: 480px) {
     .ds-hero__visual { padding: 0 var(--space-3); }
-    .ds-hero__content > .ds-hero__visual { padding: 0; }
+    .ds-hero__content > .ds-hero__visual {
+      padding: 0;
+      max-width: 260px;        /* slightly tighter on phones */
+    }
   }
 {% endstyle %}
 
