@@ -1419,6 +1419,40 @@
           step(1);
         });
       }
+
+      // Eager-preload every non-active thumb's full-size image into the
+      // browser cache so switching between gallery images is instant
+      // instead of triggering a fresh network request on every click.
+      //
+      // Why this matters: the activate() function above just sets
+      // mainImg.src = data-src. Without preload, the browser fetches
+      // that URL on the click, which is what was causing the lag on
+      // the first switch (only fast on repeat clicks because of cache).
+      //
+      // Timing: deferred to requestIdleCallback (or setTimeout fallback
+      // for older Safari) so we don't compete with the main image's
+      // fetchpriority=high load, which has to finish first for LCP.
+      // By the time the user clicks a thumb (usually multiple seconds
+      // in), the preload has completed and the swap hits cache.
+      //
+      // Priority: low fetchPriority hint so these loads stay polite —
+      // they shouldn't slow down anything above-the-fold.
+      function preloadGalleryImages() {
+        // Skip first thumb — its URL matches the main image's src so
+        // the high-res version is already in cache.
+        thumbList.slice(1).forEach(function (btn) {
+          var src = btn.getAttribute('data-src');
+          if (!src) return;
+          var img = new Image();
+          if ('fetchPriority' in img) img.fetchPriority = 'low';
+          img.src = src;
+        });
+      }
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(preloadGalleryImages, { timeout: 2000 });
+      } else {
+        setTimeout(preloadGalleryImages, 500);
+      }
     });
   })();
 
