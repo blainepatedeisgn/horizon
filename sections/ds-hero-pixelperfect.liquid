@@ -23,9 +23,14 @@
 {%- endcomment -%}
 
 {%- liquid
-  assign hero_video = section.settings.hero_video
-  assign visual = section.settings.visual
-  assign cs = section.settings.color_scheme
+  assign before_image = section.settings.before_image
+  assign after_image  = section.settings.after_image
+  assign before_label = section.settings.before_label
+  assign after_label  = section.settings.after_label
+  assign start_pos    = section.settings.starting_position | default: 50
+  assign hero_video   = section.settings.hero_video
+  assign visual       = section.settings.visual
+  assign cs           = section.settings.color_scheme
 -%}
 
 <div class="ds-hero color-{{ cs }}">
@@ -35,7 +40,59 @@
 
   <div class="ds-hero__visual">
     <div class="ds-hero__visual-inner">
-      {%- if hero_video != blank -%}
+      {%- if before_image != blank and after_image != blank -%}
+        {%- comment -%}
+          Before/after comparison slider — the on-brand demo of the
+          Pixel Perfect plugin (drag to compare original vs pixel-art
+          output). Built as a role="slider" element with full keyboard
+          + pointer + touch support. See script + CSS below.
+        {%- endcomment -%}
+        <div
+          class="ds-before-after"
+          data-ds-before-after
+          role="slider"
+          tabindex="0"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="{{ start_pos }}"
+          aria-label="Compare before and after — {{ start_pos }}% after visible. Drag, click, or use arrow keys."
+          style="--position: {{ start_pos }}%;"
+        >
+          {{
+            before_image
+            | image_url: width: 1400
+            | image_tag:
+                class: 'ds-before-after__img ds-before-after__img--before',
+                alt: before_label | default: 'Before',
+                loading: 'eager',
+                fetchpriority: 'high',
+                widths: '480, 720, 960, 1200, 1400'
+          }}
+          {{
+            after_image
+            | image_url: width: 1400
+            | image_tag:
+                class: 'ds-before-after__img ds-before-after__img--after',
+                alt: after_label | default: 'After',
+                loading: 'eager',
+                widths: '480, 720, 960, 1200, 1400'
+          }}
+
+          {%- if before_label != blank -%}
+            <span class="ds-before-after__label ds-before-after__label--before" aria-hidden="true">{{ before_label }}</span>
+          {%- endif -%}
+          {%- if after_label != blank -%}
+            <span class="ds-before-after__label ds-before-after__label--after" aria-hidden="true">{{ after_label }}</span>
+          {%- endif -%}
+
+          <span class="ds-before-after__divider" aria-hidden="true"></span>
+          <span class="ds-before-after__handle" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 6l-6 6 6 6M13 6l6 6-6 6"/>
+            </svg>
+          </span>
+        </div>
+      {%- elsif hero_video != blank -%}
         {%- comment -%}
           Manual <video> (not the video_tag filter) so we get playsinline
           (iOS Safari refuses to autoplay without it) and preload=auto
@@ -157,6 +214,132 @@
   }
   .ds-hero-title__glow { display: none; }
 
+  /* ============================================================
+     BEFORE/AFTER SLIDER
+     Drag-to-compare visual for the Pixel Perfect hero. Fills the
+     full right column on desktop (no max-width cap, no 1:1 aspect
+     constraint — wider rectangle that scales with the column),
+     collapses to a square on mobile. White border + white divider
+     + white circular handle. The plugin's on-brand demo: drag to
+     see the original vs the pixel-art output.
+
+     Layout
+       • Container takes 100% of column width
+       • aspect-ratio: 4/3 on desktop → wider rectangle that fills
+         the column nicely. aspect-ratio: 1/1 on mobile.
+       • Before image: absolute, full size, base layer
+       • After image: absolute, full size, clip-path inset cuts
+         away the left portion based on --position CSS variable
+       • Divider + handle: positioned via --position
+
+     Interaction model
+       • Pointer drag (mouse, pen, touch — Pointer Events API
+         handles all three uniformly)
+       • Click anywhere on the frame jumps the slider to that x
+       • Pointer capture on the frame so dragging works even when
+         the cursor leaves the bounds
+       • Keyboard: arrow keys (1 step), PageUp/Down (10 steps),
+         Home/End (0/100). Wrapper has role="slider" + aria-valuenow
+         so SR users get a properly-typed control.
+  ============================================================ */
+  .ds-before-after {
+    --position: 50%;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 2px solid var(--color-fg);
+    background: var(--color-bg-elev);
+    user-select: none;
+    cursor: ew-resize;
+    /* Disable native touch scroll handling on the slider so drag
+       works on mobile without the page also panning. */
+    touch-action: none;
+  }
+  .ds-before-after:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+  .ds-before-after__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+    /* GPU-promote so the clip-path repaints are smooth during drag */
+    will-change: clip-path;
+  }
+  .ds-before-after__img--after {
+    /* clip-path inset(top right bottom left) — inset the LEFT edge
+       by --position so only the right portion of the after image
+       shows. The left portion of the before image is visible
+       underneath. */
+    clip-path: inset(0 0 0 var(--position));
+  }
+  .ds-before-after__divider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--position);
+    width: 2px;
+    background: var(--color-fg);
+    transform: translateX(-50%);
+    pointer-events: none;
+    /* Subtle drop shadow so the line reads against both light and
+       dark image content. */
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+  }
+  .ds-before-after__handle {
+    position: absolute;
+    top: 50%;
+    left: var(--position);
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--color-fg);
+    color: var(--color-background);
+    border: 2px solid var(--color-fg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .ds-before-after:hover .ds-before-after__handle {
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  .ds-before-after:focus-visible .ds-before-after__handle,
+  .ds-before-after[data-dragging] .ds-before-after__handle {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-fg);
+  }
+  /* Optional corner labels — "Before" + "After" annotations so the
+     comparison reads at a glance. Pill style matches the cart line
+     item PLUGIN tag for brand consistency. */
+  .ds-before-after__label {
+    position: absolute;
+    top: 12px;
+    padding: 4px 8px;
+    background: rgba(10, 10, 10, 0.72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .ds-before-after__label--before { left: 12px; }
+  .ds-before-after__label--after  { right: 12px; }
+
   @media (max-width: 900px) {
     .ds-hero {
       grid-template-columns: 1fr;
@@ -178,6 +361,19 @@
       width: min(94%, 480px);
       max-width: none;
     }
+    /* Before/after slider on mobile: 1:1 square instead of 4:3
+       landscape. Keeps the comparison readable at phone widths. */
+    .ds-before-after {
+      aspect-ratio: 1 / 1;
+    }
+    .ds-before-after__handle {
+      width: 38px;
+      height: 38px;
+    }
+    .ds-before-after__label {
+      font-size: 9px;
+      padding: 3px 6px;
+    }
   }
   @media (max-width: 480px) {
     .ds-hero__visual { padding: 0 var(--space-3); }
@@ -196,6 +392,94 @@
       v.pause();
     });
   })();
+
+  /* Before/after slider — drag, click-to-jump, keyboard nav.
+     Uses Pointer Events API so mouse/pen/touch all flow through the
+     same code path. Pointer capture means dragging works even when
+     the cursor leaves the frame. Keyboard arrows + Home/End handle
+     a11y. The wrapper has role="slider" + aria-valuenow so screen
+     readers announce position as the user navigates. */
+  (function () {
+    var els = document.querySelectorAll('[data-ds-before-after]');
+    if (!els.length) return;
+
+    els.forEach(function (el) {
+      var min = 0;
+      var max = 100;
+      var step = 1;
+      var pageStep = 10;
+
+      function getCurrent() {
+        return parseFloat(el.getAttribute('aria-valuenow')) || 50;
+      }
+      function setPosition(pct) {
+        pct = Math.max(min, Math.min(max, pct));
+        var rounded = Math.round(pct);
+        el.style.setProperty('--position', pct + '%');
+        el.setAttribute('aria-valuenow', rounded);
+        el.setAttribute(
+          'aria-label',
+          'Compare before and after — ' + rounded + '% after visible. Drag, click, or use arrow keys.'
+        );
+      }
+      function positionFromEvent(e) {
+        var rect = el.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        return (x / rect.width) * 100;
+      }
+
+      el.addEventListener('pointerdown', function (e) {
+        // Ignore non-primary mouse buttons
+        if (e.button !== undefined && e.button !== 0) return;
+        e.preventDefault();
+        el.setAttribute('data-dragging', '');
+        try { el.setPointerCapture(e.pointerId); } catch (_) {}
+        el.focus({ preventScroll: true });
+        setPosition(positionFromEvent(e));
+
+        function onMove(ev) {
+          if (ev.pointerId !== e.pointerId) return;
+          setPosition(positionFromEvent(ev));
+        }
+        function onEnd(ev) {
+          if (ev.pointerId !== e.pointerId) return;
+          el.removeEventListener('pointermove', onMove);
+          el.removeEventListener('pointerup', onEnd);
+          el.removeEventListener('pointercancel', onEnd);
+          el.removeAttribute('data-dragging');
+          try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+        }
+        el.addEventListener('pointermove', onMove);
+        el.addEventListener('pointerup', onEnd);
+        el.addEventListener('pointercancel', onEnd);
+      });
+
+      el.addEventListener('keydown', function (e) {
+        var current = getCurrent();
+        var next = current;
+        switch (e.key) {
+          case 'ArrowLeft':
+          case 'ArrowDown':
+            next = current - step; break;
+          case 'ArrowRight':
+          case 'ArrowUp':
+            next = current + step; break;
+          case 'PageDown':
+            next = current - pageStep; break;
+          case 'PageUp':
+            next = current + pageStep; break;
+          case 'Home':
+            next = min; break;
+          case 'End':
+            next = max; break;
+          default:
+            return;
+        }
+        e.preventDefault();
+        setPosition(next);
+      });
+    });
+  })();
 </script>
 
 {% schema %}
@@ -211,16 +495,65 @@
       "label": "Color scheme"
     },
     {
+      "type": "header",
+      "content": "Before/after slider (top priority)"
+    },
+    {
+      "type": "paragraph",
+      "content": "Drag-to-compare visual that fills the right column. Set BOTH images for the slider to render; otherwise the section falls back to the video / image / placeholder below."
+    },
+    {
+      "type": "image_picker",
+      "id": "before_image",
+      "label": "Before image",
+      "info": "The base layer — visible on the LEFT side of the slider when dragged. e.g. the original, un-pixelated render."
+    },
+    {
+      "type": "image_picker",
+      "id": "after_image",
+      "label": "After image",
+      "info": "The top layer — visible on the RIGHT side of the slider when dragged. e.g. the Pixel Perfect output of the same source. Same dimensions as the before image for clean comparison."
+    },
+    {
+      "type": "text",
+      "id": "before_label",
+      "label": "Before label",
+      "default": "Before",
+      "info": "Small caption pill in the top-left corner. Leave blank to hide."
+    },
+    {
+      "type": "text",
+      "id": "after_label",
+      "label": "After label",
+      "default": "After",
+      "info": "Small caption pill in the top-right corner."
+    },
+    {
+      "type": "range",
+      "id": "starting_position",
+      "label": "Starting position",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 50,
+      "unit": "%",
+      "info": "Where the divider sits on initial load. 0 = full After visible, 100 = full Before, 50 = centered."
+    },
+    {
+      "type": "header",
+      "content": "Fallback: video or static image"
+    },
+    {
       "type": "video",
       "id": "hero_video",
       "label": "Hero video",
-      "info": "Optional. If set, plays in place of the image — muted, looping, 1:1 square. Encode at 1200×1200 so the layout matches the image. The first frame is used as the poster while loading; reduced-motion users see it as a still."
+      "info": "Used when before/after slider isn't set. Plays muted on loop. Encode at 1200×1200."
     },
     {
       "type": "image_picker",
       "id": "visual",
-      "label": "Hero visual",
-      "info": "Recommend a 1200×1200 square render. Used when no video is set. Falls back to the BACKLIT CSS-art placeholder if both are empty — replace with a Pixel Perfect screenshot or render before launch."
+      "label": "Hero visual (static)",
+      "info": "Used when neither the slider nor a video is set. 1200×1200 square render recommended. Falls back to the BACKLIT CSS-art placeholder if empty."
     }
   ],
   "blocks": [
