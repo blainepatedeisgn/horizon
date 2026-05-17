@@ -146,14 +146,22 @@
       position: relative;
       /* Desktop: cap at 1200px, otherwise 88vw — fills most of the
          viewport on wide screens without bleeding edge-to-edge.
-         Mobile: drops to a slightly narrower 92vw at ≤700px so the
-         wordmark sits comfortably away from the screen edges. */
+         5:1 aspect on desktop matches the visual rhythm of the
+         original mockup; the v2 images (1874×498, ~3.76:1) get
+         object-fit: contain so they letterbox slightly on the sides
+         here.  On wide screens that letterbox isn't noticeable. */
       width: min(88vw, 1200px);
-      aspect-ratio: 5 / 1;        /* matches the wordmark images' rough ratio */
+      aspect-ratio: 5 / 1;
     }
     @media (max-width: 700px) {
+      /* Mobile: drop the letterboxing.  Match the stage aspect to
+         the image's actual aspect (1874×498) so the wordmark fills
+         the stage edge-to-edge.  At 5:1 the image was rendering
+         only ~75% of stage width with empty space on each side,
+         making the wordmark feel tiny on a narrow phone viewport. */
       .ds-loader__stage {
         width: 92vw;
+        aspect-ratio: 1874 / 498;
       }
     }
     .ds-loader__frame {
