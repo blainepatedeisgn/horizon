@@ -1,14 +1,22 @@
 {%- comment -%}
   sections/ds-wordmark.liquid — Giant footer-of-page wordmark
 
-  Single-line, viewport-wide bold display text with an optional small
-  mono ® superscript. Centered, unselectable, clipped on overflow.
+  Renders the brand text as an SVG that fills 100% of its container
+  exactly, regardless of viewport width OR text length.  This works
+  because the SVG's viewBox is set to match the rendered text's
+  bounding box (measured once via JS after fonts load + on resize),
+  and the SVG itself is `width: 100%`.  Result: the wordmark scales
+  fluidly from phone to wide desktop, edge-to-edge inside the
+  `--pad-x` page margins, with no overflow at narrow widths and no
+  under-fill at wide widths.
 
-  Placement: per handoff doc §6, this lives "below the footer" — but
-  Shopify renders template sections inside <main>, before the footer
-  group. So this is the last section of index.json, sitting above
-  Horizon's footer. To literally render it after the footer, we'd need
-  to move it into footer-group; deferred to Phase 5 if it matters.
+  Replaces the previous CSS `font-size: clamp(48px, 16.5vw, 600px)`
+  approach, which was calibrated for "DISRUPTED" specifically and
+  broke if the merchant changed the text, AND overflowed on mobile
+  when the device width × 17vw exceeded `container width − 2 × pad`.
+
+  Accessibility: the wordmark is decorative (the brand name is
+  already in the header logo) so the SVG is `aria-hidden="true"`.
 {%- endcomment -%}
 
 {%- liquid
@@ -17,12 +25,25 @@
 -%}
 
 <div class="ds-wordmark color-{{ cs }}">
-  <div class="ds-wordmark__text" aria-hidden="true">
-    {{- text -}}
-    {%- if section.settings.show_registration_mark -%}
-      <span class="ds-wordmark__reg">®</span>
-    {%- endif -%}
-  </div>
+  {%- comment -%}
+    Default viewBox is a sensible starting ratio so the SVG renders
+    at roughly the right size before JS measures.  The JS overrides
+    it with the actual text bbox once fonts are ready.
+  {%- endcomment -%}
+  <svg
+    class="ds-wordmark__svg"
+    data-ds-wordmark
+    aria-hidden="true"
+    viewBox="0 0 600 100"
+    preserveAspectRatio="xMidYMid meet"
+  >
+    <text
+      class="ds-wordmark__svg-text"
+      x="0"
+      y="0"
+      dominant-baseline="text-before-edge"
+    >{{- text | escape -}}{%- if section.settings.show_registration_mark -%}<tspan class="ds-wordmark__svg-reg" baseline-shift="super" font-size="0.45em" dx="0.2em">®</tspan>{%- endif -%}</text>
+  </svg>
 </div>
 
 {% style %}
@@ -31,39 +52,84 @@
     color: var(--color-foreground);
     padding-top: clamp(16px, 2vw, 32px);
     padding-bottom: clamp(16px, 2vw, 32px);
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+    overflow: hidden;   /* belt-and-braces — if the JS hasn't fired yet
+                           and the default viewBox ratio doesn't match
+                           the real text, the parent clips the overflow */
   }
-  .ds-wordmark__text {
-    /* Scales with viewport from 48px (tiny phones) up to 600px (wide
-       4K monitors). The 16.5vw target is calibrated against the actual
-       rendered text width — 18vw caused the ® to clip past the right
-       edge on common desktop widths. */
-    font-size: clamp(48px, 16.5vw, 600px);
-    font-weight: 700;
-    letter-spacing: -0.055em;
-    line-height: 0.82;
-    text-align: center;
-    margin-top: clamp(32px, 5vw, 56px);
-    padding: 0 var(--pad-x);
-    color: var(--color-fg);
+  .ds-wordmark__svg {
+    display: block;
+    width: 100%;
+    height: auto;
     user-select: none;
-    white-space: nowrap;
-    overflow: hidden;
+    overflow: visible;  /* don't clip glyphs from descenders/ascenders
+                           extending slightly past the bbox baseline */
   }
-  .ds-wordmark__reg {
-    font-size: 0.18em;
-    vertical-align: super;
+  .ds-wordmark__svg-text {
+    fill: var(--color-fg);
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 100px;          /* base size — only used for bbox math.
+                                   The SVG's viewBox/scale handles the
+                                   actual rendered size. */
+    letter-spacing: -0.055em;
+  }
+  .ds-wordmark__svg-reg {
+    fill: var(--color-fg-muted);
     font-family: var(--font-mono);
+    font-weight: 400;
     letter-spacing: 0;
-    color: var(--color-fg-muted);
-    margin-left: 8px;
-  }
-  @media (max-width: 640px) {
-    .ds-wordmark__text {
-      font-size: clamp(48px, 17vw, 180px);
-      letter-spacing: -0.045em;
-    }
   }
 {% endstyle %}
+
+<script>
+  (function () {
+    // Measure the wordmark text's bounding box and set the SVG's
+    // viewBox to match — this makes the SVG fill its container
+    // exactly, regardless of viewport width or text length.
+    //
+    // Runs three times in sequence:
+    //   1. On script load — immediate so something renders fast
+    //   2. After fonts are ready — refines the measurement once the
+    //      real font replaces the fallback (most accurate)
+    //   3. On resize — debounced; recomputes on viewport change
+    document.querySelectorAll('[data-ds-wordmark]').forEach(function (svg) {
+      var text = svg.querySelector('text');
+      if (!text) return;
+
+      function fit() {
+        try {
+          var bbox = text.getBBox();
+          if (bbox.width > 0 && bbox.height > 0) {
+            svg.setAttribute(
+              'viewBox',
+              bbox.x + ' ' + bbox.y + ' ' +
+              bbox.width + ' ' + bbox.height
+            );
+          }
+        } catch (e) {
+          // getBBox can throw if the element is detached or hidden;
+          // ignore — the next call (fonts.ready or resize) will retry.
+        }
+      }
+
+      fit();
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(fit);
+      }
+
+      // Debounce resize so we don't measure on every scroll-bar-induced
+      // resize event during a viewport drag.
+      var resizeTimer = null;
+      window.addEventListener('resize', function () {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(fit, 100);
+      }, { passive: true });
+    });
+  })();
+</script>
 
 {% schema %}
 {
@@ -82,7 +148,7 @@
       "id": "text",
       "default": "DISRUPTED",
       "label": "Text",
-      "info": "Brand wordmark, rendered at viewport-width scale. Bold display weight, slight negative letter-spacing."
+      "info": "Brand wordmark. Renders as an SVG that fills the container exactly at any viewport width — any text length works (short or long), no manual size calibration needed."
     },
     {
       "type": "checkbox",
