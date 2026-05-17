@@ -521,6 +521,39 @@
       opacity: 1;
     }
     .ds-header__menu-toggle { padding: 0 4px; }
+
+    /* The left chunk holds [hamburger + logo image].  Desktop sets
+       flex-shrink: 0 so the logo never compresses against nav links,
+       but on mobile that prevents the actions (search + cart) from
+       fitting — the logo's intrinsic width at 32px height plus the
+       hamburger pushes everything past the right edge.  Allow shrink
+       + cap the logo image so it always fits comfortably. */
+    .ds-header__left {
+      flex-shrink: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .ds-header__logo {
+      min-width: 0;
+      overflow: hidden;
+    }
+    .ds-header__logo-img {
+      height: 22px;                 /* down from 32px on desktop */
+      max-width: 100%;
+      object-fit: contain;
+      object-position: left center;
+    }
+  }
+
+  /* Phones (≤480px): shrink the logo further so the actions row has
+     room on tightest screens.  Wordmark logos with a 5:1 ratio at
+     18px tall ≈ 90px wide, which leaves ~200px for hamburger + icons
+     on a typical 360px-wide phone. */
+  @media (max-width: 480px) {
+    .ds-header__logo-img {
+      height: 18px;
+      max-width: 55vw;
+    }
   }
 
   /* Mobile drawer — full overhaul to match the original mockup
