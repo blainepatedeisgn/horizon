@@ -188,16 +188,50 @@
     <div class="ds-header__drawer-inner">
       <div class="ds-header__drawer-head">
         <span class="ds-header__drawer-eyebrow">[ Menu ]</span>
-        <button class="ds-header__drawer-close" type="button" aria-label="Close menu" data-ds-menu-toggle>×</button>
+        <button class="ds-header__drawer-close" type="button" aria-label="Close menu" data-ds-menu-toggle>
+          <svg viewBox="0 0 24 24" fill="none" width="16" height="16" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+            <path d="M5 5L19 19M19 5L5 19"/>
+          </svg>
+          <span>Close</span>
+        </button>
       </div>
+
       <nav class="ds-header__drawer-nav" aria-label="Mobile main navigation">
         {%- for link in linklists[main_menu].links -%}
           <a
             href="{{ link.url }}"
             class="ds-header__drawer-link{% if link.active or link.child_active %} is-active{% endif %}"
-          >{{ link.title }}</a>
+          >
+            <span>{{ link.title }}</span>
+            <span class="ds-header__drawer-link-arrow" aria-hidden="true">→</span>
+          </a>
         {%- endfor -%}
       </nav>
+
+      {%- liquid
+        assign drawer_loc    = section.settings.drawer_footer_location
+        assign drawer_email  = section.settings.drawer_footer_email
+        assign drawer_status = section.settings.drawer_footer_status
+        assign current_year  = 'now' | date: '%Y'
+      -%}
+      {%- if drawer_loc != blank or drawer_email != blank or drawer_status != blank -%}
+        <div class="ds-header__drawer-foot">
+          {%- if drawer_loc != blank or drawer_status != blank -%}
+            <div class="ds-header__drawer-foot-row">
+              <span>{{ drawer_loc }}</span>
+              {%- if drawer_status != blank -%}
+                <span><span class="ds-header__drawer-dot" aria-hidden="true">●</span> {{ drawer_status }}</span>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+          {%- if drawer_email != blank -%}
+            <div class="ds-header__drawer-foot-row">
+              <span>{{ drawer_email }}</span>
+              <span>© {{ current_year }}</span>
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
     </div>
   </div>
 {%- endif -%}
@@ -489,69 +523,140 @@
     .ds-header__menu-toggle { padding: 0 4px; }
   }
 
-  /* Mobile drawer */
+  /* Mobile drawer — full overhaul to match the original mockup
+     (lines 320-404 of disrupted-studio-mockup.html). Slides in from
+     the left, fills the viewport, structured as head / nav / foot
+     with the foot pushed down via margin-top: auto. */
   .ds-header__drawer {
     position: fixed;
     inset: 0;
     z-index: 60;
     background: var(--color-bg);
-    display: none;
-    opacity: 0;
-    transition: opacity var(--t-fast) var(--ease);
+    color: var(--color-fg);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform var(--t-slow, 480ms) var(--ease, cubic-bezier(.2,.7,.2,1));
+    visibility: hidden;
   }
   .ds-header__drawer.is-open {
-    display: block;
-    opacity: 1;
+    transform: translateX(0);
+    visibility: visible;
   }
   .ds-header__drawer-inner {
     padding: var(--space-5) var(--pad-x) var(--space-7);
     display: flex;
     flex-direction: column;
-    gap: var(--space-7);
-    height: 100%;
+    min-height: 100svh;
   }
+
+  /* Head — [Menu] eyebrow on left, × Close on right, hairline under */
   .ds-header__drawer-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
   }
   .ds-header__drawer-eyebrow {
     font-family: var(--font-mono);
     font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--color-fg-muted);
-    letter-spacing: 0.08em;
   }
   .ds-header__drawer-close {
     background: none;
     border: 0;
     color: var(--color-fg);
-    font-size: 32px;
     cursor: pointer;
-    padding: 0;
-    line-height: 1;
-    width: 44px;
-    height: 44px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 8px;
+    padding: 10px 0;
+    min-height: 44px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-caps);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1;
   }
+  .ds-header__drawer-close svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+
+  /* Nav links — huge display type, divider per row, arrow on the right.
+     Hover slides text right and reveals the arrow shift. */
   .ds-header__drawer-nav {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
   }
   .ds-header__drawer-link {
     font-family: var(--font-sans);
-    font-size: clamp(28px, 6vw, 40px);
+    font-size: clamp(40px, 12vw, 60px);
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.035em;
+    line-height: 1;
     color: var(--color-fg);
     text-decoration: none;
-    transition: color var(--t-fast) var(--ease);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    transition:
+      color        var(--t-fast) var(--ease),
+      padding-left var(--t-fast) var(--ease);
+  }
+  .ds-header__drawer-link:first-child {
+    padding-top: var(--space-4);
+  }
+  .ds-header__drawer-link-arrow {
+    font-size: 0.42em;
+    font-weight: 400;
+    color: var(--color-fg-muted);
+    transition:
+      transform var(--t-fast) var(--ease),
+      color     var(--t-fast) var(--ease);
   }
   .ds-header__drawer-link:hover,
+  .ds-header__drawer-link:active,
   .ds-header__drawer-link.is-active {
     color: var(--color-accent);
+    padding-left: var(--space-3);
+  }
+  .ds-header__drawer-link:hover .ds-header__drawer-link-arrow,
+  .ds-header__drawer-link:active .ds-header__drawer-link-arrow,
+  .ds-header__drawer-link.is-active .ds-header__drawer-link-arrow {
+    transform: translateX(6px);
+    color: var(--color-accent);
+  }
+
+  /* Foot — pushed to the bottom via margin-top: auto; mono caps rows */
+  .ds-header__drawer-foot {
+    margin-top: auto;
+    padding-top: var(--space-7);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-header__drawer-foot-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--color-fg-muted);
+  }
+  .ds-header__drawer-dot { color: var(--color-accent); }
+
+  /* Respect reduced motion — drop the slide transition */
+  @media (prefers-reduced-motion: reduce) {
+    .ds-header__drawer { transition: none; }
   }
 
   /* ============================================================
@@ -1495,6 +1600,30 @@
       "id": "sticky",
       "default": true,
       "label": "Stick to top on scroll"
+    },
+    { "type": "header", "content": "Mobile drawer footer" },
+    {
+      "type": "paragraph",
+      "content": "Small mono-caps rows at the bottom of the mobile menu drawer. Leave any field blank to omit that line."
+    },
+    {
+      "type": "text",
+      "id": "drawer_footer_location",
+      "label": "Location line",
+      "default": "Made in Atlanta"
+    },
+    {
+      "type": "text",
+      "id": "drawer_footer_email",
+      "label": "Contact line",
+      "default": "hello@disrupted.studio"
+    },
+    {
+      "type": "text",
+      "id": "drawer_footer_status",
+      "label": "Status label",
+      "default": "Live",
+      "info": "Renders next to a small orange dot, e.g. \"● Live\"."
     },
     { "type": "header", "content": "Cart upsell" },
     {
