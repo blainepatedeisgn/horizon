@@ -1,0 +1,129 @@
+{%- comment -%}
+  snippets/ds-cart-upsell.liquid — "Pairs well with" row in cart drawer
+
+  Renders 2–3 compact upsell rows below the cart items and above the
+  checkout summary. Each row is a tiny product card (thumb + name + cat
+  + price + inline "+ ADD" button) that AJAX-adds without leaving the
+  drawer — same product-form-component pattern as the homepage/collection
+  quick-add overlay.
+
+  Behavior
+    • Only renders when cart has items (skips on empty cart)
+    • Filters out products already in the cart
+    • Pulls from the merchant-picked collection in ds-header settings
+      (falls back to collections.all if unset)
+    • Caps at 3 cards
+    • Skips unavailable / sold-out items
+
+  Layout choice (per research synthesis)
+    Vertical stack of compact rows beats horizontal scroll in a 440px
+    drawer — readable, matches existing cart item visual rhythm, no
+    swipe ergonomics on desktop.
+
+  Copy choice ("Pairs well with")
+    Reads as signal-chain / craft language — fits the brutalist
+    plugin/font aesthetic better than generic "You may also like".
+{%- endcomment -%}
+
+{%- liquid
+  comment
+    Pick the source collection from section settings, fallback to all
+  endcomment
+  assign source = section.settings.cart_upsell_collection
+  if source != blank
+    assign source_products = collections[source].products
+  else
+    assign source_products = collections.all.products
+  endif
+
+  comment
+    Build a lookup of product IDs already in cart so we can skip them
+  endcomment
+  assign cart_product_ids = ''
+  for item in cart.items
+    assign cart_product_ids = cart_product_ids | append: ',' | append: item.product_id
+  endfor
+
+  assign max_upsells = section.settings.cart_upsell_count | default: 3
+  assign rendered = 0
+-%}
+
+{%- if source_products.size > 0 -%}
+  {%- comment -%} Build the upsell list first so we know if anything will render {%- endcomment -%}
+  {%- capture upsell_items -%}
+    {%- for product in source_products -%}
+      {%- if rendered >= max_upsells -%}{%- break -%}{%- endif -%}
+      {%- assign needle = ',' | append: product.id -%}
+      {%- unless cart_product_ids contains needle -%}
+        {%- if product.available -%}
+          {%- assign current_variant = product.selected_or_first_available_variant -%}
+          <li class="ds-cart-upsell__item">
+            <a href="{{ product.url }}" class="ds-cart-upsell__item-media" tabindex="-1" aria-hidden="true">
+              {%- if product.featured_image -%}
+                {{
+                  product.featured_image
+                  | image_url: width: 160
+                  | image_tag:
+                      class: 'ds-cart-upsell__item-img',
+                      alt: '',
+                      loading: 'lazy',
+                      widths: '64,128,192'
+                }}
+              {%- else -%}
+                <span class="ds-cart-upsell__item-img-placeholder" aria-hidden="true"></span>
+              {%- endif -%}
+            </a>
+
+            <a href="{{ product.url }}" class="ds-cart-upsell__item-info">
+              <div class="ds-cart-upsell__item-title">{{ product.title }}</div>
+              <div class="ds-cart-upsell__item-meta">
+                {%- if product.type != blank -%}
+                  <span class="ds-cart-upsell__item-cat">{{ product.type }}</span>
+                  <span class="ds-cart-upsell__item-sep" aria-hidden="true">·</span>
+                {%- endif -%}
+                <span class="ds-cart-upsell__item-price">{{ product.price | money }}</span>
+              </div>
+            </a>
+
+            {%- if product.has_only_default_variant -%}
+              <product-form-component
+                class="ds-cart-upsell__add-form"
+                data-product-id="{{ product.id }}"
+                on:submit="/handleSubmit"
+              >
+                <div class="visually-hidden" aria-live="assertive" role="status" aria-atomic="true" ref="liveRegion"></div>
+                {%- form 'product', product, novalidate: 'novalidate' -%}
+                  <input type="hidden" name="id" ref="variantId" value="{{ current_variant.id }}">
+                  <input type="hidden" name="quantity" value="1">
+                  <button
+                    type="submit"
+                    class="ds-cart-upsell__add"
+                    aria-label="Add {{ product.title | escape }} to cart"
+                  >
+                    <span aria-hidden="true">+</span>
+                    <span>Add</span>
+                  </button>
+                {%- endform -%}
+              </product-form-component>
+            {%- else -%}
+              <a href="{{ product.url }}" class="ds-cart-upsell__add ds-cart-upsell__add--options" aria-label="Choose options for {{ product.title | escape }}">
+                <span aria-hidden="true">→</span>
+                <span>Options</span>
+              </a>
+            {%- endif -%}
+          </li>
+          {%- assign rendered = rendered | plus: 1 -%}
+        {%- endif -%}
+      {%- endunless -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+
+  {%- if rendered > 0 -%}
+    <div class="ds-cart-upsell">
+      <div class="ds-cart-upsell__head">Pairs well with</div>
+      <ul class="ds-cart-upsell__list">
+        {{ upsell_items }}
+      </ul>
+    </div>
+  {%- endif -%}
+{%- endif -%}
