@@ -33,7 +33,7 @@
 
 {%- liquid
   assign cs = section.settings.color_scheme
-  assign version = section.settings.version | default: 'v1.0'
+  assign version = section.settings.version | default: 'v1.1'
   assign version_date = section.settings.version_date | default: 'May 2026'
   assign eyebrow = section.settings.eyebrow | default: 'ASSET LICENSE'
   assign title = section.settings.title | default: 'License terms'
@@ -62,26 +62,27 @@
       </h2>
       <div class="ds-license__tldr-grid">
         <div class="ds-license__tldr-card">
-          <p class="ds-license__tldr-card-eyebrow ds-mono">[ YOU CAN ]</p>
+          <p class="ds-license__tldr-card-eyebrow ds-mono">[ PERSONAL ]</p>
           <ul class="ds-license__tldr-card-list">
-            <li>Use everything you buy for commercial work — client projects, your own products, billboards, web, apps (per tier).</li>
-            <li>Modify and combine assets as part of your own deliverables.</li>
-            <li>Keep using what you bought, forever.</li>
+            <li>Your own non-monetized work — hobby, learning, portfolio, art for yourself.</li>
+            <li>Use, modify, combine for personal projects.</li>
+            <li>NOT for client work, products you sell, paid ads, or anything that brings in money.</li>
           </ul>
         </div>
         <div class="ds-license__tldr-card">
-          <p class="ds-license__tldr-card-eyebrow ds-mono">[ YOU CAN'T ]</p>
+          <p class="ds-license__tldr-card-eyebrow ds-mono">[ COMMERCIAL ]</p>
           <ul class="ds-license__tldr-card-list">
-            <li>Redistribute, resell, or share the source files.</li>
-            <li>Use anything to train AI/ML models, ever.</li>
-            <li>Transfer your license to another person or company.</li>
+            <li>Client work, products you sell, agency work, paid ads, anything monetized.</li>
+            <li>Full media rights — print, web, app, broadcast (per product type).</li>
+            <li>Modify, combine, embed in your end products.</li>
           </ul>
         </div>
         <div class="ds-license__tldr-card">
-          <p class="ds-license__tldr-card-eyebrow ds-mono">[ NEED MORE ]</p>
+          <p class="ds-license__tldr-card-eyebrow ds-mono">[ NEVER ]</p>
           <ul class="ds-license__tldr-card-list">
-            <li>Extended tiers exist for bigger teams (plugins), wider media (fonts), or higher-volume products (graphics).</li>
-            <li>Want a custom enterprise license? Email hello@disruptedstudio.com.</li>
+            <li>Redistribute or resell the source files.</li>
+            <li>Train AI/ML models on what you buy.</li>
+            <li>Transfer the license to another person or company.</li>
           </ul>
         </div>
       </div>
@@ -93,26 +94,28 @@
         <span class="ds-license__block-num ds-mono">02</span>
         Tiers by product type
       </h2>
-      <p class="ds-license__block-intro">Tiers differ by what's being licensed. Plugins gate on seats. Fonts gate on usage type. Graphics gate on end-product volume. Each product page tells you which tier you're buying.</p>
+      <p class="ds-license__block-intro">Two tiers — <strong>Personal</strong> for your own non-monetized work, <strong>Commercial</strong> for anything that brings in money (client work, products you sell, agency use, ads). The rights at each tier vary by what you're buying — plugins, fonts, and graphics each gate on different things.</p>
 
       <h3 class="ds-license__tier-heading ds-mono">[ PLUGINS — BACKLIT, PIXEL PERFECT, ETC. ]</h3>
       <div class="ds-license__tier-table">
         <div class="ds-license__tier-col">
-          <h4 class="ds-license__tier-name">Standard</h4>
+          <h4 class="ds-license__tier-name">Personal</h4>
           <ul class="ds-license__tier-list">
-            <li><strong>1 designer seat</strong></li>
-            <li>Install on up to 2 of your own devices</li>
-            <li>Commercial use in client work and your own products</li>
+            <li><strong>Personal projects only</strong></li>
+            <li>Hobby art, learning, portfolio, your own non-sale work</li>
+            <li>1 designer · 2 devices</li>
+            <li>Output may NOT be sold, monetized, or used in paid client work</li>
             <li>Lifetime updates within the major version</li>
           </ul>
         </div>
         <div class="ds-license__tier-col ds-license__tier-col--upsell">
-          <h4 class="ds-license__tier-name">Studio</h4>
+          <h4 class="ds-license__tier-name">Commercial</h4>
           <ul class="ds-license__tier-list">
-            <li><strong>Up to 5 designer seats</strong></li>
-            <li>Install on up to 2 devices per seat</li>
-            <li>Everything in Standard, multiplied by your team</li>
-            <li>Single billing contact for the studio</li>
+            <li><strong>Client work + monetized output</strong></li>
+            <li>Use in products you sell, ads, marketing, agency / business work</li>
+            <li>1 designer · 2 devices (single seat)</li>
+            <li>For 5+ seats or a whole studio, email for a custom Studio quote</li>
+            <li>Lifetime updates within the major version</li>
           </ul>
         </div>
       </div>
@@ -120,42 +123,46 @@
       <h3 class="ds-license__tier-heading ds-mono">[ FONTS — NEUE PORTAL, RIVET MONO, ETC. ]</h3>
       <div class="ds-license__tier-table">
         <div class="ds-license__tier-col">
-          <h4 class="ds-license__tier-name">Standard</h4>
+          <h4 class="ds-license__tier-name">Personal</h4>
           <ul class="ds-license__tier-list">
-            <li><strong>Desktop use only</strong></li>
-            <li>Embed in PDF / static documents</li>
-            <li>Use in logos, identity systems, packaging, print</li>
-            <li>Up to 5 employees / freelancers at one organization</li>
+            <li><strong>Personal projects only</strong></li>
+            <li>Desktop installation, your own design work</li>
+            <li>Embed in personal PDFs / static documents</li>
+            <li>NOT for client work, branding, products for sale, paid advertising, or web embedding</li>
+            <li>1 user · 1 device</li>
           </ul>
         </div>
         <div class="ds-license__tier-col ds-license__tier-col--upsell">
-          <h4 class="ds-license__tier-name">Extended</h4>
+          <h4 class="ds-license__tier-name">Commercial</h4>
           <ul class="ds-license__tier-list">
-            <li><strong>Desktop + Web + ePub + App embedding</strong></li>
+            <li><strong>Full commercial use — desktop, web, app, ePub, broadcast</strong></li>
+            <li>Client logos, branding systems, products for sale, paid ads</li>
             <li>Self-hosted webfont (WOFF/WOFF2) — no pageview cap</li>
             <li>Embed in mobile and desktop apps you distribute</li>
-            <li>Up to 25 employees / freelancers</li>
+            <li>Up to 5 employees / freelancers at one organization</li>
           </ul>
         </div>
       </div>
 
-      <h3 class="ds-license__tier-heading ds-mono">[ GRAPHICS — CHROMA, BOTANIC, ETC. ]</h3>
+      <h3 class="ds-license__tier-heading ds-mono">[ GRAPHICS — CHROMA, BOTANIC, ARCADE, STARGAZER, ETC. ]</h3>
       <div class="ds-license__tier-table">
         <div class="ds-license__tier-col">
-          <h4 class="ds-license__tier-name">Standard</h4>
+          <h4 class="ds-license__tier-name">Personal</h4>
           <ul class="ds-license__tier-list">
-            <li><strong>Up to 10,000 end products for sale</strong></li>
-            <li>Use in client work, your own products, marketing</li>
-            <li>Modify, combine, recolor freely</li>
-            <li>Cannot redistribute the assets as standalone files</li>
+            <li><strong>Personal projects only</strong></li>
+            <li>Wallpapers, hobby art, learning, non-monetized social posts</li>
+            <li>Modify, combine, recolor for personal use</li>
+            <li>NOT for client work, products sold, paid ads, or any monetized output</li>
           </ul>
         </div>
         <div class="ds-license__tier-col ds-license__tier-col--upsell">
-          <h4 class="ds-license__tier-name">Extended</h4>
+          <h4 class="ds-license__tier-name">Commercial</h4>
           <ul class="ds-license__tier-list">
             <li><strong>Up to 250,000 end products for sale</strong></li>
-            <li>Sublicensing allowed within your end product (not as a standalone asset)</li>
-            <li>Everything in Standard</li>
+            <li>Use in client work, products you sell, marketing, paid ads</li>
+            <li>Modify, combine, recolor, embed in larger compositions you sell</li>
+            <li>May not redistribute the source assets as standalone files</li>
+            <li>Sublicensing allowed only INSIDE your end product (not as a standalone asset)</li>
           </ul>
         </div>
       </div>
@@ -178,44 +185,47 @@
         <p>"<strong>Disrupted Studio</strong>" means Disrupted Studio (the licensor), reachable at hello@disruptedstudio.com.</p>
         <p>"<strong>Asset</strong>" means any plugin, font, graphic, illustration, template, code, or other digital file delivered as part of an order.</p>
         <p>"<strong>Licensee</strong>" means the individual or organization named on the order receipt.</p>
-        <p>"<strong>Standard</strong>", "<strong>Studio</strong>", and "<strong>Extended</strong>" mean the license tiers as described in Section 02 above.</p>
+        <p>"<strong>Personal</strong>" means use for non-monetized purposes only — your own hobby, learning, portfolio, or non-sale projects. No money may change hands as a direct or indirect result of the Asset's involvement in the work.</p>
+        <p>"<strong>Commercial</strong>" means use for any monetized or business purpose — client work, paid projects, products for sale, paid advertising, agency work, or use within a for-profit organization.</p>
         <p>"<strong>End product</strong>" means any deliverable created using an Asset (a logo, web page, mobile app, packaging design, illustration, animation, video, etc.).</p>
 
         <h3 id="grant" class="ds-license__term-heading">3.2 License grant</h3>
         <p>Subject to payment in full and ongoing compliance with these terms, Disrupted Studio grants Licensee a <strong>perpetual, non-exclusive, non-transferable, worldwide</strong> license to use the Asset as described in Section 02 for the tier purchased.</p>
-        <p>The license is granted to the Licensee named on the order. Designers buying for a client should place the order in the client's name (this is industry standard practice).</p>
+        <p>The license is granted to the Licensee named on the order. Designers buying a Commercial license for a client should place the order in the client's name (this is industry standard practice).</p>
 
         <h3 id="permitted" class="ds-license__term-heading">3.3 Permitted uses</h3>
-        <p>Within the limits of the purchased tier, Licensee may:</p>
+        <p>Within the limits of the purchased tier:</p>
         <ul>
-          <li>Use the Asset for commercial purposes including client work, products for sale, marketing materials, and internal projects.</li>
-          <li>Modify, combine, recolor, and remix the Asset as part of Licensee's own end products.</li>
-          <li>Include the Asset (in modified or unmodified form) inside end products distributed to others, provided the Asset is not the primary value of the end product (see 3.4).</li>
-          <li>Make backup copies for personal archival use.</li>
+          <li><strong>Personal tier</strong> permits use in non-monetized personal projects only — hobby art, learning, portfolio pieces that are not paid, and non-commercial social posts.</li>
+          <li><strong>Commercial tier</strong> permits all Personal uses, plus use in client work, products for sale, paid marketing, paid advertising, and within for-profit organizations.</li>
+          <li>Both tiers permit modifying, combining, recoloring, and remixing the Asset within Licensee's own work.</li>
+          <li>Both tiers permit backup copies for personal archival use.</li>
         </ul>
 
         <h3 id="prohibited" class="ds-license__term-heading">3.4 Prohibited uses</h3>
         <p>Regardless of tier, Licensee may NOT:</p>
         <ul>
           <li><strong>Redistribute the source Asset</strong> — including selling, sharing, giving away, or making available the original files outside Licensee's organization.</li>
-          <li><strong>Sublicense the Asset as a standalone file</strong> — except as explicitly permitted by Extended Graphics (sublicensing within end products only).</li>
+          <li><strong>Sublicense the Asset as a standalone file</strong> — except as explicitly permitted by Commercial Graphics (sublicensing within end products only).</li>
           <li><strong>Use the Asset in any AI/ML training dataset</strong>, embedding-generation pipeline, or generative model training, in whole or in part.</li>
+          <li><strong>Use a Personal license for any monetized output</strong> — including paid client work, products for sale, paid advertising, sponsored social content, or anything that generates revenue. The Commercial license is required for any of these uses.</li>
           <li><strong>Create competing products</strong> whose primary value is the Asset (e.g., reselling a font as your own font, repackaging a graphics pack as your own).</li>
           <li><strong>Claim authorship</strong> of the Asset.</li>
           <li><strong>Transfer the license</strong> to another person, company, or successor organization (except as permitted in 3.9).</li>
         </ul>
 
-        <h3 id="limits" class="ds-license__term-heading">3.5 Tier limits</h3>
-        <p>The seat / volume / usage limits stated in Section 02 are part of the license grant. Exceeding them — running additional seats, embedding fonts beyond the purchased usage type, manufacturing more than the end-product cap — requires upgrading to the next tier.</p>
-        <p>Tier upgrades are available at any time by emailing hello@disruptedstudio.com. Licensee pays the difference between the original purchase and the higher tier (Grilli Type / Foundry Types model).</p>
+        <h3 id="limits" class="ds-license__term-heading">3.5 Tier limits and upgrades</h3>
+        <p>The seat / volume / usage limits stated in Section 02 are part of the license grant. Exceeding them — using a Personal license for monetized work, exceeding the seat or volume caps on Commercial, or embedding fonts beyond the purchased usage type — requires upgrading to the appropriate tier.</p>
+        <p>Upgrading from Personal to Commercial (or expanding a Commercial license to cover more seats / a larger team) is available at any time by emailing hello@disruptedstudio.com. Licensee pays the difference between the original purchase and the upgraded tier (the Grilli Type / Foundry Types pay-the-difference model).</p>
 
         <h3 id="formats" class="ds-license__term-heading">3.6 Permitted embedding and formats</h3>
         <p>For fonts:</p>
         <ul>
-          <li><strong>Standard:</strong> embed in PDF as subset (security-locked or print-only). Static documents only.</li>
-          <li><strong>Extended:</strong> includes Standard plus self-hosted webfont (WOFF/WOFF2), iOS / Android app embedding, and ePub embedding.</li>
+          <li><strong>Personal:</strong> desktop installation only. Embed in personal PDFs as subset (security-locked or print-only) for your own non-sale documents.</li>
+          <li><strong>Commercial:</strong> includes Personal usage plus self-hosted webfont (WOFF/WOFF2), iOS / Android app embedding, ePub embedding, broadcast, and paid advertising.</li>
         </ul>
-        <p>For plugins and graphics: no embedding restrictions apply beyond Section 3.4.</p>
+        <p>For plugins: the plugin itself is installed and run on the Licensee's machine. The Personal vs Commercial distinction governs the use of the <em>output</em> created with the plugin, not the plugin's installation. See Section 3.3.</p>
+        <p>For graphics: no specific embedding restrictions beyond Section 3.4 apply. Commercial tier allows inclusion in end products for sale up to the volume cap stated in Section 02.</p>
 
         <h3 id="refunds" class="ds-license__term-heading">3.7 Refunds</h3>
         <p>All sales are final. Because Assets are digital files delivered immediately at purchase, refunds are not available except where required by applicable law.</p>
@@ -249,8 +259,12 @@
       <p class="ds-license__block-intro">The version in effect when you placed your order is the one that applies to your purchase. Older versions are kept here for reference.</p>
       <ul class="ds-license__changelog">
         <li>
+          <span class="ds-license__changelog-version ds-mono">v1.1 — May 2026</span>
+          <span class="ds-license__changelog-note">Restructured to a Personal vs Commercial split across all product types. Personal tier covers non-monetized personal projects only; Commercial covers everything paid (client work, products for sale, paid ads, agencies). Replaces the previous Standard / Studio / Extended naming.</span>
+        </li>
+        <li>
           <span class="ds-license__changelog-version ds-mono">v1.0 — May 2026</span>
-          <span class="ds-license__changelog-note">Initial publication. Standard + Studio for plugins, Standard + Extended for fonts and graphics.</span>
+          <span class="ds-license__changelog-note">Initial publication. Standard + Studio for plugins, Standard + Extended for fonts and graphics. (Superseded by v1.1.)</span>
         </li>
       </ul>
     </section>
@@ -526,7 +540,7 @@
     {
       "type": "text",
       "id": "version",
-      "default": "v1.0",
+      "default": "v1.1",
       "label": "Version",
       "info": "Bump on each amendment. Old versions stay in the changelog at the bottom of the page."
     },
