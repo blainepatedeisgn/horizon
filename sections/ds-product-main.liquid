@@ -332,15 +332,18 @@
 
             {%- unless product.has_only_default_variant -%}
               {%- comment -%}
-                Tier-aware variant select. If ANY variant has the
+                Tier-aware variant picker. If ANY variant has the
                 `disrupted.tier_name` metafield set (Phase 2 license
-                tier rollout), the picker renders rich tier labels
-                ("Standard — $19 / 1 seat" vs "Studio — $39 / Up to 5
-                seats") and the field label switches to "License tier".
+                tier rollout), the picker renders as a stack of
+                brutalist button cards — one per tier — with the tier
+                name, summary, and price upfront. Otherwise (non-tier
+                products like future color/size variants) falls back
+                to the standard <select>.
 
-                Without those metafields, falls back to the prior
-                generic behavior — option name + price — so this
-                change is safe to ship before any products are tiered.
+                Both controls write into the same hidden
+                [data-ds-variant-input] used by the AJAX add-to-cart
+                form. The per-section sync script below handles either
+                control type.
               {%- endcomment -%}
               {%- liquid
                 assign has_tier_metadata = false
@@ -352,42 +355,71 @@
                 endfor
               -%}
               <div class="ds-pdp__info-variant">
-                <label class="ds-pdp__info-variant-label" for="ds-variant-{{ section.id }}">
+                <span class="ds-pdp__info-variant-label">
                   {%- if has_tier_metadata -%}
                     License tier
                   {%- else -%}
                     {{ product.options.first | default: 'Variant' }}
                   {%- endif -%}
-                </label>
-                <select
-                  id="ds-variant-{{ section.id }}"
-                  class="ds-pdp__info-variant-select"
-                  data-ds-variant-select
-                >
-                  {%- for variant in product.variants -%}
-                    {%- assign v_tier_name = variant.metafields.disrupted.tier_name.value -%}
-                    {%- assign v_tier_summary = variant.metafields.disrupted.tier_summary.value -%}
-                    <option
-                      value="{{ variant.id }}"
-                      {% if variant.id == current_variant.id %}selected{% endif %}
-                      {% unless variant.available %}disabled{% endunless %}
-                    >
-                      {%- if v_tier_name != blank -%}
-                        {{ v_tier_name }} — {{ variant.price | money }}{% if v_tier_summary != blank %} / {{ v_tier_summary }}{% endif %}
-                      {%- else -%}
-                        {{ variant.title }} — {{ variant.price | money }}
-                      {%- endif -%}
-                      {%- unless variant.available %} (sold out){%- endunless -%}
-                    </option>
-                  {%- endfor -%}
-                </select>
+                </span>
+
                 {%- if has_tier_metadata -%}
+                  <div
+                    class="ds-pdp__tier-cards"
+                    data-ds-variant-radio-group
+                    role="radiogroup"
+                    aria-label="License tier"
+                  >
+                    {%- for variant in product.variants -%}
+                      {%- assign v_tier_name    = variant.metafields.disrupted.tier_name.value -%}
+                      {%- assign v_tier_summary = variant.metafields.disrupted.tier_summary.value -%}
+                      <label class="ds-pdp__tier-card">
+                        <input
+                          type="radio"
+                          class="ds-pdp__tier-card-input"
+                          name="ds-tier-{{ section.id }}"
+                          value="{{ variant.id }}"
+                          {% if variant.id == current_variant.id %}checked{% endif %}
+                          {% unless variant.available %}disabled{% endunless %}
+                        >
+                        <div class="ds-pdp__tier-card-content">
+                          <div class="ds-pdp__tier-card-head">
+                            <span class="ds-pdp__tier-card-radio" aria-hidden="true"></span>
+                            <span class="ds-pdp__tier-card-name">{{ v_tier_name | default: variant.title }}</span>
+                            <span class="ds-pdp__tier-card-price">{{ variant.price | money }}</span>
+                          </div>
+                          {%- if v_tier_summary != blank -%}
+                            <p class="ds-pdp__tier-card-summary">{{ v_tier_summary }}</p>
+                          {%- endif -%}
+                          {%- unless variant.available -%}
+                            <p class="ds-pdp__tier-card-soldout">Sold out</p>
+                          {%- endunless -%}
+                        </div>
+                      </label>
+                    {%- endfor -%}
+                  </div>
                   <p class="ds-pdp__info-tier-compare">
                     <a href="/pages/license" target="_blank" rel="noopener" class="ds-text-link">
                       Compare tiers + read full license
                       <span class="ds-text-link__arrow" aria-hidden="true">→</span>
                     </a>
                   </p>
+                {%- else -%}
+                  <select
+                    id="ds-variant-{{ section.id }}"
+                    class="ds-pdp__info-variant-select"
+                    data-ds-variant-select
+                  >
+                    {%- for variant in product.variants -%}
+                      <option
+                        value="{{ variant.id }}"
+                        {% if variant.id == current_variant.id %}selected{% endif %}
+                        {% unless variant.available %}disabled{% endunless %}
+                      >
+                        {{ variant.title }} — {{ variant.price | money }}{% unless variant.available %} (sold out){% endunless %}
+                      </option>
+                    {%- endfor -%}
+                  </select>
                 {%- endif -%}
               </div>
             {%- endunless -%}
@@ -410,19 +442,35 @@
 
         {%- unless product.has_only_default_variant -%}
           {%- comment -%}
-            Tiny per-section script: keep the hidden variantId input in sync
-            with the user-facing variant select so AJAX submits the right id.
+            Tiny per-section script: keep the hidden variantId input in
+            sync with the user-facing variant picker so AJAX submits
+            the right id. Handles both control types:
+              • <select data-ds-variant-select>  (non-tier products)
+              • [data-ds-variant-radio-group]    (tier mode — button cards)
           {%- endcomment -%}
           <script>
             (function () {
               var sec = document.getElementById('shopify-section-{{ section.id }}');
               if (!sec) return;
-              var select = sec.querySelector('[data-ds-variant-select]');
               var hidden = sec.querySelector('[data-ds-variant-input]');
-              if (!select || !hidden) return;
-              select.addEventListener('change', function () {
-                hidden.value = select.value;
-              });
+              if (!hidden) return;
+
+              var select = sec.querySelector('[data-ds-variant-select]');
+              if (select) {
+                select.addEventListener('change', function () {
+                  hidden.value = select.value;
+                });
+                return;
+              }
+
+              var radios = sec.querySelector('[data-ds-variant-radio-group]');
+              if (radios) {
+                radios.addEventListener('change', function (e) {
+                  if (e.target && e.target.matches('input[type="radio"]')) {
+                    hidden.value = e.target.value;
+                  }
+                });
+              }
             })();
           </script>
         {%- endunless -%}
@@ -874,13 +922,115 @@
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
-  /* Tier compare link — shows below the variant select on PDPs whose
+  /* Tier compare link — shows below the variant picker on PDPs whose
      variants have license-tier metadata. Subtle, no visual weight. */
   .ds-pdp__info-tier-compare {
     margin: 8px 0 0;
     font-size: 12px;
     letter-spacing: 0.02em;
   }
+
+  /* ----- Tier button cards (replaces <select> in tier mode) -----
+     One card per variant, stacked. Each card is a <label> wrapping a
+     visually-hidden radio input + visible content. The radio drives
+     state via native form semantics; arrow keys, Space, and tab order
+     work without any custom JS. Selection styling uses :has() and the
+     adjacent-sibling combinator so it stays in sync with the radio. */
+  .ds-pdp__tier-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+  }
+  .ds-pdp__tier-card {
+    position: relative;
+    display: block;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .ds-pdp__tier-card:hover {
+    border-color: var(--color-fg-muted);
+  }
+  .ds-pdp__tier-card:has(.ds-pdp__tier-card-input:checked) {
+    border-color: var(--color-accent);
+    background: rgba(255, 77, 31, 0.05);
+  }
+  .ds-pdp__tier-card:has(.ds-pdp__tier-card-input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  /* Visually hide the native radio but keep it in the accessibility
+     tree so keyboard + SR users get full control. */
+  .ds-pdp__tier-card-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 1px;
+    height: 1px;
+  }
+  .ds-pdp__tier-card-input:focus-visible + .ds-pdp__tier-card-content {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+  .ds-pdp__tier-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  /* Custom radio dot — circular border, fills with accent on check. */
+  .ds-pdp__tier-card-radio {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-background);
+    flex-shrink: 0;
+    position: relative;
+    transition: border-color 0.15s ease;
+  }
+  .ds-pdp__tier-card:has(.ds-pdp__tier-card-input:checked) .ds-pdp__tier-card-radio {
+    border-color: var(--color-accent);
+  }
+  .ds-pdp__tier-card:has(.ds-pdp__tier-card-input:checked) .ds-pdp__tier-card-radio::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    background: var(--color-accent);
+    border-radius: 50%;
+  }
+  .ds-pdp__tier-card-name {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-fg);
+  }
+  .ds-pdp__tier-card-price {
+    font-size: 15px;
+    color: var(--color-fg);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Summary line indents past the radio so it reads under the tier name,
+     not under the radio dot. 14px radio + 12px gap = 26px indent. */
+  .ds-pdp__tier-card-summary {
+    margin: 4px 0 0;
+    padding-left: 26px;
+    font-size: 12px;
+    color: var(--color-fg-muted);
+    letter-spacing: 0.02em;
+  }
+  .ds-pdp__tier-card-soldout {
+    margin: 4px 0 0;
+    padding-left: 26px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--color-fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
   .ds-pdp__info-cta {
     margin-top: var(--space-3);
   }
@@ -1308,21 +1458,41 @@
       });
     }
 
-    // Sync variant + price between the main form and the sticky form
+    // Sync variant + price between the main form and the sticky form.
+    // Handles both control types — <select> for normal variants, and the
+    // tier-cards radio group when the product has license-tier metafields.
     var mainSelect    = document.querySelector('[data-ds-variant-select]');
+    var mainRadios    = document.querySelector('[data-ds-variant-radio-group]');
     var stickyVariant = bar.querySelector('[data-ds-sticky-variant]');
     var stickyPrice   = bar.querySelector('[data-ds-sticky-price]');
+
+    function applyToSticky(newValue, newPriceText) {
+      if (stickyVariant) stickyVariant.value = newValue;
+      if (stickyPrice && newPriceText) stickyPrice.textContent = newPriceText;
+    }
+
     if (mainSelect && stickyVariant) {
       mainSelect.addEventListener('change', function () {
-        stickyVariant.value = mainSelect.value;
-        // Refresh the visible price too. The variant id matches the
-        // option element's value; pull its label which we embed below
-        // as "Title — $XX.YY" so we can extract the trailing price.
+        // Pull price from the option's label text (we embed it as
+        // "Title — $XX.YY"). Same regex as before.
         var opt = mainSelect.options[mainSelect.selectedIndex];
-        if (opt && stickyPrice) {
+        var priceText = '';
+        if (opt) {
           var m = opt.textContent.match(/(\$|€|£)\s?[\d.,]+/);
-          if (m) stickyPrice.textContent = m[0];
+          if (m) priceText = m[0];
         }
+        applyToSticky(mainSelect.value, priceText);
+      });
+    }
+
+    if (mainRadios && stickyVariant) {
+      mainRadios.addEventListener('change', function (e) {
+        if (!e.target || !e.target.matches('input[type="radio"]')) return;
+        // Pull the price directly from the card's price span — no regex
+        // needed since the markup gives us a clean element to read.
+        var card = e.target.closest('.ds-pdp__tier-card');
+        var priceEl = card && card.querySelector('.ds-pdp__tier-card-price');
+        applyToSticky(e.target.value, priceEl ? priceEl.textContent : '');
       });
     }
   })();
