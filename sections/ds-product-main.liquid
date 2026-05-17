@@ -26,15 +26,22 @@
     demo_url         (url)                      → sub-CTA link destination (label is sub_cta_label)
     sub_cta_label    (string)                   → text on the sub-CTA link. Defaults to "Watch the demo"
                                                   for plugins; set to "See the full specimen" for fonts, etc.
-    specs            (list of Spec metaobjects) → specs table rows. Each Spec has
-                                                  `label` + `value` text fields. Works for any
-                                                  product type — plugins, fonts, graphics, etc.
-                                                  Hides panel if no specs are set.
+    plugin_specs     (Plugin specs metaobject)   → typed plugin spec rows:
+                                                   compat, format, file_size, license, updates, support
+    font_specs       (Font specs metaobject)     → typed font spec rows:
+                                                   family, glyphs, formats, language, license
+    graphics_specs   (Graphics specs metaobject) → typed graphics spec rows:
+                                                   items, formats, resolution, license, updates
+    specs            (list of Spec metaobjects)  → generic fallback for unusual product types.
+                                                   Each Spec has `label` + `value` text fields.
 
-  DEPRECATED (still works if set, but specs metafield supersedes them):
-    compat / format / file_size / license / updates / support — old hardcoded
-    spec metafields. The new `specs` metafield handles all spec rows
-    generically. Leave these blank to use only `specs`.
+  Spec rendering priority:
+    plugin_specs → font_specs → graphics_specs → specs (list) → legacy keys.
+  First non-empty set wins. Section hides if all are empty.
+
+  DEPRECATED (still works if set, lowest priority):
+    compat / format / file_size / license / updates / support — old flat
+    metafield keys. Use plugin_specs metaobject instead going forward.
 
   All metafields are OPTIONAL. Rows without a value just don't render.
   See docs/changes.md for the metafield definition setup steps.
@@ -97,18 +104,25 @@
   assign sub_cta_label = product.metafields.disrupted.sub_cta_label.value | default: 'Watch the demo'
 
   comment
-    Specs — generic Spec metaobject list. Each entry has `label` + `value`
-    text fields. Falls back to the deprecated hardcoded keys
-    (compat/format/file_size/license/updates/support) for backward
-    compatibility if `disrupted.specs` isn't set on the product.
+    Specs — resolved in priority order:
+    1. plugin_specs metaobject  (Compat/Format/File size/License/Updates/Support)
+    2. font_specs metaobject    (Family/Glyphs/Formats/Language/License)
+    3. graphics_specs metaobject (Items/Formats/Resolution/License/Updates)
+    4. specs (list of generic Spec metaobjects, free label+value)
+    5. legacy flat keys (backward compat)
   endcomment
-  assign specs_list = product.metafields.disrupted.specs.value
+  assign plugin_specs   = product.metafields.disrupted.plugin_specs.value
+  assign font_specs     = product.metafields.disrupted.font_specs.value
+  assign graphics_specs = product.metafields.disrupted.graphics_specs.value
+  assign specs_list     = product.metafields.disrupted.specs.value
 
-  assign legacy_spec_keys = 'compat,format,file_size,license,updates,support' | split: ','
+  assign legacy_spec_keys   = 'compat,format,file_size,license,updates,support' | split: ','
   assign legacy_spec_labels = 'Compat,Format,File size,License,Updates,Support' | split: ','
 
   assign has_specs = false
-  if specs_list and specs_list.size > 0
+  if plugin_specs or font_specs or graphics_specs
+    assign has_specs = true
+  elsif specs_list and specs_list.size > 0
     assign has_specs = true
   else
     for key in legacy_spec_keys
@@ -266,29 +280,41 @@
           </div>
         {%- endif -%}
 
-        {%- comment -%} SPECS TABLE — generic Spec metaobject list (preferred), legacy fallback {%- endcomment -%}
+        {%- comment -%} SPECS TABLE — typed sets (plugin/font/graphics) preferred, then generic, then legacy {%- endcomment -%}
         {%- if has_specs -%}
           <div class="ds-pdp__info-specs">
-            {%- if specs_list and specs_list.size > 0 -%}
+            {%- if plugin_specs -%}
+              {%- if plugin_specs.compat.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Compat</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.compat.value }}</span></div>{%- endif -%}
+              {%- if plugin_specs.format.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Format</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.format.value }}</span></div>{%- endif -%}
+              {%- if plugin_specs.file_size.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">File size</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.file_size.value }}</span></div>{%- endif -%}
+              {%- if plugin_specs.license.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.license.value }}</span></div>{%- endif -%}
+              {%- if plugin_specs.updates.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Updates</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.updates.value }}</span></div>{%- endif -%}
+              {%- if plugin_specs.support.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Support</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.support.value }}</span></div>{%- endif -%}
+            {%- elsif font_specs -%}
+              {%- if font_specs.family.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Family</span><span class="ds-pdp__info-spec-value">{{ font_specs.family.value }}</span></div>{%- endif -%}
+              {%- if font_specs.glyphs.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Glyphs</span><span class="ds-pdp__info-spec-value">{{ font_specs.glyphs.value }}</span></div>{%- endif -%}
+              {%- if font_specs.formats.value  != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Formats</span><span class="ds-pdp__info-spec-value">{{ font_specs.formats.value }}</span></div>{%- endif -%}
+              {%- if font_specs.language.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Language</span><span class="ds-pdp__info-spec-value">{{ font_specs.language.value }}</span></div>{%- endif -%}
+              {%- if font_specs.license.value  != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ font_specs.license.value }}</span></div>{%- endif -%}
+            {%- elsif graphics_specs -%}
+              {%- if graphics_specs.items.value      != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Items</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.items.value }}</span></div>{%- endif -%}
+              {%- if graphics_specs.formats.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Formats</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.formats.value }}</span></div>{%- endif -%}
+              {%- if graphics_specs.resolution.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Resolution</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.resolution.value }}</span></div>{%- endif -%}
+              {%- if graphics_specs.license.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.license.value }}</span></div>{%- endif -%}
+              {%- if graphics_specs.updates.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Updates</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.updates.value }}</span></div>{%- endif -%}
+            {%- elsif specs_list and specs_list.size > 0 -%}
               {%- for spec in specs_list -%}
                 {%- assign label = spec.label.value -%}
                 {%- assign value = spec.value.value -%}
                 {%- if label != blank and value != blank -%}
-                  <div class="ds-pdp__info-spec">
-                    <span class="ds-pdp__info-spec-label">{{ label }}</span>
-                    <span class="ds-pdp__info-spec-value">{{ value }}</span>
-                  </div>
+                  <div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">{{ label }}</span><span class="ds-pdp__info-spec-value">{{ value }}</span></div>
                 {%- endif -%}
               {%- endfor -%}
             {%- else -%}
-              {%- comment -%} Legacy fallback {%- endcomment -%}
               {%- for key in legacy_spec_keys -%}
                 {%- assign value = product.metafields.disrupted[key].value -%}
                 {%- if value != blank -%}
-                  <div class="ds-pdp__info-spec">
-                    <span class="ds-pdp__info-spec-label">{{ legacy_spec_labels[forloop.index0] }}</span>
-                    <span class="ds-pdp__info-spec-value">{{ value }}</span>
-                  </div>
+                  <div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">{{ legacy_spec_labels[forloop.index0] }}</span><span class="ds-pdp__info-spec-value">{{ value }}</span></div>
                 {%- endif -%}
               {%- endfor -%}
             {%- endif -%}
