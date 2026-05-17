@@ -1,0 +1,492 @@
+{%- comment -%}
+  sections/ds-product-scroller.liquid — Disrupted Studio product marquee.
+
+  Auto-scrolling horizontal strip of product cards. Designed for the
+  homepage but enabled on product / page / collection too, so the same
+  section can be a "Currently on sale" strip on /, a "More tools" strip
+  on a PDP, etc.
+
+  Sale state is detected automatically: any product with a
+  compare_at_price > price gets a corner badge ("−30%") and a
+  strikethrough on the original price next to the current price. No
+  separate "sale mode" toggle needed — Shopify's native compare-at
+  pricing is the source of truth. Toggles in section settings let you
+  hide the badge or strikethrough if you want a neutral "featured"
+  scroller without sale framing.
+
+  Marquee
+    • Animation translates the track from 0 → -50%, with the product
+      list rendered twice in sequence, for a seamless infinite loop
+    • Hover pauses (so users can read or click without it sliding away)
+    • Direction toggle (left ↔ right)
+    • Speed range (20–120s per full loop)
+    • Mask-image fades the edges so cards entering/leaving don't have
+      a hard cutoff against the section background
+
+  A11y
+    • prefers-reduced-motion: animation off entirely. Users see a
+      static strip and can scroll horizontally with native overflow.
+    • Cards in the duplicate (second) set get aria-hidden + tabindex:-1
+      so screen readers and keyboard users only interact with the
+      first authoritative pass.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs                = section.settings.color_scheme
+  assign eyebrow           = section.settings.eyebrow
+  assign heading           = section.settings.heading
+  assign intro             = section.settings.intro
+  assign products          = section.settings.products
+  assign show_sale_badge   = section.settings.show_sale_badge
+  assign show_strikethrough = section.settings.show_strikethrough
+  assign direction         = section.settings.direction | default: 'left'
+  assign speed             = section.settings.speed | default: 60
+  assign card_width        = section.settings.card_width | default: 240
+-%}
+
+{%- if products.size > 0 -%}
+  <section
+    class="ds-scroller color-{{ cs }}"
+    data-ds-scroller
+    data-direction="{{ direction }}"
+    style="--ds-scroller-speed: {{ speed }}s; --ds-scroller-card-width: {{ card_width }}px;"
+  >
+    <div class="ds-scroller__container">
+
+      {%- if eyebrow != blank or heading != blank or intro != blank -%}
+        <header class="ds-scroller__header">
+          {%- if eyebrow != blank -%}
+            <p class="ds-scroller__eyebrow">[ {{ eyebrow | escape }} ]</p>
+          {%- endif -%}
+          {%- if heading != blank -%}
+            <h2 class="ds-scroller__heading">{{ heading | escape }}</h2>
+          {%- endif -%}
+          {%- if intro != blank -%}
+            <p class="ds-scroller__intro">{{ intro | escape }}</p>
+          {%- endif -%}
+        </header>
+      {%- endif -%}
+
+      <div class="ds-scroller__track-wrap">
+        <div class="ds-scroller__track">
+          {%- comment -%}
+            Render product list twice for seamless infinite scroll.
+            Second pass is aria-hidden + tabindex=-1 so it doesn't
+            duplicate the products in the accessibility tree.
+          {%- endcomment -%}
+          {%- for n in (1..2) -%}
+            {%- assign is_duplicate = forloop.last -%}
+            {%- for product in products -%}
+              {%- liquid
+                assign on_sale = false
+                if product.compare_at_price > product.price
+                  assign on_sale = true
+                endif
+
+                assign discount_pct = 0
+                if on_sale and product.compare_at_price > 0
+                  assign discount_diff = product.compare_at_price | minus: product.price
+                  assign discount_pct = discount_diff | times: 100 | divided_by: product.compare_at_price
+                endif
+              -%}
+
+              <a
+                href="{{ product.url }}"
+                class="ds-scroller__card"
+                {% if is_duplicate %}aria-hidden="true" tabindex="-1"{% endif %}
+              >
+                <div class="ds-scroller__card-media">
+                  {%- if product.featured_image -%}
+                    {{
+                      product.featured_image
+                      | image_url: width: 600
+                      | image_tag:
+                          class: 'ds-scroller__card-img',
+                          loading: 'lazy',
+                          widths: '240,360,480,600',
+                          alt: product.title
+                    }}
+                  {%- else -%}
+                    <span class="ds-scroller__card-img ds-scroller__card-img--placeholder" aria-hidden="true"></span>
+                  {%- endif -%}
+
+                  {%- if show_sale_badge and on_sale -%}
+                    <span class="ds-scroller__card-badge">
+                      −{{ discount_pct }}%
+                    </span>
+                  {%- endif -%}
+
+                  {%- if product.type != blank -%}
+                    <span class="ds-scroller__card-type">{{ product.type }}</span>
+                  {%- endif -%}
+                </div>
+
+                <div class="ds-scroller__card-info">
+                  <h3 class="ds-scroller__card-title">{{ product.title }}</h3>
+                  <p class="ds-scroller__card-price">
+                    <span class="ds-scroller__card-price-now{% if on_sale %} ds-scroller__card-price-now--sale{% endif %}">
+                      {{- product.price | money -}}
+                    </span>
+                    {%- if show_strikethrough and on_sale -%}
+                      <span class="ds-scroller__card-price-was">
+                        {{- product.compare_at_price | money -}}
+                      </span>
+                    {%- endif -%}
+                  </p>
+                </div>
+              </a>
+            {%- endfor -%}
+          {%- endfor -%}
+        </div>
+      </div>
+    </div>
+  </section>
+{%- elsif request.design_mode -%}
+  <div class="ds-scroller__empty">
+    <p>Pick at least one product in the section settings to populate the scroller.</p>
+  </div>
+{%- endif -%}
+
+{% style %}
+  .ds-scroller {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding: clamp(56px, 7vw, 112px) 0;
+    overflow: hidden;
+  }
+  .ds-scroller__container {
+    /* No max-width — the marquee should bleed to the viewport edges */
+  }
+
+  /* ---- Header ---- */
+  .ds-scroller__header {
+    max-width: 980px;
+    margin: 0 auto clamp(32px, 4vw, 56px);
+    padding: 0 var(--pad-x);
+  }
+  .ds-scroller__eyebrow {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-scroller__heading {
+    font-size: clamp(32px, 5vw, 64px);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0;
+  }
+  .ds-scroller__intro {
+    max-width: 56ch;
+    margin: var(--space-4) 0 0;
+    line-height: 1.5;
+    color: var(--color-fg-muted);
+  }
+
+  /* ---- Track ---- */
+  .ds-scroller__track-wrap {
+    overflow: hidden;
+    /* Soft fade at both ends so cards entering/leaving don't slam
+       against a hard background edge — keeps the marquee feeling
+       like one continuous strip rather than a clipped row. */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 4%,
+      black 96%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 4%,
+      black 96%,
+      transparent 100%
+    );
+  }
+  .ds-scroller__track {
+    display: flex;
+    gap: var(--space-4);
+    width: max-content;
+    padding: 4px var(--pad-x); /* keeps the first/last card off the viewport edge by a hair when paused */
+    animation: ds-scroller-marquee var(--ds-scroller-speed, 60s) linear infinite;
+    will-change: transform;
+  }
+  .ds-scroller[data-direction="right"] .ds-scroller__track {
+    animation-name: ds-scroller-marquee-rev;
+  }
+  .ds-scroller__track:hover,
+  .ds-scroller__track:focus-within {
+    animation-play-state: paused;
+  }
+
+  @keyframes ds-scroller-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @keyframes ds-scroller-marquee-rev {
+    from { transform: translateX(-50%); }
+    to   { transform: translateX(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-scroller__track-wrap {
+      overflow-x: auto;
+    }
+    .ds-scroller__track {
+      animation: none;
+    }
+  }
+
+  /* ---- Card ---- */
+  .ds-scroller__card {
+    flex: 0 0 var(--ds-scroller-card-width, 240px);
+    width: var(--ds-scroller-card-width, 240px);
+    text-decoration: none;
+    color: var(--color-fg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-scroller__card-media {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+    overflow: hidden;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-scroller__card:hover .ds-scroller__card-media {
+    border-color: var(--color-accent);
+  }
+  .ds-scroller__card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s var(--ease);
+  }
+  .ds-scroller__card:hover .ds-scroller__card-img {
+    transform: scale(1.04);
+  }
+  .ds-scroller__card-img--placeholder {
+    background: var(--color-bg-elev);
+  }
+  /* Sale badge — top-left corner, accent fill, mono caps. Brutalist
+     shouty version of a Shopify SALE tag. */
+  .ds-scroller__card-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 4px 8px;
+    background: var(--color-accent);
+    color: var(--color-background);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Type tag — top-right corner, bordered pill matching the cart card
+     PLUGIN/FONT/GRAPHICS treatment so the scroller stays on-brand. */
+  .ds-scroller__card-type {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 2px 7px;
+    background: rgba(10, 10, 10, 0.65);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-scroller__card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 2px;
+  }
+  .ds-scroller__card-title {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    margin: 0;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-scroller__card:hover .ds-scroller__card-title {
+    color: var(--color-accent);
+  }
+  .ds-scroller__card-price {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin: 0;
+  }
+  .ds-scroller__card-price-now {
+    color: var(--color-fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-scroller__card-price-now--sale {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .ds-scroller__card-price-was {
+    color: var(--color-fg-muted);
+    text-decoration: line-through;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- Empty state (design mode only) ---- */
+  .ds-scroller__empty {
+    padding: 80px var(--pad-x);
+    text-align: center;
+    color: var(--color-fg-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px dashed var(--color-border);
+  }
+
+  /* ---- Mobile tweaks ---- */
+  @media (max-width: 600px) {
+    .ds-scroller__card {
+      flex: 0 0 min(70vw, var(--ds-scroller-card-width, 240px));
+      width: min(70vw, var(--ds-scroller-card-width, 240px));
+    }
+    .ds-scroller__track-wrap {
+      -webkit-mask-image: linear-gradient(to right, transparent 0, black 2%, black 98%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0, black 2%, black 98%, transparent 100%);
+    }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Product scroller",
+  "tag": "section",
+  "class": "ds-section ds-section--scroller",
+  "enabled_on": {
+    "templates": ["index", "product", "page", "collection", "list-collections"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "header",
+      "content": "Copy"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "default": "ON SALE",
+      "label": "Eyebrow",
+      "info": "Wrapped in [ brackets ] above the heading. Leave blank to hide."
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Current sale",
+      "label": "Heading"
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "label": "Intro paragraph",
+      "info": "Optional. Short paragraph below the heading."
+    },
+    {
+      "type": "header",
+      "content": "Products"
+    },
+    {
+      "type": "product_list",
+      "id": "products",
+      "label": "Products to include",
+      "limit": 12,
+      "info": "Pick up to 12 products. Products with a compare-at price set on the variant (Shopify admin → product → pricing) automatically show a SALE badge + strikethrough."
+    },
+    {
+      "type": "header",
+      "content": "Sale display"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sale_badge",
+      "default": true,
+      "label": "Show −X% badge on sale products",
+      "info": "Calculated from compare-at price vs. current price. Shows nothing on products without a compare-at price."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_strikethrough",
+      "default": true,
+      "label": "Show compare-at price with strikethrough"
+    },
+    {
+      "type": "header",
+      "content": "Motion"
+    },
+    {
+      "type": "select",
+      "id": "direction",
+      "label": "Scroll direction",
+      "options": [
+        { "value": "left", "label": "Right → left (ticker)" },
+        { "value": "right", "label": "Left → right (reverse)" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "range",
+      "id": "speed",
+      "label": "Loop time",
+      "min": 20,
+      "max": 120,
+      "step": 5,
+      "default": 60,
+      "unit": "s",
+      "info": "Seconds for one full loop of the product list. Lower = faster. Users with reduced-motion preferences see a static strip instead."
+    },
+    {
+      "type": "range",
+      "id": "card_width",
+      "label": "Card width",
+      "min": 180,
+      "max": 360,
+      "step": 10,
+      "default": 240,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product scroller",
+      "category": "Disrupted Studio",
+      "settings": {
+        "eyebrow": "ON SALE",
+        "heading": "Current sale",
+        "show_sale_badge": true,
+        "show_strikethrough": true,
+        "direction": "left",
+        "speed": 60,
+        "card_width": 240
+      }
+    }
+  ]
+}
+{% endschema %}
