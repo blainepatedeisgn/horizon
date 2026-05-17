@@ -180,27 +180,39 @@
     }
     /* When the inline script moves .ds-hero__visual INTO .ds-hero__content
        (so the image sits right under the H1 title on mobile):
-       - Zero its own padding — the parent .ds-hero__content already
-         handles horizontal padding via var(--pad-x) and we'd double up
-       - Cap the width so the 1:1 square placeholder doesn't dominate
-         the screen.  300px centered = comfortable presence under the
-         title without pushing the rest of the content way off-screen
-       - Drop the desktop radial-gradient backdrop.  It was designed for
-         the wide hero column on desktop; at mobile widths it bleeds
-         around the placeholder and reads as a stray gradient blob */
+       - Zero its own padding
+       - Drop the desktop radial-gradient backdrop (designed for wide
+         column, reads as stray glow at narrow widths)
+       - Add extra margin-top for breathing room from the H1 — the
+         content's `gap: var(--space-5)` alone wasn't enough visually
+       - Override the desktop flex-stretch so the visual sizes to
+         content, not to fill the column */
     .ds-hero__content > .ds-hero__visual {
       padding: 0;
-      max-width: 300px;
-      width: 100%;
-      margin: 0 auto;
       background: none;
+      align-self: center;
+      margin-top: var(--space-4);
+      margin-bottom: var(--space-2);
+    }
+    /* Constrain the actual image / placeholder directly — the base
+       rules set them to `width: min(94%, 480px)` which is 94% of the
+       VISUAL element, so capping the visual wasn't enough.  Cap the
+       inner elements explicitly so they stay a reasonable size in
+       the mobile content column. */
+    .ds-hero__content > .ds-hero__visual .ds-hero__visual-img,
+    .ds-hero__content > .ds-hero__visual .ds-backlit-render {
+      width: min(80%, 280px);
     }
   }
   @media (max-width: 480px) {
     .ds-hero__visual { padding: 0 var(--space-3); }
     .ds-hero__content > .ds-hero__visual {
       padding: 0;
-      max-width: 260px;        /* slightly tighter on phones */
+      margin-top: var(--space-5);
+    }
+    .ds-hero__content > .ds-hero__visual .ds-hero__visual-img,
+    .ds-hero__content > .ds-hero__visual .ds-backlit-render {
+      width: min(75%, 240px);  /* tighter on phones */
     }
   }
 {% endstyle %}
