@@ -106,12 +106,14 @@
   }
   .ds-hero__visual-img,
   .ds-hero__visual-video {
-    /* Fill the visual column. On desktop this is roughly 1.2:1 landscape
-       (column ~570px wide vs content ~480px tall); object-fit: cover
-       trims the longer axis so centered art stays visible. Square
-       framing is restored on mobile. */
-    width: 100%;
+    /* Stay square — height matches the content column (eyebrow top to
+       button bottom), width follows from aspect-ratio so the visual
+       never stretches horizontally. max-width: 100% keeps it inside
+       the column if content is taller than the column is wide. */
     height: 100%;
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
     object-fit: cover;
     border: 1px solid var(--color-border);
     background: var(--color-bg-elev);
