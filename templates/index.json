@@ -23,7 +23,7 @@
         "ds_hero_title_iA7GRc": {
           "type": "ds-hero-title",
           "settings": {
-            "text": "Real pixels.\nOne slider.",
+            "text": "Real pixels.\nOne click.",
             "spotlight": false,
             "size_pct": 100
           },
@@ -70,6 +70,8 @@
         "color_scheme": "",
         "before_image": "shopify://shop_images/before.png",
         "after_image": "shopify://shop_images/Artboard_3.png",
+        "before_label": "Before",
+        "after_label": "After",
         "starting_position": 50,
         "visual": "shopify://shop_images/Artboard_3.png"
       }
