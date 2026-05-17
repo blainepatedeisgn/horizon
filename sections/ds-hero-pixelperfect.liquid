@@ -25,8 +25,6 @@
 {%- liquid
   assign before_image = section.settings.before_image
   assign after_image  = section.settings.after_image
-  assign before_label = section.settings.before_label
-  assign after_label  = section.settings.after_label
   assign start_pos    = section.settings.starting_position | default: 50
   assign hero_video   = section.settings.hero_video
   assign visual       = section.settings.visual
@@ -63,7 +61,7 @@
             | image_url: width: 1400
             | image_tag:
                 class: 'ds-before-after__img ds-before-after__img--before',
-                alt: before_label | default: 'Before',
+                alt: 'Before',
                 loading: 'eager',
                 fetchpriority: 'high',
                 widths: '480, 720, 960, 1200, 1400'
@@ -73,21 +71,14 @@
             | image_url: width: 1400
             | image_tag:
                 class: 'ds-before-after__img ds-before-after__img--after',
-                alt: after_label | default: 'After',
+                alt: 'After',
                 loading: 'eager',
                 widths: '480, 720, 960, 1200, 1400'
           }}
 
-          {%- if before_label != blank -%}
-            <span class="ds-before-after__label ds-before-after__label--before" aria-hidden="true">{{ before_label }}</span>
-          {%- endif -%}
-          {%- if after_label != blank -%}
-            <span class="ds-before-after__label ds-before-after__label--after" aria-hidden="true">{{ after_label }}</span>
-          {%- endif -%}
-
           <span class="ds-before-after__divider" aria-hidden="true"></span>
           <span class="ds-before-after__handle" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M11 6l-6 6 6 6M13 6l6 6-6 6"/>
             </svg>
           </span>
@@ -246,9 +237,17 @@
     --position: 50%;
     position: relative;
     width: 100%;
+    /* Cap at 720px so the slider doesn't sprawl on wide viewports —
+       matches the visual weight of the old image cap (560px) but bigger
+       to suit the comparison-rich content. Centers in the column when
+       the column is wider than the cap. */
+    max-width: 720px;
+    margin: 0 auto;
     aspect-ratio: 4 / 3;
     overflow: hidden;
-    border: 2px solid var(--color-fg);
+    /* White border, hardcoded so it can't be overridden by a future
+       color-scheme tweak that re-maps --color-fg to something else. */
+    border: 2px solid #ffffff;
     background: var(--color-bg-elev);
     user-select: none;
     cursor: ew-resize;
@@ -257,7 +256,10 @@
     touch-action: none;
   }
   .ds-before-after:focus-visible {
-    outline: 2px solid var(--color-accent);
+    /* Subtle white outline matching the brutalist border. Was accent
+       orange before — moved to white so the focus indicator doesn't
+       fight the brand-white frame. */
+    outline: 2px solid #ffffff;
     outline-offset: 4px;
   }
   .ds-before-after__img {
@@ -284,7 +286,7 @@
     bottom: 0;
     left: var(--position);
     width: 2px;
-    background: var(--color-fg);
+    background: #ffffff;
     transform: translateX(-50%);
     pointer-events: none;
     /* Subtle drop shadow so the line reads against both light and
@@ -296,50 +298,25 @@
     top: 50%;
     left: var(--position);
     transform: translate(-50%, -50%);
-    width: 44px;
-    height: 44px;
+    /* Shrunk handle — was 44px, now 32px. Visible but less dominant. */
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: var(--color-fg);
+    background: #ffffff;
     color: var(--color-background);
-    border: 2px solid var(--color-fg);
+    border: 2px solid #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
     z-index: 2;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    transition: transform 0.15s ease, background 0.15s ease;
+    transition: transform 0.15s ease;
   }
-  .ds-before-after:hover .ds-before-after__handle {
-    transform: translate(-50%, -50%) scale(1.08);
-  }
-  .ds-before-after:focus-visible .ds-before-after__handle,
+  .ds-before-after:hover .ds-before-after__handle,
   .ds-before-after[data-dragging] .ds-before-after__handle {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-fg);
+    transform: translate(-50%, -50%) scale(1.1);
   }
-  /* Optional corner labels — "Before" + "After" annotations so the
-     comparison reads at a glance. Pill style matches the cart line
-     item PLUGIN tag for brand consistency. */
-  .ds-before-after__label {
-    position: absolute;
-    top: 12px;
-    padding: 4px 8px;
-    background: rgba(10, 10, 10, 0.72);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    color: var(--color-fg);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    pointer-events: none;
-    z-index: 2;
-  }
-  .ds-before-after__label--before { left: 12px; }
-  .ds-before-after__label--after  { right: 12px; }
-
   @media (max-width: 900px) {
     .ds-hero {
       grid-template-columns: 1fr;
@@ -365,14 +342,11 @@
        landscape. Keeps the comparison readable at phone widths. */
     .ds-before-after {
       aspect-ratio: 1 / 1;
+      max-width: none;
     }
     .ds-before-after__handle {
-      width: 38px;
-      height: 38px;
-    }
-    .ds-before-after__label {
-      font-size: 9px;
-      padding: 3px 6px;
+      width: 28px;
+      height: 28px;
     }
   }
   @media (max-width: 480px) {
@@ -513,20 +487,6 @@
       "id": "after_image",
       "label": "After image",
       "info": "The top layer — visible on the RIGHT side of the slider when dragged. e.g. the Pixel Perfect output of the same source. Same dimensions as the before image for clean comparison."
-    },
-    {
-      "type": "text",
-      "id": "before_label",
-      "label": "Before label",
-      "default": "Before",
-      "info": "Small caption pill in the top-left corner. Leave blank to hide."
-    },
-    {
-      "type": "text",
-      "id": "after_label",
-      "label": "After label",
-      "default": "After",
-      "info": "Small caption pill in the top-right corner."
     },
     {
       "type": "range",
