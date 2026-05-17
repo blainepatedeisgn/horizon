@@ -154,6 +154,18 @@
       bar.addEventListener('focusout', start);
     }
 
+    // Pause the rotation when the tab is backgrounded.  Modern browsers
+    // throttle setInterval in hidden tabs but don't kill it — this
+    // explicitly halts the timer so we don't waste CPU + battery
+    // animating something the user can't see.  Resumes on tab return.
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        stop();
+      } else {
+        start();
+      }
+    });
+
     var prevBtn = bar.querySelector('[data-ds-announce-prev]');
     var nextBtn = bar.querySelector('[data-ds-announce-next]');
     if (prevBtn) prevBtn.addEventListener('click', function () { prev(); start(); });

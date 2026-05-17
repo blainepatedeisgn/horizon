@@ -1,2 +1,12 @@
 {{ 'overflow-list.css' | asset_url | preload_tag: as: 'style' }}
 {{ 'base.css' | asset_url | stylesheet_tag: preload: true }}
+
+{%- comment -%}
+  Disrupted Studio design tokens — loaded inside Horizon's stylesheet
+  chain so it's preloaded alongside base.css and lands in the head
+  BEFORE any inline-style blocks from custom sections (which used to
+  reference --ds-* tokens that hadn't loaded yet, briefly flashing
+  Horizon defaults on first paint).  Replaces the late tag that used
+  to sit at the bottom of layout/theme.liquid head.
+{%- endcomment -%}
+{{ 'ds-tokens.css' | asset_url | stylesheet_tag: preload: true }}

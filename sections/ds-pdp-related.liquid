@@ -89,9 +89,17 @@
         {%- endif -%}
       {%- endfor -%}
 
-      {%- comment -%} Pass 2: fallback to all products if we need more {%- endcomment -%}
+      {%- comment -%}
+        Pass 2: fallback to all products if we need more.
+        `limit: 50` is essential — Liquid's `for` evaluates the WHOLE
+        collection even when the inner condition early-outs, so without
+        a limit this loop scans every product in the catalog on every
+        PDP render.  50 is plenty: at worst we need products_to_show (3)
+        and we already filtered duplicates via seen_ids, so 50 candidates
+        is way more than enough headroom.
+      {%- endcomment -%}
       {%- if rendered < products_to_show -%}
-        {%- for p in collections.all.products -%}
+        {%- for p in collections.all.products limit: 50 -%}
           {%- if rendered < products_to_show and p.id != product.id -%}
             {%- assign marker = ',' | append: p.id | append: ',' -%}
             {%- unless seen_ids contains marker -%}
