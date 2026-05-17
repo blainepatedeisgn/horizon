@@ -173,6 +173,30 @@
           {%- else -%}
             {{ 'product-1' | placeholder_svg_tag: 'ds-pdp__gallery-main-img placeholder-svg' }}
           {%- endif -%}
+          {%- comment -%}
+            Inset prev/next arrows — overlay the hero image, only rendered
+            when more than one media item exists.  Wired up by the existing
+            gallery script at the bottom of this section; arrow click =
+            cycle to the prev/next thumbnail with wrap-around at ends.
+          {%- endcomment -%}
+          {%- if product.media.size > 1 -%}
+            <button
+              type="button"
+              class="ds-pdp__gallery-nav ds-pdp__gallery-nav--prev"
+              data-ds-gallery-prev
+              aria-label="Previous image"
+            >
+              <span aria-hidden="true">&larr;</span>
+            </button>
+            <button
+              type="button"
+              class="ds-pdp__gallery-nav ds-pdp__gallery-nav--next"
+              data-ds-gallery-next
+              aria-label="Next image"
+            >
+              <span aria-hidden="true">&rarr;</span>
+            </button>
+          {%- endif -%}
         </div>
         {%- if product.media.size > 1 -%}
           <div class="ds-pdp__gallery-thumbs">
@@ -558,6 +582,70 @@
     padding: var(--space-7);
     opacity: 0.4;
   }
+
+  /* ============================================================
+     GALLERY NAV ARROWS
+     Small prev/next buttons overlaid on the hero image.  Only
+     render when product.media.size > 1.  Sit inside the existing
+     `.ds-pdp__gallery-main` (position: relative), so the absolute
+     positioning is local to the square image frame.
+     Brutalist treatment: sharp corners, mono glyph, semi-opaque
+     dark background, hover lifts opacity + accent border.
+     ============================================================ */
+  .ds-pdp__gallery-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 0;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    opacity: 0.65;
+    transition:
+      opacity var(--t-fast) var(--ease),
+      background var(--t-fast) var(--ease),
+      border-color var(--t-fast) var(--ease);
+  }
+  .ds-pdp__gallery-main:hover .ds-pdp__gallery-nav {
+    opacity: 1;
+  }
+  .ds-pdp__gallery-nav:hover,
+  .ds-pdp__gallery-nav:focus-visible {
+    background: rgba(0, 0, 0, 0.85);
+    border-color: var(--color-accent);
+    opacity: 1;
+    outline: none;
+  }
+  .ds-pdp__gallery-nav--prev { left: 12px; }
+  .ds-pdp__gallery-nav--next { right: 12px; }
+
+  /* Touch devices: arrows always at full opacity (no hover state to reveal them). */
+  @media (hover: none) {
+    .ds-pdp__gallery-nav { opacity: 0.85; }
+  }
+
+  /* Mobile: slightly smaller + tighter inset so they don't crowd the image. */
+  @media (max-width: 600px) {
+    .ds-pdp__gallery-nav {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+    .ds-pdp__gallery-nav--prev { left: 8px; }
+    .ds-pdp__gallery-nav--next { right: 8px; }
+  }
+
   .ds-pdp__gallery-thumbs {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -979,35 +1067,70 @@
 {% endschema %}
 
 <script>
-  // Thumbnail swap — scope by nearest .ds-pdp__gallery instead of ID lookup
-  // (the old ID-based version was silently failing on some templates because
-  // section.id strings in JSON templates produce IDs that getElementById
-  // wasn't matching reliably).
+  // Gallery — thumbnail swap + inset prev/next arrow nav
+  //
+  // Scopes everything to the nearest `.ds-pdp__gallery` so multiple
+  // galleries on a page (shouldn't happen on PDP but safe) don't
+  // collide.  The `activate(btn)` helper is the single source of
+  // truth: thumbnail click and arrow click both funnel through it,
+  // so the active state + main-image swap stay consistent.
+  //
+  // Arrows wrap at ends (prev from index 0 jumps to the last image,
+  // next from the last image jumps back to 0).
   (function () {
     document.querySelectorAll('.ds-pdp__gallery').forEach(function (gallery) {
       var mainImg = gallery.querySelector('.ds-pdp__gallery-main-img');
       var thumbs  = gallery.querySelector('.ds-pdp__gallery-thumbs');
       if (!mainImg || !thumbs) return;
 
-      thumbs.addEventListener('click', function (e) {
-        var btn = e.target.closest('.ds-pdp__gallery-thumb');
-        if (!btn) return;
-        e.preventDefault();
+      var thumbList = Array.prototype.slice.call(
+        thumbs.querySelectorAll('.ds-pdp__gallery-thumb'));
 
+      function activate(btn) {
+        if (!btn) return;
         var src = btn.getAttribute('data-src');
         if (!src) return;
-
-        thumbs.querySelectorAll('.ds-pdp__gallery-thumb').forEach(function (b) {
-          b.classList.remove('is-active');
-        });
+        thumbList.forEach(function (b) { b.classList.remove('is-active'); });
         btn.classList.add('is-active');
-
         // Wipe responsive attrs so the browser actually loads our explicit src
         // (otherwise srcset can win and you see the original featured image)
         mainImg.removeAttribute('srcset');
         mainImg.removeAttribute('sizes');
         mainImg.src = src;
+      }
+
+      // Thumbnail click — direct activation.
+      thumbs.addEventListener('click', function (e) {
+        var btn = e.target.closest('.ds-pdp__gallery-thumb');
+        if (!btn) return;
+        e.preventDefault();
+        activate(btn);
       });
+
+      // Inset arrow nav — step ±1 through thumbList, wrap at ends.
+      function step(delta) {
+        if (thumbList.length === 0) return;
+        var currentIdx = thumbList.findIndex(function (b) {
+          return b.classList.contains('is-active');
+        });
+        if (currentIdx === -1) currentIdx = 0;
+        var nextIdx = (currentIdx + delta + thumbList.length) % thumbList.length;
+        activate(thumbList[nextIdx]);
+      }
+      var prevBtn = gallery.querySelector('[data-ds-gallery-prev]');
+      var nextBtn = gallery.querySelector('[data-ds-gallery-next]');
+      if (prevBtn) {
+        prevBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          step(-1);
+        });
+      }
+      if (nextBtn) {
+        nextBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          step(1);
+        });
+      }
     });
   })();
 
