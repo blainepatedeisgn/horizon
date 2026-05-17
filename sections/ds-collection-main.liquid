@@ -124,13 +124,22 @@
           {% if active_filter_count > 0 %}open{% endif %}
         >
           <summary class="ds-collection__filters-summary" aria-label="Toggle filters">
-            <span class="ds-collection__filters-summary-label">Filters</span>
-            {%- if active_filter_count > 0 -%}
-              <span class="ds-collection__filters-summary-count">
-                {{- active_filter_count }} active
-              </span>
-            {%- endif -%}
-            <span class="ds-collection__filters-summary-caret" aria-hidden="true">+</span>
+            {%- comment -%}
+              Inner span is required because Safari treats <summary>
+              as `display: list-item` internally and silently ignores
+              `display: flex` applied directly to it.  The wrapper
+              span carries the flex layout instead, which works
+              identically across Safari/Chromium/Firefox.
+            {%- endcomment -%}
+            <span class="ds-collection__filters-summary-inner">
+              <span class="ds-collection__filters-summary-label">Filters</span>
+              {%- if active_filter_count > 0 -%}
+                <span class="ds-collection__filters-summary-count">
+                  {{- active_filter_count }} active
+                </span>
+              {%- endif -%}
+              <span class="ds-collection__filters-summary-caret" aria-hidden="true">+</span>
+            </span>
           </summary>
         <aside class="ds-collection__filters" aria-label="Filters">
           {%- for filter in collection.filters -%}
@@ -408,23 +417,21 @@
   .ds-collection__filters-wrap {
     /* details default: no list-style on its summary marker.  */
   }
+  /* The <summary> element itself stays as a block-level "button".
+     Safari treats summary as `display: list-item` internally and
+     ignores `display: flex` applied directly — so we put the flex
+     layout on an inner span (.ds-collection__filters-summary-inner).
+     Suppress the native disclosure marker via list-style: none +
+     ::-webkit-details-marker. */
   .ds-collection__filters-summary {
-    /* Brutalist toggle button: full-width row, mono caps, sharp.
-       Native disclosure marker is suppressed; we draw our own caret. */
     list-style: none;
     display: none;        /* hidden on desktop, shown ≤900px below */
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: 14px 16px;
+    padding: 0;
+    margin: 0;
     border: 1px solid var(--color-border-strong);
     background: transparent;
     cursor: pointer;
     user-select: none;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
     color: var(--color-fg);
     border-radius: 0;
     transition: border-color var(--t-fast) var(--ease),
@@ -437,6 +444,19 @@
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
+  /* Inner flex wrapper — does the actual layout work the summary
+     would have done if Safari weren't quirky. */
+  .ds-collection__filters-summary-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 14px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
   .ds-collection__filters-summary-label {
     flex: 1;
   }
@@ -447,8 +467,7 @@
     padding: 2px 6px;
     border: 1px solid var(--color-accent);
   }
-  /* Caret: + when closed, − when open.  Uses ::before pseudo so the
-     glyph swaps cleanly without re-parsing the DOM. */
+  /* Caret: + when closed, − when open via [open] selector below. */
   .ds-collection__filters-summary-caret {
     display: inline-block;
     width: 16px;
@@ -713,8 +732,11 @@
       font-size: clamp(32px, 9vw, 56px);
     }
 
-    /* Show the <summary> toggle on mobile (was display:none for desktop). */
-    .ds-collection__filters-summary { display: flex; }
+    /* Show the <summary> toggle on mobile (was display:none for desktop).
+       Use `display: block` here — Safari treats summary as list-item
+       and ignores `display: flex` on it directly.  The internal flex
+       layout is on .ds-collection__filters-summary-inner. */
+    .ds-collection__filters-summary { display: block; }
 
     /* The <aside> filter panel uses the details element's natural
        open/closed behaviour: closed = hidden, open = visible.  No
