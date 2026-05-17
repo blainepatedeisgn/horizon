@@ -17,14 +17,14 @@
         "tagline_1": {
           "type": "tagline",
           "settings": {
-            "text": "Tools for designers who hate generic tools",
+            "text": "Tools for designers",
             "url": ""
           }
         },
         "tagline_2": {
           "type": "tagline",
           "settings": {
-            "text": "Real assets. No AI. Hand-built.",
+            "text": "Real assets. Hand-built.",
             "url": ""
           }
         },
@@ -34,20 +34,12 @@
             "text": "Bought once, owned forever.",
             "url": ""
           }
-        },
-        "tagline_4": {
-          "type": "tagline",
-          "settings": {
-            "text": "30-day money-back guarantee",
-            "url": ""
-          }
         }
       },
       "block_order": [
         "tagline_1",
         "tagline_2",
-        "tagline_3",
-        "tagline_4"
+        "tagline_3"
       ],
       "settings": {
         "fill_style": "orange",
