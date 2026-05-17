@@ -106,12 +106,12 @@
         Six stacked frames.  Only one is opacity:1 at a time via the
         staggered animation.  --i sets the per-frame animation-delay.
       {%- endcomment -%}
-      <img class="ds-loader__frame" src="{{ frame_1_url }}" alt="" style="--i: 0" decoding="sync">
-      <img class="ds-loader__frame" src="{{ frame_2_url }}" alt="" style="--i: 1" decoding="sync">
-      <img class="ds-loader__frame" src="{{ frame_3_url }}" alt="" style="--i: 2" decoding="sync">
-      <img class="ds-loader__frame" src="{{ frame_4_url }}" alt="" style="--i: 3" decoding="sync">
-      <img class="ds-loader__frame" src="{{ frame_5_url }}" alt="" style="--i: 4" decoding="sync">
-      <img class="ds-loader__frame" src="{{ frame_6_url }}" alt="" style="--i: 5" decoding="sync">
+      <img class="ds-loader__frame" src="{{ frame_1_url }}" alt="" style="--i: 0" decoding="async" loading="eager" fetchpriority="high">
+      <img class="ds-loader__frame" src="{{ frame_2_url }}" alt="" style="--i: 1" decoding="async" loading="eager" fetchpriority="high">
+      <img class="ds-loader__frame" src="{{ frame_3_url }}" alt="" style="--i: 2" decoding="async" loading="eager" fetchpriority="high">
+      <img class="ds-loader__frame" src="{{ frame_4_url }}" alt="" style="--i: 3" decoding="async" loading="eager" fetchpriority="high">
+      <img class="ds-loader__frame" src="{{ frame_5_url }}" alt="" style="--i: 4" decoding="async" loading="eager" fetchpriority="high">
+      <img class="ds-loader__frame" src="{{ frame_6_url }}" alt="" style="--i: 5" decoding="async" loading="eager" fetchpriority="high">
     </div>
   </div>
 
@@ -174,6 +174,17 @@
       animation:
         ds-loader-flash var(--ds-loader-cycle) steps(1, end) infinite;
       animation-delay: calc(var(--ds-loader-frame-ms) * var(--i));
+      /* GPU-promote so iOS Safari doesn't drop frames during the
+         rapid opacity strobe. Without this, mobile renders the
+         strobe on the CPU and either freezes on one frame or
+         appears not to cycle at all. */
+      will-change: opacity;
+      transform: translateZ(0);
+      /* Backface-hidden + translateZ together force composited
+         rendering on older Safari versions that ignore will-change
+         alone. Belt and suspenders for mobile compatibility. */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       /* No image smoothing — these are pixelated/sharp by design */
       image-rendering: pixelated;
       image-rendering: crisp-edges;
