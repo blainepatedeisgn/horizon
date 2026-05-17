@@ -132,112 +132,27 @@
         "color_scheme": ""
       }
     },
-    "trust_marquee": {
-      "type": "ds-trust-marquee",
-      "blocks": {
-        "logo_1": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "Adobe",
-            "style": "default"
-          }
-        },
-        "logo_2": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "Nike.",
-            "style": "bold"
-          }
-        },
-        "logo_3": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "Pentagram",
-            "style": "serif"
-          }
-        },
-        "logo_4": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "WARNER",
-            "style": "blocky"
-          }
-        },
-        "logo_5": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "Vans",
-            "style": "script"
-          }
-        },
-        "logo_6": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "ESPN",
-            "style": "mono"
-          }
-        },
-        "logo_7": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "Condé Nast",
-            "style": "thin"
-          }
-        },
-        "logo_8": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "Atlantic",
-            "style": "default"
-          }
-        },
-        "logo_9": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "VICE",
-            "style": "bold"
-          }
-        },
-        "logo_10": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "Ogilvy",
-            "style": "serif"
-          }
-        },
-        "logo_11": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "Sony",
-            "style": "script"
-          }
-        },
-        "logo_12": {
-          "type": "ds-trust-logo",
-          "settings": {
-            "text": "COMPLEX",
-            "style": "mono"
-          }
-        }
-      },
-      "block_order": [
-        "logo_1",
-        "logo_2",
-        "logo_3",
-        "logo_4",
-        "logo_5",
-        "logo_6",
-        "logo_7",
-        "logo_8",
-        "logo_9",
-        "logo_10",
-        "logo_11",
-        "logo_12"
-      ],
+    "ds_product_scroller_QHJ8rQ": {
+      "type": "ds-product-scroller",
+      "name": "Product scroller",
       "settings": {
         "color_scheme": "",
-        "label": "Used by designers at",
-        "duration_seconds": 40
+        "eyebrow": "ON SALE",
+        "heading": "Current sale",
+        "intro": "",
+        "products": [
+          "afterlife-graphics-pack",
+          "medieval-graphics-pack",
+          "music-video-title-templates",
+          "obscura-gothic",
+          "pixel-perfect-plugin",
+          "stargazer-graphics-pack",
+          "txt-84"
+        ],
+        "show_sale_badge": true,
+        "direction": "left",
+        "speed": 60,
+        "card_width": 240
       }
     },
     "product_grid": {
@@ -314,7 +229,7 @@
   "order": [
     "ds_hero_pixelperfect_KLC9fz",
     "hero",
-    "trust_marquee",
+    "ds_product_scroller_QHJ8rQ",
     "product_grid",
     "category_teasers",
     "newsletter"
