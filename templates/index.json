@@ -50,7 +50,8 @@
           "type": "ds-button-row",
           "settings": {
             "primary_label": "BUY PIXEL PERFECT",
-            "primary_url": "shopify://products/pixel-perfect-plugin",
+            "primary_url": "",
+            "primary_product": "pixel-perfect-plugin",
             "secondary_label": "Watch the demo",
             "secondary_url": "shopify://products/pixel-perfect-plugin"
           },
@@ -112,6 +113,7 @@
           "settings": {
             "primary_label": "Buy BACKLIT — $48",
             "primary_url": "",
+            "primary_product": "",
             "secondary_label": "Watch the demo",
             "secondary_url": ""
           },
