@@ -91,41 +91,6 @@
       gap: var(--space-5);
     }
   }
-  /* Phone: shrink card inner padding + stack the email form vertically
-     so the button's intrinsic width doesn't push it off-screen.
-     The unified form border is dropped on mobile because when the
-     form stacks (input above, button below) the shared border made
-     the button feel "trapped inside a box" rather than a distinct
-     brutalist action.  Each control now gets its own treatment. */
-  @media (max-width: 480px) {
-    .ds-newsletter-card {
-      padding: var(--space-5) var(--space-4);
-    }
-    .ds-newsletter-card__form {
-      flex-direction: column;
-      gap: var(--space-3);
-      border: 0;                              /* drop unified frame */
-    }
-    .ds-newsletter-card__form:focus-within {
-      border-color: transparent;              /* no flash when input focused */
-    }
-    .ds-newsletter-card__input {
-      border: 1px solid var(--color-border-strong);
-      padding: 16px 18px;
-      transition: border-color var(--t-fast) var(--ease);
-    }
-    .ds-newsletter-card__input:focus {
-      border-color: var(--color-fg);
-      outline: none;
-    }
-    .ds-newsletter-card__btn {
-      width: 100%;
-      padding: 18px 20px;                     /* heftier — matches the page's other CTAs */
-      font-family: var(--font-mono);          /* mono caps — matches sticky CTA + buttons elsewhere */
-      font-size: 12px;
-      letter-spacing: 0.16em;
-    }
-  }
   .ds-newsletter-card__eyebrow {
     margin: 0 0 var(--space-4);
   }
@@ -193,6 +158,50 @@
     font-size: 12px;
     color: var(--color-sale);
     margin: var(--space-3) 0 0;
+  }
+
+  /* ============================================================
+     Phone overrides (≤480px) — kept at the END of the CSS so they
+     win on the cascade.  Earlier this block sat near the top of
+     the stylesheet, BEFORE the base button/form/input rules — so
+     the base rules came later in source order and overrode the
+     mobile values (CSS cascades: equal specificity → later wins).
+     That's why the SUBSCRIBE button kept rendering as the thin
+     desktop pill even on phone widths.
+
+     Stack the form vertically and drop the unified form border —
+     when input + button stack, the shared border made the button
+     feel "trapped inside a box" rather than a distinct brutalist
+     action.  Each control gets its own treatment.
+     ============================================================ */
+  @media (max-width: 480px) {
+    .ds-newsletter-card {
+      padding: var(--space-5) var(--space-4);
+    }
+    .ds-newsletter-card__form {
+      flex-direction: column;
+      gap: var(--space-3);
+      border: 0;                              /* drop unified frame */
+    }
+    .ds-newsletter-card__form:focus-within {
+      border-color: transparent;              /* no flash when input focused */
+    }
+    .ds-newsletter-card__input {
+      border: 1px solid var(--color-border-strong);
+      padding: 16px 18px;
+      transition: border-color var(--t-fast) var(--ease);
+    }
+    .ds-newsletter-card__input:focus {
+      border-color: var(--color-fg);
+      outline: none;
+    }
+    .ds-newsletter-card__btn {
+      width: 100%;
+      padding: 18px 20px;                     /* heftier — matches the page's other CTAs */
+      font-family: var(--font-mono);          /* mono caps — matches sticky CTA + buttons elsewhere */
+      font-size: 12px;
+      letter-spacing: 0.16em;
+    }
   }
 {% endstyle %}
 
