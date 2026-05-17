@@ -33,7 +33,11 @@
     padding-bottom: clamp(16px, 2vw, 32px);
   }
   .ds-wordmark__text {
-    font-size: clamp(56px, 18vw, 256px);
+    /* Scales with viewport from 48px (tiny phones) up to 600px (wide
+       4K monitors). The 16.5vw target is calibrated against the actual
+       rendered text width — 18vw caused the ® to clip past the right
+       edge on common desktop widths. */
+    font-size: clamp(48px, 16.5vw, 600px);
     font-weight: 700;
     letter-spacing: -0.055em;
     line-height: 0.82;
@@ -55,7 +59,7 @@
   }
   @media (max-width: 640px) {
     .ds-wordmark__text {
-      font-size: clamp(56px, 19vw, 200px);
+      font-size: clamp(48px, 17vw, 180px);
       letter-spacing: -0.045em;
     }
   }
