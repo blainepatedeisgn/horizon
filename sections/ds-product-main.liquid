@@ -23,9 +23,12 @@
   PRODUCT METAFIELDS (namespace: "disrupted", optional, per-product):
     badge_text       (string)                   → orange badge text (e.g. "NEW · v1.0"); hidden if blank
     tagline          (string)                   → short paragraph under the title
-    demo_url         (url)                      → sub-CTA link destination (label is sub_cta_label)
-    sub_cta_label    (string)                   → text on the sub-CTA link. Defaults to "Watch the demo"
-                                                  for plugins; set to "See the full specimen" for fonts, etc.
+
+  Sub-CTA (label + anchor) lives in SECTION SETTINGS now, set per
+  template — plugin / font / graphics / bundle each ship with the
+  right copy and anchor preconfigured. See section schema below +
+  templates/product.*.json. Metafields `demo_url` and `sub_cta_label`
+  have been removed; their definitions can be cleaned up in admin.
     plugin_specs     (Plugin specs metaobject)   → typed plugin spec rows:
                                                    compat, format, file_size, license, updates, support
     font_specs       (Font specs metaobject)     → typed font spec rows:
@@ -100,16 +103,29 @@
     Optional content metafields.
   endcomment
   assign tagline = product.metafields.disrupted.tagline.value
-  assign sub_cta_label = product.metafields.disrupted.sub_cta_label.value | default: 'Watch the demo'
 
   comment
-    demo_url: URL-scheme allowlist.  Only http(s):// absolute URLs and
-    same-origin paths (starting with `/` or `#`) are honoured.  Anything
-    else (e.g. a stray `javascript:` URI in a metafield) is treated as
-    blank so the sub-CTA hides entirely.  Defence-in-depth — the
-    metafield is merchant-controlled, but allow lists are cheap.
+    Sub-CTA: label + URL are now SECTION SETTINGS set per template
+    (see templates/product.plugin.json, product.font.json, etc.) so
+    each product type has its own hardcoded copy + anchor target
+    without per-product metafield setup.
+
+      plugin   → "Watch the demo"             → #video
+      font     → "See the specimen"           → #specimen
+      graphics → "Browse the pack"            → #features
+      bundle   → "View bundle contents"       → #includes
+
+    Was previously driven by product metafields `demo_url` and
+    `sub_cta_label`. Those metafield definitions can be deleted from
+    Settings → Custom data → Products — no template still reads them.
+
+    URL-scheme allowlist: only http(s):// absolutes and same-origin
+    paths (starting with `/` or `#`) are honoured. Anything else
+    (e.g. a stray `javascript:` URI from a careless theme-editor edit)
+    is treated as blank so the sub-CTA hides entirely. Defence-in-depth.
   endcomment
-  assign raw_demo_url = product.metafields.disrupted.demo_url.value
+  assign sub_cta_label = section.settings.sub_cta_label | default: 'Watch the demo'
+  assign raw_demo_url = section.settings.sub_cta_url
   assign demo_url = ''
   if raw_demo_url != blank
     if raw_demo_url contains '://'
@@ -1352,6 +1368,24 @@
       "id": "color_scheme",
       "default": "scheme-1",
       "label": "Color scheme"
+    },
+    {
+      "type": "header",
+      "content": "Sub-CTA below buy button"
+    },
+    {
+      "type": "text",
+      "id": "sub_cta_label",
+      "label": "Label",
+      "default": "Watch the demo",
+      "info": "Text on the secondary link below the Add-to-cart button. Leave blank to hide entirely."
+    },
+    {
+      "type": "text",
+      "id": "sub_cta_url",
+      "label": "Link or anchor",
+      "default": "#video",
+      "info": "Use an in-page anchor (#video, #specimen, #features, #includes) to smooth-scroll to that section, OR a full https:// URL for an external link. Hardcoded per template — each product type's template ships with the right defaults."
     }
   ],
   "presets": [

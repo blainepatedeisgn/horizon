@@ -24,7 +24,9 @@
     "main": {
       "type": "ds-product-main",
       "settings": {
-        "color_scheme": "scheme-1"
+        "color_scheme": "scheme-1",
+        "sub_cta_label": "See the specimen",
+        "sub_cta_url": "#specimen"
       }
     },
     "specimen": {
