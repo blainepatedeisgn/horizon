@@ -369,9 +369,22 @@
                 endunless
               -%}
               <div class="ds-pdp__info-variant">
-                <span class="ds-pdp__info-variant-label">
-                  {{ product.options.first | default: 'Variant' }}
-                </span>
+                <div class="ds-pdp__info-variant-head">
+                  <span class="ds-pdp__info-variant-label">
+                    {{ product.options.first | default: 'Variant' }}
+                  </span>
+                  {%- if use_tier_cards -%}
+                    <a
+                      href="/pages/license"
+                      target="_blank"
+                      rel="noopener"
+                      class="ds-pdp__info-variant-link ds-text-link"
+                    >
+                      Compare tiers
+                      <span class="ds-text-link__arrow" aria-hidden="true">→</span>
+                    </a>
+                  {%- endif -%}
+                </div>
 
                 {%- if use_tier_cards -%}
                   <div
@@ -408,12 +421,6 @@
                       </label>
                     {%- endfor -%}
                   </div>
-                  <p class="ds-pdp__info-tier-compare">
-                    <a href="/pages/license" target="_blank" rel="noopener" class="ds-text-link">
-                      Compare tiers + read full license
-                      <span class="ds-text-link__arrow" aria-hidden="true">→</span>
-                    </a>
-                  </p>
                 {%- else -%}
                   <select
                     id="ds-variant-{{ section.id }}"
@@ -948,12 +955,28 @@
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
-  /* Tier compare link — shows below the variant picker on PDPs whose
-     variants have license-tier metadata. Subtle, no visual weight. */
-  .ds-pdp__info-tier-compare {
-    margin: 8px 0 0;
+  /* Label row: variant label on the left, optional auxiliary link on
+     the right (e.g. "Compare tiers →" when the picker is in tier-card
+     mode). Mirrors the "View demo →" pattern used elsewhere on PDPs —
+     keeps the secondary action paired with the section heading instead
+     of orphaned below the control. */
+  .ds-pdp__info-variant-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .ds-pdp__info-variant-link {
     font-size: 12px;
     letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  /* On narrow viewports the link wraps under the label rather than
+     squeezing into the same row — keeps it readable on phones. */
+  @media (max-width: 480px) {
+    .ds-pdp__info-variant-head {
+      flex-wrap: wrap;
+    }
   }
 
   /* ----- Tier button cards (replaces <select> in tier mode) -----
