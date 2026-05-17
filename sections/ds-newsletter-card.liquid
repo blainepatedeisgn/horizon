@@ -91,6 +91,20 @@
       gap: var(--space-5);
     }
   }
+  /* Phone: shrink card inner padding + stack the email form vertically
+     so the button's intrinsic width doesn't push it off-screen. */
+  @media (max-width: 480px) {
+    .ds-newsletter-card {
+      padding: var(--space-5) var(--space-4);
+    }
+    .ds-newsletter-card__form {
+      flex-direction: column;
+    }
+    .ds-newsletter-card__btn {
+      padding: 16px 20px;
+      width: 100%;
+    }
+  }
   .ds-newsletter-card__eyebrow {
     margin: 0 0 var(--space-4);
   }
