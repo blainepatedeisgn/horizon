@@ -4,17 +4,92 @@
   Pair of CTAs side-by-side: a primary button + an inline text-link with
   arrow. Either may be left blank to hide. For more than two CTAs we'd
   refactor to a container block that nests individual button blocks.
+
+  ADD-TO-CART MODE
+  Set `primary_product` in the block settings to convert the primary
+  button into an Add-to-cart action for that product's first available
+  variant (qty 1). Uses Horizon's <product-form-component> for AJAX +
+  cart-drawer auto-open — same pattern as ds-product-main.liquid's PDP
+  form. When no product is set, the button renders as a plain link
+  using `primary_url` (the original behavior, fully backward compatible).
 {%- endcomment -%}
 
+{%- liquid
+  assign primary_label   = block.settings.primary_label
+  assign primary_url     = block.settings.primary_url
+  assign primary_product = block.settings.primary_product
+  assign secondary_label = block.settings.secondary_label
+  assign secondary_url   = block.settings.secondary_url
+  assign atc_variant     = primary_product.selected_or_first_available_variant
+  assign atc_available   = atc_variant.available
+-%}
+
 <div class="ds-button-row" {{ block.shopify_attributes }}>
-  {%- if block.settings.primary_label != blank -%}
-    <a href="{{ block.settings.primary_url | default: '#' }}" class="ds-btn ds-btn--lg">
-      {{ block.settings.primary_label }}
-    </a>
+  {%- if primary_label != blank -%}
+    {%- if primary_product != blank -%}
+      {%- comment -%}
+        ATC mode. <product-form-component> intercepts the submit, posts
+        to /cart/add.js, and dispatches a CartAddEvent that the header's
+        <cart-drawer-component auto-open> picks up — drawer slides open
+        with the item already inside, no page reload.
+
+        Required wiring (matches PDP at ds-product-main.liquid:305+):
+          • data-section-id          — needed for section morphing
+          • data-product-id          — analytics + variant events
+          • on:submit="/handleSubmit" — declarative AJAX intercept
+          • ref="liveRegion"         — SR announcement target (required)
+          • ref="variantId"          — current variant input (required)
+      {%- endcomment -%}
+      <script
+        src="{{ 'product-form.js' | asset_url }}"
+        type="module"
+        fetchpriority="low"
+      ></script>
+
+      <product-form-component
+        data-section-id="{{ section.id }}"
+        data-product-id="{{ primary_product.id }}"
+        on:submit="/handleSubmit"
+        class="ds-button-row__atc"
+      >
+        <div
+          class="visually-hidden"
+          aria-live="assertive"
+          role="status"
+          aria-atomic="true"
+          ref="liveRegion"
+        ></div>
+        {%- form 'product', primary_product, novalidate: 'novalidate' -%}
+          <input
+            type="hidden"
+            name="id"
+            ref="variantId"
+            value="{{ atc_variant.id }}"
+          >
+          <input type="hidden" name="quantity" value="1">
+          <button
+            type="submit"
+            name="add"
+            class="ds-btn ds-btn--lg"
+            {% unless atc_available %}disabled{% endunless %}
+          >
+            {%- if atc_available -%}
+              {{ primary_label }}
+            {%- else -%}
+              Sold out
+            {%- endif -%}
+          </button>
+        {%- endform -%}
+      </product-form-component>
+    {%- else -%}
+      <a href="{{ primary_url | default: '#' }}" class="ds-btn ds-btn--lg">
+        {{ primary_label }}
+      </a>
+    {%- endif -%}
   {%- endif -%}
-  {%- if block.settings.secondary_label != blank -%}
-    <a href="{{ block.settings.secondary_url | default: '#' }}" class="ds-text-link">
-      {{ block.settings.secondary_label }}
+  {%- if secondary_label != blank -%}
+    <a href="{{ secondary_url | default: '#' }}" class="ds-text-link">
+      {{ secondary_label }}
       <span class="ds-text-link__arrow" aria-hidden="true">→</span>
     </a>
   {%- endif -%}
@@ -25,8 +100,11 @@
   "name": "Button row",
   "settings": [
     { "type": "header", "content": "Primary button" },
-    { "type": "text", "id": "primary_label", "default": "Buy BACKLIT — $48", "label": "Label" },
-    { "type": "url",  "id": "primary_url",                                    "label": "Link" },
+    { "type": "text",    "id": "primary_label",   "default": "Buy BACKLIT — $48", "label": "Label" },
+    { "type": "url",     "id": "primary_url",                                    "label": "Link",
+      "info": "Used as the button destination when no Add-to-cart product is set below." },
+    { "type": "product", "id": "primary_product",                                "label": "Add-to-cart product (optional)",
+      "info": "If set, the button becomes an Add-to-cart for this product's first available variant (qty 1). Click opens the cart drawer with the item already inside. Overrides the Link above. Leave blank to use a plain link." },
 
     { "type": "header", "content": "Secondary link" },
     { "type": "text", "id": "secondary_label", "default": "Watch the demo",   "label": "Label" },
