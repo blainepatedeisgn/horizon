@@ -110,7 +110,10 @@
      halo), so we hide that span here — otherwise the title would
      render twice as inline text. */
   .ds-hero-title {
-    font-size: var(--fs-display);
+    /* PP hero runs the headline at 80% of the responsive default — the
+       copy is short enough that the full BACKLIT size felt oversized.
+       Multiplies the clamp so mobile still scales down proportionally. */
+    font-size: calc(var(--fs-display) * 0.8);
     font-weight: 600;
     line-height: 0.92;
     letter-spacing: -0.04em;
