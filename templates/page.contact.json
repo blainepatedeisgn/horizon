@@ -16,7 +16,7 @@
           "type": "stat",
           "settings": {
             "label": "Products shipped",
-            "value": "03"
+            "value": "08"
           }
         },
         "stat_RJN7NR": {
@@ -24,19 +24,6 @@
           "settings": {
             "label": "Customers served",
             "value": "247"
-          }
-        },
-        "stat_LREWam": {
-          "type": "stat",
-          "settings": {
-            "label": "Coffees consumed",
-            "value": "∞"
-          }
-        },
-        "manifest_line_LffhxF": {
-          "type": "manifest_line",
-          "settings": {
-            "text": "no AI. ever."
           }
         },
         "manifest_line_DkBz3Q": {
@@ -56,40 +43,14 @@
           "settings": {
             "text": "you buy once, you own forever."
           }
-        },
-        "changelog_entry_qPnB7R": {
-          "type": "changelog_entry",
-          "settings": {
-            "date": "2026-05",
-            "text": "Disrupted Studio launches"
-          }
-        },
-        "changelog_entry_Xg9zVw": {
-          "type": "changelog_entry",
-          "settings": {
-            "date": "2026-05",
-            "text": "BACKLIT v1.0 ships"
-          }
-        },
-        "changelog_entry_BqTGUY": {
-          "type": "changelog_entry",
-          "settings": {
-            "date": "2026-06",
-            "text": "Next drop — TBA"
-          }
         }
       },
       "block_order": [
         "stat_rnmPP8",
         "stat_RJN7NR",
-        "stat_LREWam",
-        "manifest_line_LffhxF",
         "manifest_line_DkBz3Q",
         "manifest_line_fdYdfX",
-        "manifest_line_ELA8Tx",
-        "changelog_entry_qPnB7R",
-        "changelog_entry_Xg9zVw",
-        "changelog_entry_BqTGUY"
+        "manifest_line_ELA8Tx"
       ],
       "name": "Disrupted about",
       "settings": {
