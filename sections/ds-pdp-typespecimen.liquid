@@ -57,49 +57,8 @@
         </div>
       {%- endif -%}
 
-      <div
-        class="ds-pdp-typespecimen__quote ds-pdp-typespecimen__live"
-        contenteditable="true"
-        spellcheck="false"
-        data-ds-specimen-default="{{ specimen_quote | escape }}"
-        aria-label="Editable specimen text — type to preview"
-      >{{ specimen_quote }}</div>
-
-      {%- if section.settings.show_alphabet -%}
-        <div class="ds-pdp-typespecimen__row">
-          <div class="ds-pdp-typespecimen__row-label">Uppercase</div>
-          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
-        </div>
-        <div class="ds-pdp-typespecimen__row">
-          <div class="ds-pdp-typespecimen__row-label">Lowercase</div>
-          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">abcdefghijklmnopqrstuvwxyz</div>
-        </div>
-      {%- endif -%}
-
-      {%- if section.settings.show_numbers -%}
-        <div class="ds-pdp-typespecimen__row">
-          <div class="ds-pdp-typespecimen__row-label">Numerals</div>
-          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">0123456789</div>
-        </div>
-      {%- endif -%}
-
-      {%- if section.settings.show_glyphs -%}
-        <div class="ds-pdp-typespecimen__row">
-          <div class="ds-pdp-typespecimen__row-label">Symbols</div>
-          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">! @ # $ % &amp; * ? . , ; : - + = / \ ( ) [ ] { } &lt; &gt; &quot; &apos;</div>
-        </div>
-      {%- endif -%}
-
-      <div class="ds-pdp-typespecimen__controls">
-        <div class="ds-pdp-typespecimen__controls-left">
-          {%- if section.settings.link_label != blank -%}
-            <a href="{{ section.settings.link_url | default: '#' }}" class="ds-pdp-typespecimen__link">
-              {{ section.settings.link_label }}
-              <span class="ds-pdp-typespecimen__link-arrow" aria-hidden="true">→</span>
-            </a>
-          {%- endif -%}
-        </div>
-        <div class="ds-pdp-typespecimen__sliders" data-ds-specimen-controls>
+      <div class="ds-pdp-typespecimen__controls" data-ds-specimen-controls>
+        <div class="ds-pdp-typespecimen__sliders">
           <div class="ds-pdp-typespecimen__control">
             <div class="ds-pdp-typespecimen__control-head">
               <span class="ds-pdp-typespecimen__control-label">Size</span>
@@ -132,11 +91,52 @@
               class="ds-pdp-typespecimen__range"
             >
           </div>
-          <button type="button" class="ds-pdp-typespecimen__reset" data-ds-specimen-reset aria-label="Reset specimen">
-            Reset
-          </button>
         </div>
+        <button type="button" class="ds-pdp-typespecimen__reset" data-ds-specimen-reset aria-label="Reset specimen">
+          Reset
+        </button>
       </div>
+
+      <div
+        class="ds-pdp-typespecimen__quote ds-pdp-typespecimen__live"
+        contenteditable="true"
+        spellcheck="false"
+        data-ds-specimen-default="{{ specimen_quote | escape }}"
+        data-ds-specimen-placeholder="Type to preview…"
+        aria-label="Editable specimen text — type to preview"
+      >{{ specimen_quote }}</div>
+
+      {%- if section.settings.show_alphabet -%}
+        <div class="ds-pdp-typespecimen__row">
+          <div class="ds-pdp-typespecimen__row-label">Uppercase</div>
+          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+        </div>
+        <div class="ds-pdp-typespecimen__row">
+          <div class="ds-pdp-typespecimen__row-label">Lowercase</div>
+          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">abcdefghijklmnopqrstuvwxyz</div>
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.show_numbers -%}
+        <div class="ds-pdp-typespecimen__row">
+          <div class="ds-pdp-typespecimen__row-label">Numerals</div>
+          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">0123456789</div>
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.show_glyphs -%}
+        <div class="ds-pdp-typespecimen__row">
+          <div class="ds-pdp-typespecimen__row-label">Symbols</div>
+          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">! @ # $ % &amp; * ? . , ; : - + = / \ ( ) [ ] { } &lt; &gt; &quot; &apos;</div>
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.link_label != blank -%}
+        <a href="{{ section.settings.link_url | default: '#' }}" class="ds-pdp-typespecimen__link">
+          {{ section.settings.link_label }}
+          <span class="ds-pdp-typespecimen__link-arrow" aria-hidden="true">→</span>
+        </a>
+      {%- endif -%}
 
     </div>
   </section>
@@ -237,6 +237,12 @@
     outline: 1px dashed var(--color-border-strong);
     outline-offset: 12px;
   }
+  /* Placeholder when the editable quote is empty */
+  .ds-pdp-typespecimen__quote:empty:not(:focus)::before {
+    content: attr(data-ds-specimen-placeholder);
+    color: var(--color-fg-faint);
+    font-style: italic;
+  }
   .ds-pdp-typespecimen__row {
     display: grid;
     grid-template-columns: 140px 1fr;
@@ -269,20 +275,26 @@
     }
   }
 
-  /* Controls row: link on left, sliders on right */
+  /* Controls — sit ABOVE the editable quote so dragging the size slider
+     grows the quote DOWNWARD without pushing the slider off-screen. */
   .ds-pdp-typespecimen__controls {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
-    gap: var(--space-5);
-    margin-top: var(--space-6);
+    gap: var(--space-6);
+    padding: var(--space-5) 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-3);
     flex-wrap: wrap;
   }
-  .ds-pdp-typespecimen__controls-left { flex-shrink: 0; }
+
+  /* "See the full specimen →" link, at the bottom of the section */
   .ds-pdp-typespecimen__link {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    margin-top: var(--space-5);
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 500;
@@ -348,8 +360,8 @@
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 4px;
-    background: var(--color-border);
+    height: 2px;
+    background: var(--color-fg-faint);
     outline: none;
     cursor: pointer;
     padding: 0;
