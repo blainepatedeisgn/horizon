@@ -61,10 +61,14 @@
       "settings": {
         "color_scheme": "scheme-1",
         "logo_text": "DISRUPTED STUDIO",
+        "logo_image": "shopify://shop_images/Artboard_3_c133465b-e9a7-409a-8852-609aac9e29f4.png",
         "main_menu": "main-menu",
         "show_search": true,
         "show_cart": true,
         "sticky": true,
+        "drawer_footer_location": "Made in Atlanta",
+        "drawer_footer_email": "hello@disrupted.studio",
+        "drawer_footer_status": "Live",
         "cart_upsell_collection": "all-products",
         "cart_upsell_count": 2
       }
