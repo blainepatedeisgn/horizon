@@ -252,11 +252,36 @@ move is to swap the `_cart-products` block in main-cart.liquid for
 snippet. Deferred — the drawer is the primary surface (hero ATC opens
 it directly).
 
-### Phase 4 — Customer accounts + license retrieval (DONE)
+### Phase 4 — Customer accounts (BUILT BUT INACTIVE for launch)
 
-Built 5 classic customer-account templates with brutalist styling +
-per-line-item tier badges. Customers stay on yourdomain.com end-to-end
-instead of bouncing to Shopify-hosted account UI.
+**Status:** Built 5 classic customer-account templates with brutalist
+styling + per-line-item tier badges. Discovered the store is locked
+to **New Customer Accounts (NCA)** with no path back to Classic
+(Shopify removed the toggle for stores created in 2024+). For launch,
+we accepted NCA and customers see Shopify-hosted account UI on
+`shopify.com/.../account`.
+
+The 5 templates sit dormant in `templates/customers/` — they don't
+render under NCA, but they're kept in the repo as:
+  • Documentation of the intended account UX
+  • Reference for porting to a Customer Accounts UI Extension later
+  • A drop-in if Shopify ever reopens Classic for this store
+
+**What launches with:**
+  • Customers click any sign-in link → bounced to NCA on shopify.com
+  • Order history, re-downloads, license access all functional but
+    Shopify-styled (not brutalist)
+  • Functionality is fine; only the aesthetic is off-brand
+
+**Revisit triggers:**
+  • Customer feedback complaining about the brand break
+  • Need for license-specific UI Shopify's hosted account doesn't
+    surface (e.g., per-order license PDF download, tier upgrade button)
+  • Either would push us to build a Customer Accounts UI Extension
+    (different stack — JS+React+Shopify CLI, runs inside NCA at
+    specific extension points)
+
+**Templates built (for the record):**
 
 - [x] `snippets/ds-customer-styles.liquid` — shared CSS for every
       customer template (forms, order rows, tier pills, license callout)
@@ -272,19 +297,31 @@ instead of bouncing to Shopify-hosted account UI.
       license callout showing the buyer's name as the license
       recipient + link to `/pages/license`
 
-**Admin task — required for templates to render:**
+**Admin status (verified during build):**
 
-- [ ] Settings → Customer accounts → choose **Classic accounts**
-      (sometimes labeled "Legacy customer accounts"). If the store is
-      on New Customer Accounts (Shopify-hosted), these templates are
-      ignored and customers see Shopify-styled account screens on
-      shop.app instead of the brutalist ones we just built.
+- [x] Settings → Customer accounts → Authentication: store is on
+      **New Customer Accounts** with Shop / Google / Facebook providers.
+      No Classic toggle is exposed (Shopify removed it for stores
+      created in 2024+). The templates below cannot render until /
+      unless this changes.
 
-**Optional admin polish:**
-- [ ] Settings → Notifications → Order confirmation: link to
-      `/account` so order emails point customers at their dashboard
-- [ ] Add `/account/login` to the header navigation if you want a
-      visible "Sign in" entry point
+**If brand consistency on account pages becomes critical later:**
+
+The realistic next steps, in order of effort:
+
+1. Open a Shopify Support ticket asking for Classic accounts to be
+   enabled, citing brand consistency requirements. Indie merchants
+   have occasionally gotten this granted. Free to ask.
+2. Build a Customer Accounts UI Extension. Different stack — Shopify
+   CLI + React. Runs inside NCA at specific extension points (order
+   summary, sidebar menu items, etc.) rather than full-page control.
+   Best for adding the license-specific surfaces (download buttons,
+   tier upgrade prompts, license PDF link) onto NCA without trying
+   to rebuild the whole account UI.
+3. Build a custom `/pages/account-help` landing page on the brand
+   site framing the bounce to shopify.com as intentional, with
+   instructions + link to the NCA sign-in. Easiest brand-friendly
+   compromise, no JS extensions required.
 
 **Tier badge behavior** (works for both Path A and Path B setups):
   • Reads `variant.metafields.disrupted.tier_name` first (Path B)
