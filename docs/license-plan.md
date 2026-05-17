@@ -252,12 +252,53 @@ move is to swap the `_cart-products` block in main-cart.liquid for
 snippet. Deferred — the drawer is the primary surface (hero ATC opens
 it directly).
 
-### Phase 4 — Customer accounts + license retrieval (post-launch)
+### Phase 4 — Customer accounts + license retrieval (DONE)
 
-No `templates/customers/` yet. When accounts ship, build
-`/account/licenses` listing every order's tier with link back to
-`/pages/license`. Creative Market, Future Fonts, Envato all rely on this
-pattern.
+Built 5 classic customer-account templates with brutalist styling +
+per-line-item tier badges. Customers stay on yourdomain.com end-to-end
+instead of bouncing to Shopify-hosted account UI.
+
+- [x] `snippets/ds-customer-styles.liquid` — shared CSS for every
+      customer template (forms, order rows, tier pills, license callout)
+- [x] `templates/customers/login.liquid` — sign-in + inline recover
+      password form, hash-routed toggle (`#recover`)
+- [x] `templates/customers/register.liquid` — create-account form
+- [x] `templates/customers/reset_password.liquid` — renders when
+      customer clicks the reset link in the recovery email
+- [x] `templates/customers/account.liquid` — dashboard with order
+      history, per-line-item tier badges (accent treatment when the
+      line is the upper-tier variant), link to each order's detail
+- [x] `templates/customers/order.liquid` — single order detail with
+      license callout showing the buyer's name as the license
+      recipient + link to `/pages/license`
+
+**Admin task — required for templates to render:**
+
+- [ ] Settings → Customer accounts → choose **Classic accounts**
+      (sometimes labeled "Legacy customer accounts"). If the store is
+      on New Customer Accounts (Shopify-hosted), these templates are
+      ignored and customers see Shopify-styled account screens on
+      shop.app instead of the brutalist ones we just built.
+
+**Optional admin polish:**
+- [ ] Settings → Notifications → Order confirmation: link to
+      `/account` so order emails point customers at their dashboard
+- [ ] Add `/account/login` to the header navigation if you want a
+      visible "Sign in" entry point
+
+**Tier badge behavior** (works for both Path A and Path B setups):
+  • Reads `variant.metafields.disrupted.tier_name` first (Path B)
+  • Falls back to `variant.title` (Path A — variants only)
+  • Skips the "Default Title" sentinel for single-variant products
+  • Accent border + accent color when the line is the highest-priced
+    variant of the product (visual signal of upper-tier purchase)
+
+**Not built (deferred):**
+  • Re-download flow per line item — Shopify Digital Downloads delivers
+    via order email URL. If customers ask for an account-page
+    re-download, next step is wiring up the digital_download object.
+  • Address book — digital products only, not needed
+  • Account settings (name / email edit) — defer until customers ask
 
 ### Phase 5 — Pay-the-difference upgrades
 

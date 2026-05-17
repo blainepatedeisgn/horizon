@@ -1,0 +1,139 @@
+{%- comment -%}
+  templates/customers/order.liquid — Disrupted Studio order detail.
+
+  Single-order detail page reached from the account dashboard at
+  /account/orders/{{ order.id }}. Shopify exposes `order` for the
+  current order, validated to belong to the authenticated customer.
+
+  Layout
+    • ← Back link to account dashboard
+    • Header  — order number + date + financial status
+    • Line items list (image + title + tier badge + price)
+    • License callout — the version of /pages/license in effect at
+      order time, plus "issued to" recipient
+    • Order total + payment status
+
+  License callout
+    Shows the buyer's name (or the order email if no name on file) as
+    the license recipient — matches the Studio 2am / Dinamo / Toward
+    convention that the license is "issued to the customer named on
+    the order receipt." Adds a link to /pages/license with the version
+    pill so the customer knows which terms apply to this purchase.
+{%- endcomment -%}
+
+{%- render 'ds-customer-styles' -%}
+
+<section class="ds-account">
+  <div class="ds-account__container">
+
+    <p class="ds-account__crumbs">
+      <a href="/account">← Back to account</a>
+    </p>
+
+    <header class="ds-account__header">
+      <p class="ds-account__eyebrow">[ ORDER {{ order.name }} ]</p>
+      <h1 class="ds-account__title">{{ order.created_at | date: '%B %-d, %Y' }}</h1>
+      <p class="ds-account__intro">
+        {%- assign status_label = order.financial_status_label | downcase -%}
+        Payment status: <strong>{{ status_label }}</strong>
+        {%- if order.fulfillment_status_label != blank %} · Fulfillment: <strong>{{ order.fulfillment_status_label | downcase }}</strong>{%- endif -%}
+      </p>
+    </header>
+
+    <section class="ds-account__section">
+      <h2 class="ds-account__section-title">Items · {{ order.line_items.size }}</h2>
+
+      <ul class="ds-account__order-items">
+        {%- for line in order.line_items -%}
+          {%- liquid
+            assign line_tier = line.variant.metafields.disrupted.tier_name.value
+            if line_tier == blank
+              assign line_tier = line.variant.title
+            endif
+            if line_tier == 'Default Title'
+              assign line_tier = ''
+            endif
+
+            assign is_upper = false
+            assign max_price = 0
+            for v in line.product.variants
+              if v.price > max_price
+                assign max_price = v.price
+              endif
+            endfor
+            if line.variant.price >= max_price and line.product.variants.size > 1
+              assign is_upper = true
+            endif
+          -%}
+
+          <li class="ds-account__order-item">
+            {%- if line.image -%}
+              {{
+                line.image
+                | image_url: width: 120
+                | image_tag:
+                    class: 'ds-account__order-item-img',
+                    alt: line.product.title,
+                    loading: 'lazy',
+                    widths: '56,112,168'
+              }}
+            {%- else -%}
+              <span class="ds-account__order-item-img" aria-hidden="true"></span>
+            {%- endif -%}
+
+            <div class="ds-account__order-item-info">
+              <a href="{{ line.product.url }}" class="ds-account__order-item-title">
+                {{- line.product.title -}}
+              </a>
+              {%- if line_tier != blank -%}
+                <span
+                  class="ds-account__order-item-tier{% if is_upper %} ds-account__order-item-tier--accent{% endif %}"
+                  aria-label="License tier"
+                >
+                  {{- line_tier -}}
+                </span>
+              {%- endif -%}
+            </div>
+
+            <span class="ds-account__order-item-price">
+              {{ line.final_line_price | money }}
+            </span>
+          </li>
+        {%- endfor -%}
+      </ul>
+
+      {%- comment -%} ----- LICENSE CALLOUT ----- {%- endcomment -%}
+      <div class="ds-account__license-callout">
+        <p class="ds-account__license-callout-title">[ LICENSE ]</p>
+        <p>
+          Your purchase is governed by the Disrupted Studio license terms in effect at the time of this order.
+          <a href="/pages/license" target="_blank" rel="noopener" class="ds-text-link">
+            Read the full terms →
+          </a>
+        </p>
+        <p class="ds-account__license-callout-issued">
+          Issued to:
+          {%- assign issued_name = order.billing_address.name -%}
+          {%- if issued_name == blank -%}
+            {%- assign issued_name = customer.name -%}
+          {%- endif -%}
+          {%- if issued_name == blank -%}
+            {%- assign issued_name = order.email -%}
+          {%- endif -%}
+          <strong>{{ issued_name }}</strong>
+          &nbsp;·&nbsp;
+          Order {{ order.name }}
+        </p>
+      </div>
+
+      {%- comment -%} ----- ORDER FOOTER ----- {%- endcomment -%}
+      <footer class="ds-account__order-footer">
+        <span>Subtotal {{ order.subtotal_price | money }}</span>
+        <span class="ds-account__order-total">
+          Total {{ order.total_price | money }}
+        </span>
+      </footer>
+    </section>
+
+  </div>
+</section>

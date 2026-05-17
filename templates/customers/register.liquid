@@ -1,0 +1,101 @@
+{%- comment -%}
+  templates/customers/register.liquid — Disrupted Studio create-account.
+
+  Uses Shopify's {% form 'create_customer' %} which POSTs to the
+  account creation endpoint and either creates the account or returns
+  validation errors. On success, Shopify redirects to /account.
+
+  Required fields: first name, last name, email, password.
+  Marketing opt-in is intentionally OPTIONAL (checkbox at the bottom)
+  so we don't force consent — better deliverability for the customers
+  who do opt in, and clearer legal posture.
+{%- endcomment -%}
+
+{%- render 'ds-customer-styles' -%}
+
+<section class="ds-account">
+  <div class="ds-account__container ds-account__container--narrow">
+
+    <header class="ds-account__header">
+      <p class="ds-account__eyebrow">[ ACCOUNT ]</p>
+      <h1 class="ds-account__title">Create account</h1>
+      <p class="ds-account__intro">
+        Save your purchases, track licenses, and skip checkout next time.
+      </p>
+    </header>
+
+    {%- form 'create_customer', class: 'ds-form' -%}
+      {%- if form.errors -%}
+        <ul class="ds-form__errors">
+          {%- for error in form.errors -%}
+            <li>{{ form.errors.messages[error] }}</li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      <div class="ds-form__row">
+        <label class="ds-form__label" for="register-first-name">First name</label>
+        <input
+          type="text"
+          id="register-first-name"
+          name="customer[first_name]"
+          class="ds-form__input"
+          autocomplete="given-name"
+          required
+        >
+      </div>
+
+      <div class="ds-form__row">
+        <label class="ds-form__label" for="register-last-name">Last name</label>
+        <input
+          type="text"
+          id="register-last-name"
+          name="customer[last_name]"
+          class="ds-form__input"
+          autocomplete="family-name"
+          required
+        >
+      </div>
+
+      <div class="ds-form__row">
+        <label class="ds-form__label" for="register-email">Email</label>
+        <input
+          type="email"
+          id="register-email"
+          name="customer[email]"
+          class="ds-form__input"
+          autocomplete="email"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          required
+        >
+      </div>
+
+      <div class="ds-form__row">
+        <label class="ds-form__label" for="register-password">Password</label>
+        <input
+          type="password"
+          id="register-password"
+          name="customer[password]"
+          class="ds-form__input"
+          autocomplete="new-password"
+          minlength="5"
+          required
+        >
+        <p class="ds-form__hint">5 characters minimum. Mix in numbers / symbols for security.</p>
+      </div>
+
+      <div class="ds-form__submit-row">
+        <button type="submit" class="ds-btn ds-btn--lg ds-btn--accent">
+          Create account
+        </button>
+      </div>
+
+      <p class="ds-form__alt">
+        Already have an account? <a href="/account/login">Sign in</a>
+      </p>
+    {%- endform -%}
+
+  </div>
+</section>

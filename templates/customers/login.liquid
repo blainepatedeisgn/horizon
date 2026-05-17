@@ -1,0 +1,190 @@
+{%- comment -%}
+  templates/customers/login.liquid — Disrupted Studio sign-in.
+
+  Both the login form and the password-recover form render in the DOM.
+  A small inline script toggles between them based on URL hash:
+    /account/login          → login form
+    /account/login#recover  → recover form
+
+  This is the same pattern Dawn / standard Shopify themes use because
+  Shopify Classic doesn't have a separate URL for password recovery —
+  both flows live on /account/login.
+
+  Classic accounts must be enabled in admin for this template to render:
+    Settings → Customer accounts → "Classic accounts" (or "Legacy
+    customer accounts" depending on the admin label).
+{%- endcomment -%}
+
+{%- render 'ds-customer-styles' -%}
+
+<section class="ds-account">
+  <div class="ds-account__container ds-account__container--narrow">
+
+    {%- comment -%} ===== SIGN IN FORM ===== {%- endcomment -%}
+    <div data-ds-login-form>
+      <header class="ds-account__header">
+        <p class="ds-account__eyebrow">[ ACCOUNT ]</p>
+        <h1 class="ds-account__title">Sign in</h1>
+        <p class="ds-account__intro">
+          Access your orders, re-download purchased files, and view your license details.
+        </p>
+      </header>
+
+      {%- form 'customer_login', class: 'ds-form' -%}
+        {%- if form.errors -%}
+          <ul class="ds-form__errors">
+            {%- for error in form.errors -%}
+              <li>{{ form.errors.messages[error] }}</li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        <div class="ds-form__row">
+          <label class="ds-form__label" for="login-email">Email</label>
+          <input
+            type="email"
+            id="login-email"
+            name="customer[email]"
+            class="ds-form__input"
+            autocomplete="email"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            required
+          >
+        </div>
+
+        <div class="ds-form__row">
+          <label class="ds-form__label" for="login-password">Password</label>
+          <input
+            type="password"
+            id="login-password"
+            name="customer[password]"
+            class="ds-form__input"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+
+        <div class="ds-form__submit-row">
+          <button type="submit" class="ds-btn ds-btn--lg ds-btn--accent">
+            Sign in
+          </button>
+        </div>
+
+        <p class="ds-form__alt">
+          <a href="#recover" data-ds-show-recover>Forgot password?</a>
+          &nbsp;·&nbsp;
+          <a href="/account/register">Create account</a>
+        </p>
+      {%- endform -%}
+    </div>
+
+    {%- comment -%} ===== RECOVER PASSWORD FORM ===== {%- endcomment -%}
+    <div data-ds-recover-form hidden>
+      <header class="ds-account__header">
+        <p class="ds-account__eyebrow">[ ACCOUNT ]</p>
+        <h1 class="ds-account__title">Reset password</h1>
+        <p class="ds-account__intro">
+          Enter the email on your account. If it matches, we'll send a reset link.
+        </p>
+      </header>
+
+      {%- form 'recover_customer_password', class: 'ds-form' -%}
+        {%- if form.posted_successfully? -%}
+          <p class="ds-form__success">
+            If that email is on file, a reset link is on its way. Check your inbox in a moment.
+          </p>
+        {%- endif -%}
+
+        {%- if form.errors -%}
+          <ul class="ds-form__errors">
+            {%- for error in form.errors -%}
+              <li>{{ form.errors.messages[error] }}</li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        <div class="ds-form__row">
+          <label class="ds-form__label" for="recover-email">Email</label>
+          <input
+            type="email"
+            id="recover-email"
+            name="email"
+            class="ds-form__input"
+            autocomplete="email"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            required
+          >
+        </div>
+
+        <div class="ds-form__submit-row">
+          <button type="submit" class="ds-btn ds-btn--lg ds-btn--accent">
+            Send reset link
+          </button>
+        </div>
+
+        <p class="ds-form__alt">
+          <a href="#" data-ds-show-login>← Back to sign in</a>
+        </p>
+      {%- endform -%}
+    </div>
+
+  </div>
+</section>
+
+<script>
+  /* Toggle login ↔ recover via URL hash. Hash-routing keeps the
+     forms-in-same-template pattern Shopify Classic requires while
+     letting "Forgot password?" feel like normal navigation. */
+  (function () {
+    var loginEl = document.querySelector('[data-ds-login-form]');
+    var recoverEl = document.querySelector('[data-ds-recover-form]');
+    if (!loginEl || !recoverEl) return;
+
+    function showRecover() {
+      loginEl.hidden = true;
+      recoverEl.hidden = false;
+      var firstInput = recoverEl.querySelector('input');
+      if (firstInput) firstInput.focus();
+    }
+    function showLogin() {
+      loginEl.hidden = false;
+      recoverEl.hidden = true;
+    }
+
+    // If the recover form posted (success or error), keep it visible.
+    // Shopify reloads the page after submit, which would otherwise
+    // bounce us back to the login view.
+    var recoverPosted = recoverEl.querySelector('.ds-form__success, .ds-form__errors');
+    if (recoverPosted || window.location.hash === '#recover') {
+      showRecover();
+    }
+
+    document.querySelectorAll('[data-ds-show-recover]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.location.hash = 'recover';
+        showRecover();
+      });
+    });
+    document.querySelectorAll('[data-ds-show-login]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', window.location.pathname);
+        } else {
+          window.location.hash = '';
+        }
+        showLogin();
+      });
+    });
+
+    window.addEventListener('hashchange', function () {
+      if (window.location.hash === '#recover') showRecover();
+      else showLogin();
+    });
+  })();
+</script>

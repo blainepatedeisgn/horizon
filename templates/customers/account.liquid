@@ -1,0 +1,165 @@
+{%- comment -%}
+  templates/customers/account.liquid — Disrupted Studio account dashboard.
+
+  Shopify only renders this template for an authenticated customer.
+  `customer` is the logged-in customer object. `customer.orders` is the
+  array of their orders (newest first, after a Shopify-side sort).
+
+  Layout
+    • Top nav  — greeting + Logout link
+    • Header   — eyebrow + title + intro
+    • Orders   — list of orders, each with line items + tier badges
+                 per line. Line item tier comes from the variant's
+                 `disrupted.tier_name` metafield if set, otherwise the
+                 variant title (handles both Path A and Path B setups
+                 from docs/license-plan.md). Empty state when zero orders.
+
+  Tier-name color: the tier pill picks up `.ds-account__order-item-tier--accent`
+  if the variant is the highest-priced (i.e. upper-tier) variant of the
+  product — accent border + accent color make Extended / Studio /
+  Commercial visually pop in the order history.
+
+  Not included by design (deferred): re-download links per item
+  (Shopify Digital Downloads emails the URL on order, can revisit if
+  customers ask for an account-page re-download flow), address book
+  (digital products only), payment methods (Shopify handles).
+{%- endcomment -%}
+
+{%- render 'ds-customer-styles' -%}
+
+<section class="ds-account">
+  <div class="ds-account__container">
+
+    {%- comment -%} ----- TOP NAV ----- {%- endcomment -%}
+    <div class="ds-account__nav">
+      <span class="ds-account__nav-greeting">
+        {%- if customer.first_name != blank -%}
+          Welcome back, {{ customer.first_name }}
+        {%- else -%}
+          Welcome back
+        {%- endif -%}
+      </span>
+      <a href="/account/logout" class="ds-account__nav-logout">Log out</a>
+    </div>
+
+    <header class="ds-account__header">
+      <p class="ds-account__eyebrow">[ ACCOUNT ]</p>
+      <h1 class="ds-account__title">Your orders</h1>
+      <p class="ds-account__intro">
+        Every order you've placed, with the license tier for each item. License terms in effect at order time are linked from each row.
+      </p>
+    </header>
+
+    {%- if customer.orders.size > 0 -%}
+      <section class="ds-account__section">
+        <h2 class="ds-account__section-title">Order history · {{ customer.orders.size }}</h2>
+
+        <div class="ds-account__orders">
+          {%- for order in customer.orders -%}
+            <article class="ds-account__order">
+
+              {%- comment -%} ----- ORDER HEAD ----- {%- endcomment -%}
+              <header class="ds-account__order-head">
+                <span class="ds-account__order-num">
+                  <a href="{{ order.customer_url }}">Order {{ order.name }}</a>
+                </span>
+                <div class="ds-account__order-meta">
+                  <span>{{ order.created_at | date: '%b %-d, %Y' }}</span>
+                  <span
+                    class="ds-account__order-status ds-account__order-status--{{ order.financial_status }}"
+                  >
+                    {{ order.financial_status_label | upcase }}
+                  </span>
+                </div>
+              </header>
+
+              {%- comment -%} ----- LINE ITEMS ----- {%- endcomment -%}
+              <ul class="ds-account__order-items">
+                {%- for line in order.line_items -%}
+                  {%- liquid
+                    # Find the tier name for the display badge. Prefer
+                    # the variant metafield (Path B with metafields),
+                    # otherwise fall back to the variant title (Path A
+                    # with just variants). See docs/license-plan.md.
+                    assign line_tier = line.variant.metafields.disrupted.tier_name.value
+                    if line_tier == blank
+                      assign line_tier = line.variant.title
+                    endif
+                    if line_tier == 'Default Title'
+                      assign line_tier = ''
+                    endif
+
+                    # Decide if this is the "upper tier" — gives the
+                    # badge the accent treatment instead of muted.
+                    # Compares against the product's max variant price.
+                    assign is_upper = false
+                    assign max_price = 0
+                    for v in line.product.variants
+                      if v.price > max_price
+                        assign max_price = v.price
+                      endif
+                    endfor
+                    if line.variant.price >= max_price and line.product.variants.size > 1
+                      assign is_upper = true
+                    endif
+                  -%}
+
+                  <li class="ds-account__order-item">
+                    {%- if line.image -%}
+                      {{
+                        line.image
+                        | image_url: width: 120
+                        | image_tag:
+                            class: 'ds-account__order-item-img',
+                            alt: line.product.title,
+                            loading: 'lazy',
+                            widths: '56,112,168'
+                      }}
+                    {%- else -%}
+                      <span class="ds-account__order-item-img" aria-hidden="true"></span>
+                    {%- endif -%}
+
+                    <div class="ds-account__order-item-info">
+                      <a href="{{ line.product.url }}" class="ds-account__order-item-title">
+                        {{- line.product.title -}}
+                      </a>
+                      {%- if line_tier != blank -%}
+                        <span
+                          class="ds-account__order-item-tier{% if is_upper %} ds-account__order-item-tier--accent{% endif %}"
+                          aria-label="License tier"
+                        >
+                          {{- line_tier -}}
+                        </span>
+                      {%- endif -%}
+                    </div>
+
+                    <span class="ds-account__order-item-price">
+                      {{ line.final_line_price | money }}
+                    </span>
+                  </li>
+                {%- endfor -%}
+              </ul>
+
+              {%- comment -%} ----- ORDER FOOTER ----- {%- endcomment -%}
+              <footer class="ds-account__order-footer">
+                <a href="{{ order.customer_url }}" class="ds-text-link ds-account__order-footer-link">
+                  View order + license
+                </a>
+                <span class="ds-account__order-total">
+                  Total {{ order.total_price | money }}
+                </span>
+              </footer>
+            </article>
+          {%- endfor -%}
+        </div>
+      </section>
+
+    {%- else -%}
+      <div class="ds-account__empty">
+        <p>You haven't placed any orders yet.</p>
+        <a href="/collections/all" class="ds-btn ds-btn--lg ds-btn--accent">Browse the shop</a>
+      </div>
+    {%- endif -%}
+
+  </div>
+</section>

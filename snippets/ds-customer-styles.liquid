@@ -1,0 +1,386 @@
+{%- comment -%}
+  snippets/ds-customer-styles.liquid
+
+  Shared styles for every customer-account template (login, register,
+  account, order, reset_password). Centralizing here so the 5 templates
+  stay slim — each renders this snippet once + its own unique markup.
+
+  Class taxonomy
+    .ds-account              page wrapper (dark background, big padding)
+    .ds-account__container   max-width readable column, centered
+    .ds-account__nav         secondary nav (account, logout)
+    .ds-account__crumbs      breadcrumb-style "← back" link
+    .ds-account__header      page header (eyebrow + title + intro)
+    .ds-account__title       big brutalist title
+    .ds-account__intro       paragraph below title
+    .ds-account__section     bordered content block
+
+  Form classes (shared by login / register / reset / password recovery)
+    .ds-form                 form element wrapper
+    .ds-form__row            single input row
+    .ds-form__label          input label (mono caps tiny)
+    .ds-form__input          input field (brutalist 1px border)
+    .ds-form__hint           hint text below input
+    .ds-form__errors         <ul> of errors from Shopify's form helper
+    .ds-form__submit-row     row containing submit + alt links
+    .ds-form__alt            secondary text link below form
+{%- endcomment -%}
+
+{% style %}
+  /* ---- Page shell ---- */
+  .ds-account {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    min-height: 60vh;
+    padding: clamp(48px, 6vw, 96px) 0;
+  }
+  .ds-account__container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 var(--pad-x);
+  }
+  .ds-account__container--narrow {
+    max-width: 440px;
+  }
+
+  /* ---- Secondary nav (account dashboard top bar) ---- */
+  .ds-account__nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-6);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .ds-account__nav-greeting { color: var(--color-fg-muted); }
+  .ds-account__nav-logout {
+    color: var(--color-fg);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .ds-account__nav-logout:hover { color: var(--color-accent); }
+
+  /* ---- Breadcrumbs / back link ---- */
+  .ds-account__crumbs {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin-bottom: var(--space-4);
+  }
+  .ds-account__crumbs a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .ds-account__crumbs a:hover { color: var(--color-accent); }
+
+  /* ---- Header ---- */
+  .ds-account__header {
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: clamp(24px, 3vw, 40px);
+    margin-bottom: clamp(32px, 4vw, 56px);
+  }
+  .ds-account__eyebrow {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-account__title {
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0;
+  }
+  .ds-account__intro {
+    margin-top: var(--space-4);
+    max-width: 56ch;
+    line-height: 1.5;
+    color: var(--color-fg-muted);
+  }
+
+  /* ---- Section block ---- */
+  .ds-account__section {
+    padding-block: clamp(32px, 4vw, 56px);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .ds-account__section:last-of-type { border-bottom: none; }
+  .ds-account__section-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin: 0 0 var(--space-4);
+  }
+
+  /* ---- Empty state (no orders yet, etc.) ---- */
+  .ds-account__empty {
+    padding: var(--space-6);
+    border: 1px dashed var(--color-border);
+    text-align: center;
+    color: var(--color-fg-muted);
+  }
+  .ds-account__empty p {
+    margin: 0 0 var(--space-4);
+  }
+
+  /* ---- Forms ---- */
+  .ds-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .ds-form__row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ds-form__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-form__input {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--color-bg-elev);
+    border: 1px solid var(--color-border);
+    color: var(--color-fg);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    box-sizing: border-box;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-form__input::placeholder { color: var(--color-fg-muted); opacity: 0.5; }
+  .ds-form__input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  .ds-form__hint {
+    font-size: 11px;
+    color: var(--color-fg-muted);
+    line-height: 1.4;
+  }
+  .ds-form__errors {
+    list-style: none;
+    padding: var(--space-3) var(--space-4);
+    margin: 0;
+    border: 1px solid var(--color-accent);
+    background: rgba(255, 77, 31, 0.08);
+    color: var(--color-accent);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .ds-form__errors li + li { margin-top: 4px; }
+  .ds-form__success {
+    padding: var(--space-3) var(--space-4);
+    margin: 0;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+    color: var(--color-fg);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .ds-form__submit-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+  .ds-form__submit-row .ds-btn { width: 100%; }
+  .ds-form__alt {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-form__alt a {
+    color: var(--color-fg);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .ds-form__alt a:hover { color: var(--color-accent); }
+
+  /* ---- Order list (dashboard) ---- */
+  .ds-account__orders {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .ds-account__order {
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+    padding: var(--space-5);
+  }
+  .ds-account__order-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .ds-account__order-num {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    color: var(--color-fg);
+  }
+  .ds-account__order-num a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .ds-account__order-num a:hover { color: var(--color-accent); }
+  .ds-account__order-meta {
+    display: flex;
+    gap: var(--space-3);
+    align-items: baseline;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-account__order-status {
+    padding: 2px 8px;
+    border: 1px solid var(--color-border);
+    font-size: 9px;
+  }
+  .ds-account__order-status--paid {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  .ds-account__order-status--pending,
+  .ds-account__order-status--partially_paid {
+    color: var(--color-fg);
+  }
+  .ds-account__order-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-account__order-item {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: var(--space-4);
+    align-items: start;
+  }
+  .ds-account__order-item-img {
+    width: 56px;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    display: block;
+  }
+  .ds-account__order-item-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ds-account__order-item-title {
+    font-size: 14px;
+    color: var(--color-fg);
+    text-decoration: none;
+    line-height: 1.3;
+  }
+  .ds-account__order-item-title:hover { color: var(--color-accent); }
+  .ds-account__order-item-tier {
+    align-self: flex-start;
+    display: inline-block;
+    padding: 2px 7px;
+    border: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-account__order-item-tier--accent {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .ds-account__order-item-price {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-fg);
+    white-space: nowrap;
+  }
+  .ds-account__order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .ds-account__order-total {
+    color: var(--color-fg);
+  }
+
+  /* ---- License callout (order detail page) ---- */
+  .ds-account__license-callout {
+    margin-top: var(--space-5);
+    padding: var(--space-5);
+    border: 1px dashed var(--color-accent);
+    background: rgba(255, 77, 31, 0.05);
+  }
+  .ds-account__license-callout-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin: 0 0 var(--space-2);
+  }
+  .ds-account__license-callout p {
+    margin: 0 0 var(--space-3);
+    line-height: 1.5;
+    font-size: 14px;
+  }
+  .ds-account__license-callout-issued {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg-muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 600px) {
+    .ds-account__order-head { flex-direction: column; gap: var(--space-2); }
+    .ds-account__order-item {
+      grid-template-columns: 48px 1fr;
+      grid-template-areas: "img info" ". price";
+    }
+    .ds-account__order-item-img { grid-area: img; width: 48px; }
+    .ds-account__order-item-info { grid-area: info; }
+    .ds-account__order-item-price { grid-area: price; text-align: left; }
+  }
+{% endstyle %}
