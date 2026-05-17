@@ -1047,35 +1047,53 @@
     line-height: 1.3;
   }
   .ds-cart__item-title:hover { color: var(--color-accent); }
+  /* Product type — visually marked as a metadata tag, not body text.
+     Bordered pill with align-self: flex-start so it hugs its content
+     instead of stretching across the info column. */
   .ds-cart__item-cat {
+    align-self: flex-start;
+    display: inline-block;
+    padding: 2px 7px;
+    border: 1px solid var(--color-border);
     font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.06em;
+    font-size: 9px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--color-fg-muted);
   }
+  /* Selected variant — the most important answer-shaped info after
+     the title (which tier they're buying). Promoted to body color +
+     slightly bigger so it reads as the answer, not as another
+     muted descriptor. */
   .ds-cart__item-variant {
-    font-size: 12px;
-    color: var(--color-fg-muted);
+    font-size: 13px;
+    color: var(--color-fg);
+    font-weight: 500;
   }
   .ds-cart__item-actions {
     display: flex;
     gap: var(--space-3);
     margin-top: 2px;
   }
+  /* Remove action — underlined so it's obviously interactive, distinct
+     from the descriptive labels above (which are static text). Accent
+     on hover gives a brand-correct interactive feel. */
   .ds-cart__item-remove {
     background: transparent;
     border: 0;
     padding: 0;
     font-family: var(--font-mono);
     font-size: 10px;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--color-fg-muted);
     cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
     transition: color var(--t-fast) var(--ease);
   }
-  .ds-cart__item-remove:hover { color: var(--color-fg); }
+  .ds-cart__item-remove:hover { color: var(--color-accent); }
   .ds-cart__item-price {
     font-family: var(--font-mono);
     font-size: 14px;
