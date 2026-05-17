@@ -1061,14 +1061,14 @@
     text-transform: uppercase;
     color: var(--color-fg-muted);
   }
-  /* Selected variant — the most important answer-shaped info after
-     the title (which tier they're buying). Promoted to body color +
-     slightly bigger so it reads as the answer, not as another
-     muted descriptor. */
+  /* Selected variant — kept muted and small. The cart already gets
+     its hierarchy from the PLUGIN pill above and the underlined
+     REMOVE action below; promoting Commercial to body weight made it
+     compete with the title for attention. Lighter treatment lets the
+     three-line info column read as a clean descending hierarchy. */
   .ds-cart__item-variant {
-    font-size: 13px;
-    color: var(--color-fg);
-    font-weight: 500;
+    font-size: 12px;
+    color: var(--color-fg-muted);
   }
   .ds-cart__item-actions {
     display: flex;
