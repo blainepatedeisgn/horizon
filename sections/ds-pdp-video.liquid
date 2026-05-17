@@ -58,14 +58,14 @@
           <div class="ds-section-head">
             {%- if heading != blank -%}
               <h2 class="ds-section-head__title">
-                {{ heading }}
+                {{ heading | escape }}
                 {%- if duration != blank -%}
-                  <span class="ds-section-head__num">{{ duration }}</span>
+                  <span class="ds-section-head__num">{{ duration | escape }}</span>
                 {%- endif -%}
               </h2>
             {%- endif -%}
             {%- if subhead != blank -%}
-              <p class="ds-section-head__sub">{{ subhead }}</p>
+              <p class="ds-section-head__sub">{{ subhead | escape | newline_to_br }}</p>
             {%- endif -%}
           </div>
         {%- endif -%}
@@ -97,18 +97,20 @@
           {%- elsif youtube_id != blank -%}
             <iframe
               class="ds-pdp-video__media"
-              src="https://www.youtube.com/embed/{{ youtube_id }}"
+              src="https://www.youtube.com/embed/{{ youtube_id | escape }}"
               title="{{ heading | default: 'Product video' | escape }}"
               loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen
             ></iframe>
           {%- elsif vimeo_id != blank -%}
             <iframe
               class="ds-pdp-video__media"
-              src="https://player.vimeo.com/video/{{ vimeo_id }}"
+              src="https://player.vimeo.com/video/{{ vimeo_id | escape }}"
               title="{{ heading | default: 'Product video' | escape }}"
               loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
               allow="autoplay; fullscreen; picture-in-picture"
               allowfullscreen
             ></iframe>

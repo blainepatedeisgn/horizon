@@ -100,8 +100,29 @@
     Optional content metafields.
   endcomment
   assign tagline = product.metafields.disrupted.tagline.value
-  assign demo_url = product.metafields.disrupted.demo_url.value
   assign sub_cta_label = product.metafields.disrupted.sub_cta_label.value | default: 'Watch the demo'
+
+  comment
+    demo_url: URL-scheme allowlist.  Only http(s):// absolute URLs and
+    same-origin paths (starting with `/` or `#`) are honoured.  Anything
+    else (e.g. a stray `javascript:` URI in a metafield) is treated as
+    blank so the sub-CTA hides entirely.  Defence-in-depth — the
+    metafield is merchant-controlled, but allow lists are cheap.
+  endcomment
+  assign raw_demo_url = product.metafields.disrupted.demo_url.value
+  assign demo_url = ''
+  if raw_demo_url != blank
+    if raw_demo_url contains '://'
+      if raw_demo_url contains 'http://' or raw_demo_url contains 'https://'
+        assign demo_url = raw_demo_url
+      endif
+    else
+      assign first_char = raw_demo_url | slice: 0, 1
+      if first_char == '/' or first_char == '#'
+        assign demo_url = raw_demo_url
+      endif
+    endif
+  endif
 
   comment
     Specs — resolved in priority order:
@@ -224,24 +245,30 @@
       {%- comment -%} ----- INFO COLUMN ----- {%- endcomment -%}
       <div class="ds-pdp__info">
 
-        {%- comment -%} EYEBROW + OPTIONAL BADGE {%- endcomment -%}
+        {%- comment -%}
+          EYEBROW + OPTIONAL BADGE.  All four sources here are
+          merchant-controlled text — Shopify Liquid doesn't auto-
+          escape `{{ }}` output, so we explicitly | escape any
+          metafield-driven text to be safe against a stray HTML/JS
+          paste into the metafield value.  Defense in depth.
+        {%- endcomment -%}
         {%- if eyebrow_text != blank or badge_text != blank -%}
           <div class="ds-pdp__info-eyebrow">
             {%- if eyebrow_text != blank -%}
-              <span class="ds-pdp__info-cat">{{ eyebrow_text }}</span>
+              <span class="ds-pdp__info-cat">{{ eyebrow_text | escape }}</span>
             {%- endif -%}
             {%- if badge_text != blank -%}
-              <span class="ds-pdp__info-badge">{{ badge_text }}</span>
+              <span class="ds-pdp__info-badge">{{ badge_text | escape }}</span>
             {%- endif -%}
           </div>
         {%- endif -%}
 
-        {%- comment -%} TITLE {%- endcomment -%}
+        {%- comment -%} TITLE — product.title is sanitised by Shopify, no escape needed {%- endcomment -%}
         <h1 class="ds-pdp__info-title">{{ product.title }}</h1>
 
         {%- comment -%} TAGLINE (metafield) {%- endcomment -%}
         {%- if tagline != blank -%}
-          <p class="ds-pdp__info-tagline">{{ tagline }}</p>
+          <p class="ds-pdp__info-tagline">{{ tagline | escape }}</p>
         {%- endif -%}
 
         {%- comment -%} PRICE ROW (price + compare-at + sale tag inline) {%- endcomment -%}
@@ -361,11 +388,15 @@
           </script>
         {%- endunless -%}
 
-        {%- comment -%} SUB-CTA (metafield demo_url) {%- endcomment -%}
+        {%- comment -%}
+          SUB-CTA (metafield demo_url).  `demo_url` was scheme-allowlisted
+          above (http/https/`/`/`#` only); | escape on the href as a
+          belt-and-braces attribute escape.  Same for sub_cta_label.
+        {%- endcomment -%}
         {%- if demo_url != blank -%}
           <div class="ds-pdp__info-sub-cta">
-            <a href="{{ demo_url }}" class="ds-text-link">
-              {{ sub_cta_label }}
+            <a href="{{ demo_url | escape }}" class="ds-text-link">
+              {{ sub_cta_label | escape }}
               <span class="ds-text-link__arrow" aria-hidden="true">→</span>
             </a>
           </div>
@@ -375,37 +406,37 @@
         {%- if has_specs -%}
           <div class="ds-pdp__info-specs">
             {%- if plugin_specs -%}
-              {%- if plugin_specs.compat.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Compat</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.compat.value }}</span></div>{%- endif -%}
-              {%- if plugin_specs.format.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Format</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.format.value }}</span></div>{%- endif -%}
-              {%- if plugin_specs.file_size.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">File size</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.file_size.value }}</span></div>{%- endif -%}
-              {%- if plugin_specs.license.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.license.value }}</span></div>{%- endif -%}
-              {%- if plugin_specs.updates.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Updates</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.updates.value }}</span></div>{%- endif -%}
-              {%- if plugin_specs.support.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Support</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.support.value }}</span></div>{%- endif -%}
+              {%- if plugin_specs.compat.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Compat</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.compat.value | escape }}</span></div>{%- endif -%}
+              {%- if plugin_specs.format.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Format</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.format.value | escape }}</span></div>{%- endif -%}
+              {%- if plugin_specs.file_size.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">File size</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.file_size.value | escape }}</span></div>{%- endif -%}
+              {%- if plugin_specs.license.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.license.value | escape }}</span></div>{%- endif -%}
+              {%- if plugin_specs.updates.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Updates</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.updates.value | escape }}</span></div>{%- endif -%}
+              {%- if plugin_specs.support.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Support</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.support.value | escape }}</span></div>{%- endif -%}
             {%- elsif font_specs -%}
-              {%- if font_specs.family.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Family</span><span class="ds-pdp__info-spec-value">{{ font_specs.family.value }}</span></div>{%- endif -%}
-              {%- if font_specs.glyphs.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Glyphs</span><span class="ds-pdp__info-spec-value">{{ font_specs.glyphs.value }}</span></div>{%- endif -%}
-              {%- if font_specs.formats.value  != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Formats</span><span class="ds-pdp__info-spec-value">{{ font_specs.formats.value }}</span></div>{%- endif -%}
-              {%- if font_specs.language.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Language</span><span class="ds-pdp__info-spec-value">{{ font_specs.language.value }}</span></div>{%- endif -%}
-              {%- if font_specs.license.value  != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ font_specs.license.value }}</span></div>{%- endif -%}
+              {%- if font_specs.family.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Family</span><span class="ds-pdp__info-spec-value">{{ font_specs.family.value | escape }}</span></div>{%- endif -%}
+              {%- if font_specs.glyphs.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Glyphs</span><span class="ds-pdp__info-spec-value">{{ font_specs.glyphs.value | escape }}</span></div>{%- endif -%}
+              {%- if font_specs.formats.value  != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Formats</span><span class="ds-pdp__info-spec-value">{{ font_specs.formats.value | escape }}</span></div>{%- endif -%}
+              {%- if font_specs.language.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Language</span><span class="ds-pdp__info-spec-value">{{ font_specs.language.value | escape }}</span></div>{%- endif -%}
+              {%- if font_specs.license.value  != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ font_specs.license.value | escape }}</span></div>{%- endif -%}
             {%- elsif graphics_specs -%}
-              {%- if graphics_specs.items.value      != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Items</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.items.value }}</span></div>{%- endif -%}
-              {%- if graphics_specs.formats.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Formats</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.formats.value }}</span></div>{%- endif -%}
-              {%- if graphics_specs.resolution.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Resolution</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.resolution.value }}</span></div>{%- endif -%}
-              {%- if graphics_specs.license.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.license.value }}</span></div>{%- endif -%}
-              {%- if graphics_specs.updates.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Updates</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.updates.value }}</span></div>{%- endif -%}
+              {%- if graphics_specs.items.value      != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Items</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.items.value | escape }}</span></div>{%- endif -%}
+              {%- if graphics_specs.formats.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Formats</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.formats.value | escape }}</span></div>{%- endif -%}
+              {%- if graphics_specs.resolution.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Resolution</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.resolution.value | escape }}</span></div>{%- endif -%}
+              {%- if graphics_specs.license.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.license.value | escape }}</span></div>{%- endif -%}
+              {%- if graphics_specs.updates.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Updates</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.updates.value | escape }}</span></div>{%- endif -%}
             {%- elsif specs_list and specs_list.size > 0 -%}
               {%- for spec in specs_list -%}
                 {%- assign label = spec.label.value -%}
                 {%- assign value = spec.value.value -%}
                 {%- if label != blank and value != blank -%}
-                  <div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">{{ label }}</span><span class="ds-pdp__info-spec-value">{{ value }}</span></div>
+                  <div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">{{ label | escape }}</span><span class="ds-pdp__info-spec-value">{{ value | escape }}</span></div>
                 {%- endif -%}
               {%- endfor -%}
             {%- else -%}
               {%- for key in legacy_spec_keys -%}
                 {%- assign value = product.metafields.disrupted[key].value -%}
                 {%- if value != blank -%}
-                  <div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">{{ legacy_spec_labels[forloop.index0] }}</span><span class="ds-pdp__info-spec-value">{{ value }}</span></div>
+                  <div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">{{ legacy_spec_labels[forloop.index0] }}</span><span class="ds-pdp__info-spec-value">{{ value | escape }}</span></div>
                 {%- endif -%}
               {%- endfor -%}
             {%- endif -%}

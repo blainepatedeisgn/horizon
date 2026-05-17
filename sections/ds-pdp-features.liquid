@@ -44,14 +44,15 @@
         <header class="ds-pdp-features__head">
           <div>
             {%- if label != blank -%}
-              <div class="ds-pdp-features__num">{{ label }}</div>
+              {%- comment -%} `label` may be the auto-generated "[ FEATURE 01 ]" capture (safe) or a merchant string. Always escape — the captured string contains only literal chars that escape leaves untouched. {%- endcomment -%}
+              <div class="ds-pdp-features__num">{{ label | escape }}</div>
             {%- endif -%}
             {%- if title_html != blank -%}
               <h2 class="ds-pdp-features__title">{{ title_html }}</h2>
             {%- endif -%}
           </div>
           {%- if body != blank -%}
-            <p class="ds-pdp-features__sub">{{ body }}</p>
+            <p class="ds-pdp-features__sub">{{ body | escape | newline_to_br }}</p>
           {%- endif -%}
         </header>
 
@@ -71,7 +72,7 @@
                 }}
                 {%- assign caption = captions[forloop.index0] -%}
                 {%- if caption != blank -%}
-                  <figcaption class="ds-pdp-features__caption"><span>{{ caption }}</span></figcaption>
+                  <figcaption class="ds-pdp-features__caption"><span>{{ caption | escape }}</span></figcaption>
                 {%- endif -%}
               </figure>
             {%- endfor -%}

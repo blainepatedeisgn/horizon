@@ -29,8 +29,29 @@
         assign heading = cta.heading.value
         assign body = cta.body.value
         assign btn_label = cta.button_label.value
-        assign btn_url = cta.button_url.value
         assign image = cta.image.value
+
+        comment
+          URL-scheme allowlist for btn_url — same approach as demo_url
+          in ds-product-main.liquid.  Only http(s):// absolutes and
+          same-origin paths (`/...`, `#...`) are honoured; anything
+          else falls back to '' (rendered href becomes '#' via default).
+          Blocks `javascript:` URIs from breaking out of metafields.
+        endcomment
+        assign raw_btn_url = cta.button_url.value
+        assign btn_url = ''
+        if raw_btn_url != blank
+          if raw_btn_url contains '://'
+            if raw_btn_url contains 'http://' or raw_btn_url contains 'https://'
+              assign btn_url = raw_btn_url
+            endif
+          else
+            assign first_char = raw_btn_url | slice: 0, 1
+            if first_char == '/' or first_char == '#'
+              assign btn_url = raw_btn_url
+            endif
+          endif
+        endif
 
         assign reverse_class = ''
         assign mod = forloop.index0 | modulo: 2
@@ -55,16 +76,18 @@
         </div>
         <div class="ds-pdp-cta__copy">
           {%- if eyebrow != blank -%}
-            <p class="ds-pdp-cta__eyebrow">{{ eyebrow }}</p>
+            <p class="ds-pdp-cta__eyebrow">{{ eyebrow | escape }}</p>
           {%- endif -%}
           {%- if heading != blank -%}
             <h3 class="ds-pdp-cta__heading">{{ heading | escape | newline_to_br }}</h3>
           {%- endif -%}
           {%- if body != blank -%}
-            <p class="ds-pdp-cta__body">{{ body }}</p>
+            {%- comment -%} | newline_to_br preserves paragraph breaks from the metafield. | escape first so any HTML in the source is neutralised before <br> insertion. {%- endcomment -%}
+            <p class="ds-pdp-cta__body">{{ body | escape | newline_to_br }}</p>
           {%- endif -%}
           {%- if btn_label != blank -%}
-            <a href="{{ btn_url | default: '#' }}" class="ds-btn ds-pdp-cta__btn">{{ btn_label }}</a>
+            {%- comment -%} btn_url was scheme-allowlisted above; | escape as belt-and-braces attribute safety. {%- endcomment -%}
+            <a href="{{ btn_url | default: '#' | escape }}" class="ds-btn ds-pdp-cta__btn">{{ btn_label | escape }}</a>
           {%- endif -%}
         </div>
       </div>
