@@ -306,6 +306,7 @@
               type="submit"
               name="add"
               class="ds-btn ds-btn--lg ds-btn--full ds-pdp__info-cta"
+              data-ds-main-atc
               {% unless current_variant.available %}disabled{% endunless %}
             >
               {%- if current_variant.available -%}
@@ -397,6 +398,90 @@
     </div>
   </div>
 </section>
+
+{%- comment -%}
+  ----- STICKY ADD-TO-CART BAR -----
+  Appears at the top of the viewport once the user has scrolled past
+  the main buybox, so the conversion path is always visible while
+  reading features, FAQs, video, etc.
+
+  Anatomy
+    [ thumb 48px ] [ name + price ] [ + ADD TO CART ]
+
+  Implementation
+    • Lives OUTSIDE the main <section> so it's a sibling element with
+      simple position:fixed positioning relative to viewport.
+    • Hidden by default. JS adds `.is-visible` when the main ATC's
+      bottom edge has scrolled above the header.
+    • Wrapped in <product-form-component> so submitting it triggers
+      AJAX add + opens the cart drawer (same flow as the main ATC).
+    • Variant + price stay in sync with the main form via small JS
+      bridge (listens for change on the variant select).
+{%- endcomment -%}
+<product-form-component
+  class="ds-pdp-sticky-cta"
+  data-ds-sticky-cta
+  data-product-id="{{ product.id }}"
+  on:submit="/handleSubmit"
+  aria-hidden="true"
+>
+  <div class="visually-hidden" aria-live="assertive" role="status" aria-atomic="true" ref="liveRegion"></div>
+  <div class="ds-pdp-sticky-cta__inner">
+
+    {%- comment -%} thumb (links to top of page) {%- endcomment -%}
+    <a href="#" class="ds-pdp-sticky-cta__media" aria-label="Back to top" data-ds-sticky-top>
+      {%- if product.featured_image -%}
+        {{
+          product.featured_image
+          | image_url: width: 120
+          | image_tag:
+              loading: 'lazy',
+              alt: product.title,
+              widths: '48,96,144',
+              sizes: '48px',
+              class: 'ds-pdp-sticky-cta__img'
+        }}
+      {%- endif -%}
+    </a>
+
+    {%- comment -%} name + price stack {%- endcomment -%}
+    <div class="ds-pdp-sticky-cta__info">
+      <div class="ds-pdp-sticky-cta__name">{{ product.title }}</div>
+      <div class="ds-pdp-sticky-cta__price" data-ds-sticky-price>
+        {%- if current_variant.compare_at_price > current_variant.price -%}
+          <span class="ds-pdp-sticky-cta__price-strike">{{ current_variant.compare_at_price | money }}</span>
+        {%- endif -%}
+        {{ current_variant.price | money }}
+      </div>
+    </div>
+
+    {%- comment -%} ATC form — own product-form-component instance {%- endcomment -%}
+    {%- form 'product', product, novalidate: 'novalidate' -%}
+      <input
+        type="hidden"
+        name="id"
+        ref="variantId"
+        value="{{ current_variant.id }}"
+        data-ds-sticky-variant
+      >
+      <input type="hidden" name="quantity" value="1">
+      <button
+        type="submit"
+        name="add"
+        class="ds-pdp-sticky-cta__btn"
+        {% unless current_variant.available %}disabled{% endunless %}
+      >
+        {%- if current_variant.available -%}
+          <span class="ds-pdp-sticky-cta__btn-icon" aria-hidden="true">+</span>
+          <span class="ds-pdp-sticky-cta__btn-label">Add</span>
+          <span class="ds-pdp-sticky-cta__btn-label-long">Add to cart</span>
+        {%- else -%}
+          Sold out
+        {%- endif -%}
+      </button>
+    {%- endform -%}
+  </div>
+</product-form-component>
 
 {% style %}
   /* ds-pdp — port of mockup .pdp-* (lines 1528-1660) with ds- namespace */
@@ -719,6 +804,151 @@
     /* Sub-CTA gets a bigger tap target on touch */
     .ds-pdp__info-sub-cta a { padding: 6px 0; display: inline-block; }
   }
+
+  /* ============================================================
+     STICKY ADD-TO-CART BAR
+     Fixed at top, slides down once the main ATC scrolls out of view.
+     Sits below the sticky header so the header nav stays accessible.
+     ============================================================ */
+  .ds-pdp-sticky-cta {
+    position: fixed;
+    top: var(--header-height, 64px);
+    left: 0;
+    right: 0;
+    z-index: 45;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    transform: translateY(-110%);
+    transition:
+      transform  var(--t-base, 240ms) var(--ease, cubic-bezier(.2,.7,.2,1)),
+      visibility var(--t-base, 240ms) var(--ease, cubic-bezier(.2,.7,.2,1));
+    visibility: hidden;
+    /* Reset inherited form layout */
+    margin: 0;
+    padding: 0;
+  }
+  .ds-pdp-sticky-cta.is-visible {
+    transform: translateY(0);
+    visibility: visible;
+  }
+  .ds-pdp-sticky-cta__inner {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-2) var(--pad-x);
+    max-width: 1600px;
+    margin: 0 auto;
+    min-height: 64px;
+  }
+
+  /* Thumbnail — click to scroll back to top */
+  .ds-pdp-sticky-cta__media {
+    display: block;
+    width: 48px;
+    height: 48px;
+    aspect-ratio: 1 / 1;
+    background: var(--color-bg-elev);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .ds-pdp-sticky-cta__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Name + price */
+  .ds-pdp-sticky-cta__info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ds-pdp-sticky-cta__name {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--color-fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+  .ds-pdp-sticky-cta__price {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-fg);
+    font-feature-settings: "tnum";
+    line-height: 1;
+  }
+  .ds-pdp-sticky-cta__price-strike {
+    text-decoration: line-through;
+    color: var(--color-fg-faint);
+    margin-right: 6px;
+    font-size: 11px;
+  }
+
+  /* ATC button — mono caps brutalist */
+  .ds-pdp-sticky-cta__btn {
+    background: var(--color-fg);
+    color: var(--color-bg);
+    border: 0;
+    border-radius: 0;
+    padding: 12px 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+  }
+  .ds-pdp-sticky-cta__btn:hover {
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+  }
+  .ds-pdp-sticky-cta__btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .ds-pdp-sticky-cta__btn-icon {
+    font-size: 14px;
+    line-height: 1;
+  }
+  /* Show short "Add" on phones, full "Add to cart" on bigger screens */
+  .ds-pdp-sticky-cta__btn-label { display: inline; }
+  .ds-pdp-sticky-cta__btn-label-long { display: none; }
+  @media (min-width: 500px) {
+    .ds-pdp-sticky-cta__btn-label { display: none; }
+    .ds-pdp-sticky-cta__btn-label-long { display: inline; }
+  }
+
+  /* Mobile — tighter padding, smaller thumb */
+  @media (max-width: 600px) {
+    .ds-pdp-sticky-cta__inner {
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+      gap: var(--space-2);
+      min-height: 56px;
+    }
+    .ds-pdp-sticky-cta__media { width: 40px; height: 40px; }
+    .ds-pdp-sticky-cta__name { font-size: 13px; }
+    .ds-pdp-sticky-cta__price { font-size: 12px; }
+    .ds-pdp-sticky-cta__btn { padding: 10px 14px; }
+  }
+
+  /* Reduced motion: drop the slide, just toggle visibility */
+  @media (prefers-reduced-motion: reduce) {
+    .ds-pdp-sticky-cta { transition: none; }
+  }
 {% endstyle %}
 
 {% schema %}
@@ -806,5 +1036,69 @@
       var y = target.getBoundingClientRect().top + window.pageYOffset - offset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     });
+  })();
+
+  // Sticky ATC bar — show when the main ATC has scrolled above the
+  // header, hide when it's back in view. Also sync variant + price
+  // between the main form and the sticky form so the right variant
+  // is added when the user has picked one.
+  (function () {
+    var bar       = document.querySelector('[data-ds-sticky-cta]');
+    var mainAtc   = document.querySelector('[data-ds-main-atc]');
+    if (!bar || !mainAtc) return;
+
+    function getHeaderH() {
+      var v = getComputedStyle(document.documentElement).getPropertyValue('--header-height');
+      return parseInt(v, 10) || 64;
+    }
+
+    var ticking = false;
+    function update() {
+      var rect = mainAtc.getBoundingClientRect();
+      var headerH = getHeaderH();
+      // Show once the main ATC's bottom edge has scrolled above the
+      // bottom of the sticky header (with a small buffer).
+      var shouldShow = rect.bottom < headerH + 4;
+      bar.classList.toggle('is-visible', shouldShow);
+      bar.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+      ticking = false;
+    }
+    function onScrollOrResize() {
+      if (!ticking) {
+        requestAnimationFrame(update);
+        ticking = true;
+      }
+    }
+
+    update();
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
+
+    // Click the sticky thumbnail → scroll back to top of the PDP
+    var topLink = bar.querySelector('[data-ds-sticky-top]');
+    if (topLink) {
+      topLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    // Sync variant + price between the main form and the sticky form
+    var mainSelect    = document.querySelector('[data-ds-variant-select]');
+    var stickyVariant = bar.querySelector('[data-ds-sticky-variant]');
+    var stickyPrice   = bar.querySelector('[data-ds-sticky-price]');
+    if (mainSelect && stickyVariant) {
+      mainSelect.addEventListener('change', function () {
+        stickyVariant.value = mainSelect.value;
+        // Refresh the visible price too. The variant id matches the
+        // option element's value; pull its label which we embed below
+        // as "Title — $XX.YY" so we can extract the trailing price.
+        var opt = mainSelect.options[mainSelect.selectedIndex];
+        if (opt && stickyPrice) {
+          var m = opt.textContent.match(/(\$|€|£)\s?[\d.,]+/);
+          if (m) stickyPrice.textContent = m[0];
+        }
+      });
+    }
   })();
 </script>
