@@ -472,12 +472,18 @@
     flex-direction: column;
     gap: var(--space-6);
   }
-  /* Force the panel visible on desktop even when <details> is closed.
-     Without this, an empty `active_filter_count` would render a
-     details-without-`open` that hides everything (summary too, since
-     summary is display:none on desktop) — leaving an invisible filter
-     sidebar.  Only applies at the desktop breakpoint. */
+  /* Desktop: the <details> wrapper must "disappear" from layout so
+     the inner <aside> can participate in the parent grid (which has
+     `grid-template-columns: 220px 1fr` — col 1 is the filter sidebar).
+     Without this, the details element itself takes col 1 but its
+     content collapses (summary is display:none, and the browser hides
+     non-summary children when details is closed), leaving an empty
+     column.  `display: contents` removes the details' own box from
+     layout while keeping the element + its open/close behaviour intact.
+     The `display: flex !important` then overrides the browser's native
+     "hide children when closed" rule so the aside renders regardless. */
   @media (min-width: 901px) {
+    .ds-collection__filters-wrap { display: contents; }
     .ds-collection__filters-wrap > .ds-collection__filters {
       display: flex !important;
     }
