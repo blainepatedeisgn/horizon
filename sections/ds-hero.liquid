@@ -178,11 +178,71 @@
       min-height: 0;
       padding: 0 var(--pad-x);
     }
+    /* When the inline script moves .ds-hero__visual INTO .ds-hero__content
+       (so the image sits right under the H1 title on mobile), zero its
+       own padding — the parent .ds-hero__content already handles the
+       horizontal padding via var(--pad-x), so the visual's own padding
+       would be doubled.  Use a contextual selector so this only applies
+       in the moved state. */
+    .ds-hero__content > .ds-hero__visual {
+      padding: 0;
+    }
   }
   @media (max-width: 480px) {
     .ds-hero__visual { padding: 0 var(--space-3); }
+    .ds-hero__content > .ds-hero__visual { padding: 0; }
   }
 {% endstyle %}
+
+<script>
+  // Mobile-only DOM reorder.  On ≤900px viewports, move the hero's
+  // visual block to sit RIGHT UNDER the H1 title block (instead of at
+  // the bottom of the content stack).  Restores to original position
+  // on resize back to desktop.  Desktop layout is unchanged.
+  //
+  // Implementation: matchMedia listener flips between two DOM states.
+  // The visual's "home" is as a direct child of .ds-hero (column 2
+  // of the desktop grid); its "mobile" position is as a child of
+  // .ds-hero__content inserted after .ds-hero-title.  The script
+  // tracks which state it's in via a local `moved` flag.
+  (function () {
+    var hero = document.querySelector('.ds-hero');
+    if (!hero) return;
+    var visual  = hero.querySelector('.ds-hero__visual');
+    var content = hero.querySelector('.ds-hero__content');
+    if (!visual || !content) return;
+
+    var titleEl = content.querySelector('.ds-hero-title');
+    if (!titleEl) return;     // no title block → leave the visual at its sibling position
+
+    // Remember the visual's original DOM location so we can restore.
+    var homeParent     = visual.parentNode;
+    var homeNextSibling = visual.nextSibling;
+    var moved = false;
+
+    var mq = window.matchMedia('(max-width: 900px)');
+
+    function apply() {
+      if (mq.matches && !moved) {
+        // Move into content, right after the H1
+        titleEl.parentNode.insertBefore(visual, titleEl.nextSibling);
+        moved = true;
+      } else if (!mq.matches && moved) {
+        // Restore to original sibling position
+        homeParent.insertBefore(visual, homeNextSibling);
+        moved = false;
+      }
+    }
+
+    apply();
+    if (mq.addEventListener) {
+      mq.addEventListener('change', apply);
+    } else if (mq.addListener) {
+      // Safari < 14 fallback
+      mq.addListener(apply);
+    }
+  })();
+</script>
 
 {% schema %}
 {
