@@ -1,16 +1,37 @@
 {%- comment -%}
   sections/ds-hero.liquid — Disrupted Studio homepage hero.
 
-  Two-column grid on desktop:
-    [ content blocks  | visual (image or CSS-art fallback) ]
-  Stacks on <=900px: content above, visual below.
+  Two layouts in one section:
 
-  Content area is `{% content_for 'blocks' %}` — merchant adds/orders any of
-  the allowed theme blocks (eyebrow, title, meta strip, rich text, button row)
-  via the theme editor. Preset auto-populates with the BACKLIT defaults.
+    Desktop (>900px):   [ content blocks  |  visual ]
+                        Side-by-side grid columns.
 
-  Visual is a section image_picker; if blank, renders the BACKLIT CSS-art
-  snippet (placeholder until a real product render is shot for launch).
+    Mobile (≤900px):    eyebrow
+                        H1 title
+                        VISUAL                  ← inserted between
+                        meta strip
+                        description
+                        CTA buttons
+
+  Implementation
+    The visual is rendered TWICE — once as `--desktop` (a direct child
+    of .ds-hero, column 2 of the grid) and once as `--mobile` (inside
+    .ds-hero__content, after the content blocks).  CSS show/hide based
+    on viewport.  CSS `order` on the content's flex children positions
+    the mobile visual right after the H1 title block.
+
+    Why duplicate instead of moving via JS: the previous JS-based
+    approach worked for the move, but the constrain-on-mobile CSS
+    kept losing the cascade battle for reasons that weren't worth
+    chasing further (suspected interaction with the .ds-backlit-render
+    snippet's own <style> block render order).  Duplicating gives each
+    copy its own clean, dedicated CSS context with no contextual
+    selectors or !important needed.
+
+    Cost: the visual markup renders twice in HTML.  For the placeholder
+    fallback (CSS-only) this is just DOM weight.  For an uploaded image,
+    the same URL appears in two <img> tags — the browser image cache
+    dedupes the actual network fetch.
 {%- endcomment -%}
 
 {%- liquid
@@ -18,28 +39,49 @@
   assign cs = section.settings.color_scheme
 -%}
 
+{%- comment -%}
+  Two macros — keep the visual markup DRY across the two copies.
+  Liquid doesn't have real macros, so we use a `capture` block.
+{%- endcomment -%}
+{%- capture visual_markup -%}
+  <div class="ds-hero__visual-inner">
+    {%- if visual != blank -%}
+      {{
+        visual
+        | image_url: width: 1200
+        | image_tag:
+            loading: 'eager',
+            fetchpriority: 'high',
+            widths: '480, 720, 960, 1200',
+            sizes: '(min-width: 900px) 50vw, 100vw',
+            class: 'ds-hero__visual-img'
+      }}
+    {%- else -%}
+      {%- render 'ds-backlit-render-fallback' -%}
+    {%- endif -%}
+  </div>
+{%- endcapture -%}
+
 <div class="ds-hero color-{{ cs }}">
   <div class="ds-hero__content">
     {%- content_for 'blocks' -%}
+
+    {%- comment -%}
+      Mobile-only visual.  CSS hides on desktop, shows on mobile.
+      Positioned between H1 and meta-strip via CSS `order` (see
+      stylesheet's @media (max-width: 900px) block).
+    {%- endcomment -%}
+    <div class="ds-hero__visual ds-hero__visual--mobile">
+      {{ visual_markup }}
+    </div>
   </div>
 
-  <div class="ds-hero__visual">
-    <div class="ds-hero__visual-inner">
-      {%- if visual != blank -%}
-        {{
-          visual
-          | image_url: width: 1200
-          | image_tag:
-              loading: 'eager',
-              fetchpriority: 'high',
-              widths: '480, 720, 960, 1200',
-              sizes: '(min-width: 900px) 50vw, 100vw',
-              class: 'ds-hero__visual-img'
-        }}
-      {%- else -%}
-        {%- render 'ds-backlit-render-fallback' -%}
-      {%- endif -%}
-    </div>
+  {%- comment -%}
+    Desktop-only visual.  CSS hides on mobile, shows on desktop as
+    grid column 2.
+  {%- endcomment -%}
+  <div class="ds-hero__visual ds-hero__visual--desktop">
+    {{ visual_markup }}
   </div>
 </div>
 
@@ -88,6 +130,12 @@
     display: block;
   }
 
+  /* Desktop: hide the mobile copy, show the desktop copy.
+     The desktop copy is sibling to .ds-hero__content so it falls
+     into grid column 2 naturally. */
+  .ds-hero__visual--mobile  { display: none; }
+  .ds-hero__visual--desktop { display: flex; }
+
   /* Tighten the in-hero variants of block styles */
   .ds-hero .ds-eyebrow .ds-mono {
     color: var(--color-accent);
@@ -106,11 +154,8 @@
     position: relative;
     display: inline-block;
     margin: 0;
-    /* Tame overflow so the spotlight pseudo can extend beyond the
-       glyph bounds without pushing siblings around. */
     isolation: isolate;
   }
-  /* Static white halo — slightly diffused duplicate of the text */
   .ds-hero-title__glow {
     position: absolute;
     inset: 0;
@@ -122,12 +167,9 @@
     pointer-events: none;
   }
 
-  /* ----- Animated spotlight ----- */
   .ds-hero-title--spotlight::before {
     content: "";
     position: absolute;
-    /* Modest overhang — keeps the spotlight close to the text rather
-       than letting it roam over surrounding space. */
     inset: -15%;
     background:
       radial-gradient(
@@ -140,11 +182,8 @@
     z-index: -2;
     pointer-events: none;
     user-select: none;
-    /* Slow figure-eight orbit — tightened range so the light traces
-       just behind the glyphs, not across the whole hero. */
     animation: ds-hero-spotlight 9s ease-in-out infinite;
     will-change: transform, opacity;
-    /* Mix the warm spotlight in additively over the (dark) bg */
     mix-blend-mode: screen;
   }
   @keyframes ds-hero-spotlight {
@@ -158,12 +197,20 @@
   @media (prefers-reduced-motion: reduce) {
     .ds-hero-title--spotlight::before {
       animation: none;
-      /* Park the spotlight roughly centered so users with reduced
-         motion still see the glow effect, just stationary. */
       transform: translate(0, 0) scale(1);
     }
   }
 
+  /* ============================================================
+     MOBILE LAYOUT (≤900px)
+     ============================================================
+     - Hero collapses to single column
+     - Desktop visual hidden, mobile visual shown
+     - Mobile visual positioned via CSS `order` to sit RIGHT UNDER
+       the H1 title (between title and meta-strip)
+     - Mobile visual gets its own clean CSS — no contextual
+       selectors, no !important, no cascade gymnastics.  It's a
+       different element with its own class hooks. */
   @media (max-width: 900px) {
     .ds-hero {
       grid-template-columns: 1fr;
@@ -174,98 +221,59 @@
     .ds-hero__content {
       padding-right: var(--pad-x);
     }
-    .ds-hero__visual {
+
+    /* Swap which copy shows on mobile */
+    .ds-hero__visual--desktop { display: none; }
+    .ds-hero__visual--mobile  { display: flex; }
+
+    /* Position the mobile visual right after the H1 title via flex
+       order.  Default order is 0 for all flex children; setting
+       explicit orders here changes the VISUAL order without touching
+       the DOM.  We position by block class so the merchant can
+       reorder blocks in the editor and the visual still lands right
+       after the title.
+
+       Title gets order 1 (we want it second after eyebrow but
+       before the visual).  Eyebrow stays default (0) so it appears
+       first.  Mobile visual gets order 2 (between title and rest).
+       Everything else stays default — they appear in source order
+       after the visual. */
+    .ds-hero__content > .ds-eyebrow      { order: 0; }
+    .ds-hero__content > .ds-hero-title   { order: 1; }
+    .ds-hero__content > .ds-hero__visual--mobile { order: 2; }
+    .ds-hero__content > .ds-meta-strip   { order: 3; }
+    .ds-hero__content > .ds-sale-tag     { order: 4; }
+    .ds-hero__content > .ds-rich-text    { order: 5; }
+    .ds-hero__content > .ds-button-row   { order: 6; }
+
+    /* Mobile visual's own styling — completely independent of the
+       desktop one, so no inheritance fights. */
+    .ds-hero__visual--mobile {
+      padding: 0;
       min-height: 0;
-      padding: 0 var(--pad-x);
+      background: none;
+      width: 100%;
+      max-width: 280px;
+      margin: var(--space-3) auto var(--space-2);
+      align-self: center;
     }
-    /* When the inline script moves .ds-hero__visual INTO .ds-hero__content
-       on mobile, the visual + its inner image/placeholder need to be
-       constrained so they don't fill the column.  Using !important
-       here because:
-       - The base .ds-backlit-render rule lives in the snippet's own
-         <style> block which Shopify may inline after the section's
-         style depending on render order
-       - The base width: min(94%, 480px) is on a 1-class selector
-         that "should" lose to mine but cascade order has been
-         unreliable in the theme editor preview specifically */
-    .ds-hero__content > .ds-hero__visual {
-      padding: 0 !important;
-      background: none !important;
-      align-self: center !important;
-      width: auto !important;
-      max-width: 280px !important;
-      margin: var(--space-4) auto var(--space-2) !important;
-    }
-    .ds-hero__content > .ds-hero__visual .ds-hero__visual-inner,
-    .ds-hero__content > .ds-hero__visual .ds-hero__visual-img,
-    .ds-hero__content > .ds-hero__visual .ds-backlit-render {
-      width: 100% !important;
-      max-width: 280px !important;
+    .ds-hero__visual--mobile .ds-hero__visual-img,
+    .ds-hero__visual--mobile .ds-backlit-render {
+      width: 100%;
+      max-width: 280px;
     }
   }
   @media (max-width: 480px) {
-    .ds-hero__visual { padding: 0 var(--space-3); }
-    .ds-hero__content > .ds-hero__visual {
-      max-width: 240px !important;
-      margin-top: var(--space-5) !important;
+    .ds-hero__visual--mobile {
+      max-width: 240px;
+      margin-top: var(--space-4);
     }
-    .ds-hero__content > .ds-hero__visual .ds-hero__visual-inner,
-    .ds-hero__content > .ds-hero__visual .ds-hero__visual-img,
-    .ds-hero__content > .ds-hero__visual .ds-backlit-render {
-      max-width: 240px !important;
+    .ds-hero__visual--mobile .ds-hero__visual-img,
+    .ds-hero__visual--mobile .ds-backlit-render {
+      max-width: 240px;
     }
   }
 {% endstyle %}
-
-<script>
-  // Mobile-only DOM reorder.  On ≤900px viewports, move the hero's
-  // visual block to sit RIGHT UNDER the H1 title block (instead of at
-  // the bottom of the content stack).  Restores to original position
-  // on resize back to desktop.  Desktop layout is unchanged.
-  //
-  // Implementation: matchMedia listener flips between two DOM states.
-  // The visual's "home" is as a direct child of .ds-hero (column 2
-  // of the desktop grid); its "mobile" position is as a child of
-  // .ds-hero__content inserted after .ds-hero-title.  The script
-  // tracks which state it's in via a local `moved` flag.
-  (function () {
-    var hero = document.querySelector('.ds-hero');
-    if (!hero) return;
-    var visual  = hero.querySelector('.ds-hero__visual');
-    var content = hero.querySelector('.ds-hero__content');
-    if (!visual || !content) return;
-
-    var titleEl = content.querySelector('.ds-hero-title');
-    if (!titleEl) return;     // no title block → leave the visual at its sibling position
-
-    // Remember the visual's original DOM location so we can restore.
-    var homeParent     = visual.parentNode;
-    var homeNextSibling = visual.nextSibling;
-    var moved = false;
-
-    var mq = window.matchMedia('(max-width: 900px)');
-
-    function apply() {
-      if (mq.matches && !moved) {
-        // Move into content, right after the H1
-        titleEl.parentNode.insertBefore(visual, titleEl.nextSibling);
-        moved = true;
-      } else if (!mq.matches && moved) {
-        // Restore to original sibling position
-        homeParent.insertBefore(visual, homeNextSibling);
-        moved = false;
-      }
-    }
-
-    apply();
-    if (mq.addEventListener) {
-      mq.addEventListener('change', apply);
-    } else if (mq.addListener) {
-      // Safari < 14 fallback
-      mq.addListener(apply);
-    }
-  })();
-</script>
 
 {% schema %}
 {
