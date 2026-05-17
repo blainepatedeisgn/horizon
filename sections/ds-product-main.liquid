@@ -346,24 +346,34 @@
                 control type.
               {%- endcomment -%}
               {%- liquid
-                assign has_tier_metadata = false
+                # Tier-card mode kicks in in two ways:
+                #   1. Strong signal: any variant has the disrupted.tier_name
+                #      metafield set (Path B — richer labels with /seat info)
+                #   2. Loose signal: the option name itself reads as
+                #      "license"-ish or "tier"-ish (Path A — variants alone,
+                #      no metafield setup required)
+                # Either trigger renders the brutalist cards; merchant
+                # picks whichever setup fits their workflow.
+                assign use_tier_cards = false
                 for v in product.variants
                   if v.metafields.disrupted.tier_name.value != blank
-                    assign has_tier_metadata = true
+                    assign use_tier_cards = true
                     break
                   endif
                 endfor
+                unless use_tier_cards
+                  assign opt_name_lc = product.options.first | default: '' | downcase
+                  if opt_name_lc contains 'license' or opt_name_lc contains 'tier'
+                    assign use_tier_cards = true
+                  endif
+                endunless
               -%}
               <div class="ds-pdp__info-variant">
                 <span class="ds-pdp__info-variant-label">
-                  {%- if has_tier_metadata -%}
-                    License tier
-                  {%- else -%}
-                    {{ product.options.first | default: 'Variant' }}
-                  {%- endif -%}
+                  {{ product.options.first | default: 'Variant' }}
                 </span>
 
-                {%- if has_tier_metadata -%}
+                {%- if use_tier_cards -%}
                   <div
                     class="ds-pdp__tier-cards"
                     data-ds-variant-radio-group
