@@ -812,14 +812,17 @@
      ============================================================ */
   .ds-pdp-sticky-cta {
     position: fixed;
-    top: var(--header-height, 64px);
+    /* --ds-search-top tracks the live bottom edge of the header (set by
+       JS in ds-header.liquid). This accounts for the announce bar +
+       sticky header state. Falls back to header height. */
+    top: var(--ds-search-top, var(--header-height, 64px));
     left: 0;
     right: 0;
     z-index: 45;
     background: var(--color-bg);
     color: var(--color-fg);
+    border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     transform: translateY(-110%);
     transition:
       transform  var(--t-base, 240ms) var(--ease, cubic-bezier(.2,.7,.2,1)),
@@ -1047,18 +1050,28 @@
     var mainAtc   = document.querySelector('[data-ds-main-atc]');
     if (!bar || !mainAtc) return;
 
-    function getHeaderH() {
-      var v = getComputedStyle(document.documentElement).getPropertyValue('--header-height');
-      return parseInt(v, 10) || 64;
+    function getHeaderBottom() {
+      // Prefer live measurement (announce bar may be in view, or not)
+      var hdr = document.querySelector('.ds-header');
+      if (hdr) {
+        var b = hdr.getBoundingClientRect().bottom;
+        if (b > 0) return b;
+      }
+      // Fallback: read --ds-search-top (updated live by ds-header JS)
+      var v = getComputedStyle(document.documentElement).getPropertyValue('--ds-search-top');
+      var n = parseInt(v, 10);
+      if (n > 0) return n;
+      // Last resort
+      return 64;
     }
 
     var ticking = false;
     function update() {
       var rect = mainAtc.getBoundingClientRect();
-      var headerH = getHeaderH();
+      var threshold = getHeaderBottom();
       // Show once the main ATC's bottom edge has scrolled above the
       // bottom of the sticky header (with a small buffer).
-      var shouldShow = rect.bottom < headerH + 4;
+      var shouldShow = rect.bottom < threshold + 4;
       bar.classList.toggle('is-visible', shouldShow);
       bar.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
       ticking = false;
