@@ -221,11 +221,36 @@ Same flow. Variants + per-variant metafields. The theme code already
 handles every product type — no per-product code changes needed.
 Reference the multiplier table at the top of this doc for prices.
 
-### Phase 3 — Cart upsell
+### Phase 3 — Cart upsell (DONE for drawer)
 
-After variant select on PDP, if Standard is currently selected, show
-"Upgrade to Studio for $48 more" nudge below the ATC button. One click
-swaps the variant.
+Pivoted from the originally-planned PDP nudge to a cart-level upsell.
+The tier cards on the PDP already show both options side-by-side, so a
+"Upgrade?" nudge below the ATC button would have been redundant. Cart
+upsell catches the post-commit "should I have picked the upper tier?"
+moment instead.
+
+- [x] Detect upgrade target: cheapest available variant of the same
+      product priced above the cart line item
+- [x] Render brutalist dashed-border button inside `.ds-cart__item`,
+      spanning all grid columns — "↑ UPGRADE · to Commercial · +$20.00 →"
+- [x] Click handler: POST `/cart/change.js` (quantity: 0) to remove the
+      lower-tier line, then POST `/cart/add.js` for the upgrade variant,
+      then reload to refresh cart UI. SessionStorage flag re-opens the
+      drawer on the next page load so the user sees the upgraded cart
+      immediately without re-clicking the cart icon.
+- [x] Loading state during round-trip: dashed border button shows
+      "— updating…" suffix, disabled to prevent double-clicks.
+- [x] Idempotent script init (window.__dsCartUpsellInit) so listeners
+      attach once even when the snippet renders in two places.
+
+**Coverage:** drawer only for now. The cart page (templates/cart.json
+→ main-cart) uses Horizon's default `_cart-products` block which
+renders Horizon's snippets/cart-products.liquid, not the customized
+ds-cart-products. To add upsell to the cart page too, the simplest
+move is to swap the `_cart-products` block in main-cart.liquid for
+`{% render 'ds-cart-products' %}` so both surfaces share the custom
+snippet. Deferred — the drawer is the primary surface (hero ATC opens
+it directly).
 
 ### Phase 4 — Customer accounts + license retrieval (post-launch)
 

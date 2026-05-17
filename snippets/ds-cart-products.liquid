@@ -148,9 +148,133 @@
                 ref="cartItemError-{{ item.index | plus: 1 }}"
               ></small>
             </div>
+
+            {%- comment -%}
+              ----- TIER UPSELL -----
+              Find the cheapest next-higher-priced available variant of
+              the same product. If one exists, render an upgrade nudge
+              spanning full width below the line item. Click via the JS
+              at the bottom of this snippet: remove this line, add the
+              upgraded variant, reload to refresh cart UI.
+
+              Skips itself silently for:
+                • single-variant products (no upgrade target)
+                • the highest-priced variant already in cart
+                • products where no higher tier is available
+            {%- endcomment -%}
+            {%- assign sorted_variants = item.product.variants | sort: 'price' -%}
+            {%- assign found_upsell = false -%}
+            {%- assign upsell_v_id = 0 -%}
+            {%- assign upsell_v_price = 0 -%}
+            {%- assign upsell_v_title = '' -%}
+            {%- for v in sorted_variants -%}
+              {%- if found_upsell == false and v.id != item.variant_id and v.available and v.price > item.variant.price -%}
+                {%- assign upsell_v_id = v.id -%}
+                {%- assign upsell_v_price = v.price -%}
+                {%- assign upsell_v_title = v.metafields.disrupted.tier_name | default: v.title -%}
+                {%- assign found_upsell = true -%}
+              {%- endif -%}
+            {%- endfor -%}
+
+            {%- if found_upsell -%}
+              {%- assign price_diff = upsell_v_price | minus: item.variant.price -%}
+              <button
+                type="button"
+                class="ds-cart__upsell"
+                data-ds-cart-upsell
+                data-line-key="{{ item.key }}"
+                data-upgrade-to="{{ upsell_v_id }}"
+                aria-label="Upgrade {{ item.product.title | escape }} to {{ upsell_v_title | escape }} for {{ price_diff | money }} more"
+              >
+                <span class="ds-cart__upsell-eyebrow ds-mono" aria-hidden="true">↑ UPGRADE</span>
+                <span class="ds-cart__upsell-text">
+                  to {{ upsell_v_title }}
+                  <span class="ds-cart__upsell-diff">+{{ price_diff | money }}</span>
+                </span>
+                <span class="ds-cart__upsell-arrow" aria-hidden="true">→</span>
+              </button>
+            {%- endif -%}
           </li>
         {%- endfor -%}
       </ul>
     </form>
   {%- endif -%}
 </div>
+
+<script>
+  /* Tier upsell click handler. Idempotent: only attaches listeners
+     once even if this snippet renders twice on /cart (header drawer +
+     page summary share the same cart line items).
+
+     Flow on click:
+       1. POST /cart/change.js with quantity: 0 to remove the current
+          (lower-tier) line item
+       2. POST /cart/add.js with the upgrade variant id and quantity: 1
+       3. Reload — refreshes both the drawer and cart page state.
+          sessionStorage flag tells the next page load to re-open the
+          cart drawer so the user sees their upgraded cart without an
+          extra click. */
+  (function () {
+    if (window.__dsCartUpsellInit) return;
+    window.__dsCartUpsellInit = true;
+
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-ds-cart-upsell]');
+      if (!btn || btn.disabled) return;
+      e.preventDefault();
+
+      btn.disabled = true;
+      btn.setAttribute('data-loading', '1');
+
+      var lineKey = btn.dataset.lineKey;
+      var upgradeTo = parseInt(btn.dataset.upgradeTo, 10);
+      if (!lineKey || !upgradeTo) {
+        btn.disabled = false;
+        btn.removeAttribute('data-loading');
+        return;
+      }
+
+      fetch('/cart/change.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: lineKey, quantity: 0 })
+      })
+      .then(function (r) {
+        if (!r.ok) throw new Error('Remove failed (' + r.status + ')');
+        return fetch('/cart/add.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: upgradeTo, quantity: 1 })
+        });
+      })
+      .then(function (r) {
+        if (!r.ok) throw new Error('Add failed (' + r.status + ')');
+        try { sessionStorage.setItem('ds-cart-reopen-after-upgrade', '1'); } catch (e) {}
+        window.location.reload();
+      })
+      .catch(function (err) {
+        console.error('Tier upgrade failed:', err);
+        btn.disabled = false;
+        btn.removeAttribute('data-loading');
+      });
+    });
+
+    /* After reload from an upgrade, re-open the cart drawer so the
+       user sees their upgraded cart immediately. The cart-drawer-component
+       listens for a synthetic click on the cart trigger to open. */
+    try {
+      if (sessionStorage.getItem('ds-cart-reopen-after-upgrade') === '1') {
+        sessionStorage.removeItem('ds-cart-reopen-after-upgrade');
+        var open = function () {
+          var trigger = document.querySelector('[on\\:click$="cart-drawer-component/open"], [data-ds-cart-trigger]');
+          if (trigger) trigger.click();
+        };
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function () { setTimeout(open, 50); });
+        } else {
+          setTimeout(open, 50);
+        }
+      }
+    } catch (e) {}
+  })();
+</script>

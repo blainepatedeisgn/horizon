@@ -924,6 +924,66 @@
   }
   .ds-cart__item-error.hidden { display: none; }
 
+  /* Tier upsell — rendered inside .ds-cart__item as a full-width row
+     below the item content (spans all 3 grid columns). Visible only
+     when the cart item has a higher-priced available variant. Click
+     swaps the line item for the upgrade tier via Cart Ajax API. */
+  .ds-cart__upsell {
+    grid-column: 1 / -1;
+    margin-top: var(--space-3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255, 77, 31, 0.06);
+    border: 1px dashed var(--color-accent);
+    color: var(--color-fg);
+    font: inherit;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .ds-cart__upsell:hover {
+    background: rgba(255, 77, 31, 0.14);
+  }
+  .ds-cart__upsell-eyebrow {
+    flex-shrink: 0;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--color-accent);
+  }
+  .ds-cart__upsell-text {
+    flex: 1;
+  }
+  .ds-cart__upsell-diff {
+    margin-left: 6px;
+    font-weight: 600;
+    color: var(--color-accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-cart__upsell-arrow {
+    color: var(--color-accent);
+    flex-shrink: 0;
+    transition: transform var(--t-fast) var(--ease);
+  }
+  .ds-cart__upsell:hover .ds-cart__upsell-arrow {
+    transform: translateX(3px);
+  }
+  /* Loading state — set by JS during the /cart/change → /cart/add
+     round-trip so the user gets feedback that the click registered. */
+  .ds-cart__upsell[data-loading] {
+    cursor: wait;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .ds-cart__upsell[data-loading] .ds-cart__upsell-text::after {
+    content: " — updating…";
+    color: var(--color-fg-muted);
+  }
+
   /* Summary footer */
   .ds-cart__summary {
     padding: var(--space-5);
