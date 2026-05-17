@@ -47,6 +47,14 @@
 
       {%- unless cart.empty? -%}
         <div class="cart-page__summary">
+          {%- comment -%}
+            License consent gate — same snippet as the drawer. Sits
+            above Horizon's _cart-summary block; the inline JS in the
+            snippet gates every [name="checkout"] button on the page
+            until the box is checked.
+          {%- endcomment -%}
+          {%- render 'ds-cart-agreement' -%}
+
           {%- content_for 'block', id: 'cart-page-summary', type: '_cart-summary' -%}
         </div>
       {%- endunless -%}

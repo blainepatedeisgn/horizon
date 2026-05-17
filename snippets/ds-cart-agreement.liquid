@@ -1,0 +1,110 @@
+{%- comment -%}
+  snippets/ds-cart-agreement.liquid — License-terms consent gate.
+
+  Brutalist checkbox + link to /pages/license. The user must check the
+  box before any [name="checkout"] button on the page becomes clickable.
+  Establishes click-wrap consent (stronger than browse-wrap per the
+  Society of Fonts EULA enforceability analysis).
+
+  Rendered in two places:
+    1. Cart drawer footer (via snippets/ds-cart-summary.liquid)
+    2. Full cart page (via sections/main-cart.liquid, above the cart
+       summary block)
+
+  Behavior
+    • Consent state persists in sessionStorage for the duration of the
+      visitor's session — re-checking required after the browser closes.
+    • Inline JS is guarded by window.__dsCartAgreementInit so it only
+      attaches listeners once, even if the snippet renders twice on the
+      cart page (drawer + page summary).
+    • Sync runs on initial load and on every Horizon `cart:update` event
+      (fired after cart morphs), so the checkbox + button state stay
+      consistent even after add/remove actions.
+    • Both checkboxes (drawer + cart page) share the same sessionStorage
+      key, so checking either one unlocks the Checkout button in both.
+
+  Known limitation
+    • Shopify-rendered dynamic checkout buttons (Apple Pay, Shop Pay
+      Express, Google Pay, PayPal Express) submit directly to Shopify
+      and bypass this gate. If affirmative consent is critical, disable
+      dynamic checkout buttons in Settings → Payments. Standard email
+      checkout flow is fully gated.
+    • CSS lives in sections/ds-header.liquid alongside the existing
+      ds-cart styling. Loaded on every page via the header section
+      group, so it applies on the cart page too.
+{%- endcomment -%}
+
+<label class="ds-cart__agreement">
+  <input
+    type="checkbox"
+    class="ds-cart__agreement-input"
+    data-ds-cart-agreement
+    aria-describedby="ds-cart-agreement-text"
+  >
+  <span class="ds-cart__agreement-box" aria-hidden="true"></span>
+  <span class="ds-cart__agreement-text" id="ds-cart-agreement-text">
+    I agree to the
+    <a
+      href="/pages/license"
+      target="_blank"
+      rel="noopener"
+      class="ds-cart__agreement-link"
+    >License terms</a>
+  </span>
+</label>
+
+<script>
+  (function () {
+    if (window.__dsCartAgreementInit) return;
+    window.__dsCartAgreementInit = true;
+
+    var STORAGE_KEY = 'ds-cart-license-agreed';
+
+    function getAgreed() {
+      try { return sessionStorage.getItem(STORAGE_KEY) === '1'; }
+      catch (e) { return false; }
+    }
+    function setAgreed(val) {
+      try {
+        if (val) sessionStorage.setItem(STORAGE_KEY, '1');
+        else sessionStorage.removeItem(STORAGE_KEY);
+      } catch (e) {}
+    }
+
+    /* Idempotent sync — runs on load, on cart updates, and after each
+       checkbox change. Walks every instance of the checkbox on the
+       page (drawer + cart page) and every checkout button, gating
+       them all from a single source of truth in sessionStorage. */
+    function syncAll() {
+      var agreed = getAgreed();
+      document.querySelectorAll('[data-ds-cart-agreement]').forEach(function (cb) {
+        if (cb.checked !== agreed) cb.checked = agreed;
+      });
+      document.querySelectorAll('button[name="checkout"], input[name="checkout"]').forEach(function (btn) {
+        btn.disabled = !agreed;
+        btn.setAttribute('aria-disabled', String(!agreed));
+      });
+    }
+
+    /* Delegated change handler — survives Horizon's morph rerenders
+       because it's attached to document, not to the markup itself. */
+    document.addEventListener('change', function (e) {
+      var t = e.target;
+      if (t && t.matches && t.matches('[data-ds-cart-agreement]')) {
+        setAgreed(!!t.checked);
+        syncAll();
+      }
+    });
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', syncAll);
+    } else {
+      syncAll();
+    }
+
+    /* Horizon's cart-items / cart-drawer components dispatch this on
+       document after each cart update + DOM morph. See assets/events.js
+       (ThemeEvents.cartUpdate = 'cart:update'). */
+    document.addEventListener('cart:update', syncAll);
+  })();
+</script>

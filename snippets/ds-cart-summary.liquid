@@ -45,6 +45,13 @@
     </div>
   </div>
 
+  {%- comment -%}
+    License consent gate. Renders the checkbox + JS that disables every
+    [name="checkout"] button until the user agrees. Shared snippet —
+    same instance also renders on the full cart page via main-cart.
+  {%- endcomment -%}
+  {%- render 'ds-cart-agreement' -%}
+
   <form
     action="{{ routes.cart_url }}"
     method="post"
