@@ -1,11 +1,10 @@
 /*
  * ------------------------------------------------------------
- * Disrupted Studio header group (Phase 4 Batches 3 + 6)
+ * IMPORTANT: The contents of this file are auto-generated.
  *
- * Replaces Horizon's stock header-announcements + header sections
- * with our custom equivalents:
- *   ds-announce-bar  — rotating tagline strip (orange by default)
- *   ds-header        — brutalist logo + nav + search + cart + mobile drawer
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
  * ------------------------------------------------------------
  */
 {
@@ -17,19 +16,31 @@
       "blocks": {
         "tagline_1": {
           "type": "tagline",
-          "settings": { "text": "Tools for designers who hate generic tools" }
+          "settings": {
+            "text": "Tools for designers who hate generic tools",
+            "url": ""
+          }
         },
         "tagline_2": {
           "type": "tagline",
-          "settings": { "text": "Real assets. No AI. Hand-built." }
+          "settings": {
+            "text": "Real assets. No AI. Hand-built.",
+            "url": ""
+          }
         },
         "tagline_3": {
           "type": "tagline",
-          "settings": { "text": "Bought once, owned forever." }
+          "settings": {
+            "text": "Bought once, owned forever.",
+            "url": ""
+          }
         },
         "tagline_4": {
           "type": "tagline",
-          "settings": { "text": "30-day money-back guarantee" }
+          "settings": {
+            "text": "30-day money-back guarantee",
+            "url": ""
+          }
         }
       },
       "block_order": [
@@ -53,7 +64,9 @@
         "main_menu": "main-menu",
         "show_search": true,
         "show_cart": true,
-        "sticky": true
+        "sticky": true,
+        "cart_upsell_collection": "all-products",
+        "cart_upsell_count": 2
       }
     }
   },
