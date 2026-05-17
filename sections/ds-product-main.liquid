@@ -531,9 +531,9 @@
         {%- endcomment -%}
         {%- if demo_url != blank -%}
           <div class="ds-pdp__info-sub-cta">
-            <a href="{{ demo_url | escape }}" class="ds-text-link">
-              {{ sub_cta_label | escape }}
-              <span class="ds-text-link__arrow" aria-hidden="true">→</span>
+            <a href="{{ demo_url | escape }}" class="ds-pdp__info-sub-cta-link">
+              <span class="ds-pdp__info-sub-cta-text">{{ sub_cta_label | escape }}</span>
+              <span class="ds-pdp__info-sub-cta-arrow" aria-hidden="true">→</span>
             </a>
           </div>
         {%- endif -%}
@@ -1112,9 +1112,41 @@
     cursor: not-allowed;
   }
 
-  /* Sub-CTA */
+  /* Sub-CTA — full-width row with text left and arrow right, slot
+     into the visual rhythm between the ATC button and the specs
+     table. Bottom border doubles as a divider above the specs box
+     below, so the whole right column reads as a continuous stack
+     of tabular info rows instead of floating elements. */
   .ds-pdp__info-sub-cta {
-    text-align: center;
+    margin-top: var(--space-3);
+  }
+  .ds-pdp__info-sub-cta-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    width: 100%;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-fg);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+  }
+  .ds-pdp__info-sub-cta-link:hover {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+  }
+  .ds-pdp__info-sub-cta-arrow {
+    display: inline-block;
+    transition: transform var(--t-fast) var(--ease);
+  }
+  .ds-pdp__info-sub-cta-link:hover .ds-pdp__info-sub-cta-arrow {
+    transform: translateX(4px);
   }
 
   /* Specs */
@@ -1200,9 +1232,6 @@
       padding: 12px 14px;
     }
     .ds-pdp__info-spec-value { text-align: left; }
-
-    /* Sub-CTA gets a bigger tap target on touch */
-    .ds-pdp__info-sub-cta a { padding: 6px 0; display: inline-block; }
   }
 
   /* ============================================================
