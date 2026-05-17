@@ -179,40 +179,40 @@
       padding: 0 var(--pad-x);
     }
     /* When the inline script moves .ds-hero__visual INTO .ds-hero__content
-       (so the image sits right under the H1 title on mobile):
-       - Zero its own padding
-       - Drop the desktop radial-gradient backdrop (designed for wide
-         column, reads as stray glow at narrow widths)
-       - Add extra margin-top for breathing room from the H1 — the
-         content's `gap: var(--space-5)` alone wasn't enough visually
-       - Override the desktop flex-stretch so the visual sizes to
-         content, not to fill the column */
+       on mobile, the visual + its inner image/placeholder need to be
+       constrained so they don't fill the column.  Using !important
+       here because:
+       - The base .ds-backlit-render rule lives in the snippet's own
+         <style> block which Shopify may inline after the section's
+         style depending on render order
+       - The base width: min(94%, 480px) is on a 1-class selector
+         that "should" lose to mine but cascade order has been
+         unreliable in the theme editor preview specifically */
     .ds-hero__content > .ds-hero__visual {
-      padding: 0;
-      background: none;
-      align-self: center;
-      margin-top: var(--space-4);
-      margin-bottom: var(--space-2);
+      padding: 0 !important;
+      background: none !important;
+      align-self: center !important;
+      width: auto !important;
+      max-width: 280px !important;
+      margin: var(--space-4) auto var(--space-2) !important;
     }
-    /* Constrain the actual image / placeholder directly — the base
-       rules set them to `width: min(94%, 480px)` which is 94% of the
-       VISUAL element, so capping the visual wasn't enough.  Cap the
-       inner elements explicitly so they stay a reasonable size in
-       the mobile content column. */
+    .ds-hero__content > .ds-hero__visual .ds-hero__visual-inner,
     .ds-hero__content > .ds-hero__visual .ds-hero__visual-img,
     .ds-hero__content > .ds-hero__visual .ds-backlit-render {
-      width: min(80%, 280px);
+      width: 100% !important;
+      max-width: 280px !important;
     }
   }
   @media (max-width: 480px) {
     .ds-hero__visual { padding: 0 var(--space-3); }
     .ds-hero__content > .ds-hero__visual {
-      padding: 0;
-      margin-top: var(--space-5);
+      max-width: 240px !important;
+      margin-top: var(--space-5) !important;
     }
+    .ds-hero__content > .ds-hero__visual .ds-hero__visual-inner,
     .ds-hero__content > .ds-hero__visual .ds-hero__visual-img,
     .ds-hero__content > .ds-hero__visual .ds-backlit-render {
-      width: min(75%, 240px);  /* tighter on phones */
+      max-width: 240px !important;
     }
   }
 {% endstyle %}
