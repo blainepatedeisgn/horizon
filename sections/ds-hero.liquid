@@ -8,30 +8,34 @@
 
     Mobile (≤900px):    eyebrow
                         H1 title
-                        VISUAL                  ← inserted between
+                        VISUAL                  ← inserted right after title
                         meta strip
                         description
                         CTA buttons
 
   Implementation
-    The visual is rendered TWICE — once as `--desktop` (a direct child
-    of .ds-hero, column 2 of the grid) and once as `--mobile` (inside
-    .ds-hero__content, after the content blocks).  CSS show/hide based
-    on viewport.  CSS `order` on the content's flex children positions
-    the mobile visual right after the H1 title block.
+    The visual is rendered TWICE — once as `--desktop` (sibling of
+    .ds-hero__content, grid column 2) and once as `--mobile` (sibling
+    of the H1 block, inserted INLINE in the block render loop).  CSS
+    show/hide based on viewport.
 
-    Why duplicate instead of moving via JS: the previous JS-based
-    approach worked for the move, but the constrain-on-mobile CSS
-    kept losing the cascade battle for reasons that weren't worth
-    chasing further (suspected interaction with the .ds-backlit-render
-    snippet's own <style> block render order).  Duplicating gives each
-    copy its own clean, dedicated CSS context with no contextual
-    selectors or !important needed.
+    Why we iterate blocks manually (instead of `{% content_for 'blocks' %}`):
+    `content_for` renders all blocks together with no hook to insert
+    custom markup between them.  We need to drop the mobile visual
+    right after the H1, so we iterate `section.blocks` ourselves and
+    insert the visual right after rendering the title block.
+
+    Why this is better than CSS `order` (the previous attempt): in the
+    Shopify theme editor, blocks can be wrapped in Shopify editor UI
+    elements that break direct-child selectors like
+    `.ds-hero__content > .ds-hero-title`.  Source-order placement is
+    immune to that wrapping because the visual is literally right
+    after the title in the HTML, no CSS positioning required.
 
     Cost: the visual markup renders twice in HTML.  For the placeholder
     fallback (CSS-only) this is just DOM weight.  For an uploaded image,
-    the same URL appears in two <img> tags — the browser image cache
-    dedupes the actual network fetch.
+    the same URL appears in two <img> tags — browser image cache dedupes
+    the actual network fetch.
 {%- endcomment -%}
 
 {%- liquid
@@ -40,8 +44,8 @@
 -%}
 
 {%- comment -%}
-  Two macros — keep the visual markup DRY across the two copies.
-  Liquid doesn't have real macros, so we use a `capture` block.
+  Visual markup captured once and reused for both copies so the
+  fallback / image_tag logic stays DRY.
 {%- endcomment -%}
 {%- capture visual_markup -%}
   <div class="ds-hero__visual-inner">
@@ -64,21 +68,44 @@
 
 <div class="ds-hero color-{{ cs }}">
   <div class="ds-hero__content">
-    {%- content_for 'blocks' -%}
-
     {%- comment -%}
-      Mobile-only visual.  CSS hides on desktop, shows on mobile.
-      Positioned between H1 and meta-strip via CSS `order` (see
-      stylesheet's @media (max-width: 900px) block).
+      Manually iterate section.blocks instead of using
+      `content_for 'blocks'` so we can drop the mobile visual right
+      after the title block in DOM source order.  This works in both
+      the live site and the theme editor (no reliance on CSS order
+      or contextual selectors).
+
+      A new block type added later just needs a `when` arm here.
     {%- endcomment -%}
-    <div class="ds-hero__visual ds-hero__visual--mobile">
-      {{ visual_markup }}
-    </div>
+    {%- for block in section.blocks -%}
+      {%- case block.type -%}
+        {%- when 'ds-eyebrow'    -%}
+          {%- render 'ds-eyebrow',    block: block -%}
+        {%- when 'ds-hero-title' -%}
+          {%- render 'ds-hero-title', block: block -%}
+          {%- comment -%}
+            Mobile-only visual, sits right after the title in source
+            order.  Hidden on desktop via CSS.  Browser cache dedupes
+            the image with the desktop copy below.
+          {%- endcomment -%}
+          <div class="ds-hero__visual ds-hero__visual--mobile">
+            {{ visual_markup }}
+          </div>
+        {%- when 'ds-meta-strip' -%}
+          {%- render 'ds-meta-strip', block: block -%}
+        {%- when 'ds-rich-text'  -%}
+          {%- render 'ds-rich-text',  block: block -%}
+        {%- when 'ds-button-row' -%}
+          {%- render 'ds-button-row', block: block -%}
+        {%- when 'ds-sale-tag'   -%}
+          {%- render 'ds-sale-tag',   block: block -%}
+      {%- endcase -%}
+    {%- endfor -%}
   </div>
 
   {%- comment -%}
-    Desktop-only visual.  CSS hides on mobile, shows on desktop as
-    grid column 2.
+    Desktop-only visual.  Sits as a sibling of .ds-hero__content so it
+    falls into grid column 2 on desktop.  Hidden on mobile via CSS.
   {%- endcomment -%}
   <div class="ds-hero__visual ds-hero__visual--desktop">
     {{ visual_markup }}
@@ -130,9 +157,7 @@
     display: block;
   }
 
-  /* Desktop: hide the mobile copy, show the desktop copy.
-     The desktop copy is sibling to .ds-hero__content so it falls
-     into grid column 2 naturally. */
+  /* Show desktop copy, hide mobile copy on desktop */
   .ds-hero__visual--mobile  { display: none; }
   .ds-hero__visual--desktop { display: flex; }
 
@@ -143,9 +168,6 @@
   }
   .ds-hero .ds-rich-text { max-width: 38ch; }
 
-  /* Display title with white glow halo (static) + optional animated
-     orange spotlight (.ds-hero-title--spotlight) that orbits behind
-     the text. The spotlight is an on-brand demo of BACKLIT itself. */
   .ds-hero-title {
     font-size: var(--fs-display);
     font-weight: 600;
@@ -206,11 +228,10 @@
      ============================================================
      - Hero collapses to single column
      - Desktop visual hidden, mobile visual shown
-     - Mobile visual positioned via CSS `order` to sit RIGHT UNDER
-       the H1 title (between title and meta-strip)
-     - Mobile visual gets its own clean CSS — no contextual
-       selectors, no !important, no cascade gymnastics.  It's a
-       different element with its own class hooks. */
+     - Mobile visual sits naturally between title block and the
+       next block via Liquid loop insertion — no CSS order needed
+     - Mobile visual gets its own size constraints with no
+       contextual selectors required (the --mobile class is enough) */
   @media (max-width: 900px) {
     .ds-hero {
       grid-template-columns: 1fr;
@@ -222,32 +243,9 @@
       padding-right: var(--pad-x);
     }
 
-    /* Swap which copy shows on mobile */
     .ds-hero__visual--desktop { display: none; }
     .ds-hero__visual--mobile  { display: flex; }
 
-    /* Position the mobile visual right after the H1 title via flex
-       order.  Default order is 0 for all flex children; setting
-       explicit orders here changes the VISUAL order without touching
-       the DOM.  We position by block class so the merchant can
-       reorder blocks in the editor and the visual still lands right
-       after the title.
-
-       Title gets order 1 (we want it second after eyebrow but
-       before the visual).  Eyebrow stays default (0) so it appears
-       first.  Mobile visual gets order 2 (between title and rest).
-       Everything else stays default — they appear in source order
-       after the visual. */
-    .ds-hero__content > .ds-eyebrow      { order: 0; }
-    .ds-hero__content > .ds-hero-title   { order: 1; }
-    .ds-hero__content > .ds-hero__visual--mobile { order: 2; }
-    .ds-hero__content > .ds-meta-strip   { order: 3; }
-    .ds-hero__content > .ds-sale-tag     { order: 4; }
-    .ds-hero__content > .ds-rich-text    { order: 5; }
-    .ds-hero__content > .ds-button-row   { order: 6; }
-
-    /* Mobile visual's own styling — completely independent of the
-       desktop one, so no inheritance fights. */
     .ds-hero__visual--mobile {
       padding: 0;
       min-height: 0;
