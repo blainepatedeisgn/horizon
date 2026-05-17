@@ -82,7 +82,7 @@
         "type": "ds-loader",
         "settings": {
           "enabled": true,
-          "show_mode": "first_visit",
+          "show_mode": "every_visit",
           "min_duration": 2000,
           "frame_ms": 130,
           "fade_ms": 400
