@@ -1194,13 +1194,18 @@
      here so it applies on both the cart drawer and the full cart page
      (header CSS loads on every template via the header section group). */
   .ds-cart__agreement {
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
+    /* Grid is more predictable than flex for "icon + text" layouts —
+       column-gap explicitly sizes the space between the checkbox box
+       and the agreement label, no chance of an out-of-flow hidden
+       input affecting interpretation. */
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 32px;
+    align-items: start;
     margin-bottom: var(--space-3);
     cursor: pointer;
     user-select: none;
-    padding: 14px 16px;
+    padding: 14px 18px;
     border: 1px solid var(--color-border);
     background: var(--color-bg-elev);
   }
