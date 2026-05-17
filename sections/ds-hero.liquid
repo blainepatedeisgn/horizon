@@ -90,29 +90,31 @@
     align-items: center;
     justify-content: center;
     padding-right: var(--pad-x);
-    /* Match the content column's height so the visual fills edge-to-edge
-       from the eyebrow's top down to the button row's bottom. Grid stays
-       align-items: center for the content column; we only stretch this
-       one cell. Mobile single-column layout overrides this below. */
-    align-self: stretch;
+    min-height: 360px;
     background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.04), transparent 60%);
   }
   .ds-hero__visual-inner {
     width: 100%;
-    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .ds-hero__visual-img,
   .ds-hero__visual-video {
-    /* Stay square — height matches the content column (eyebrow top to
-       button bottom), width follows from aspect-ratio so the visual
-       never stretches horizontally. max-width: 100% keeps it inside
-       the column if content is taller than the column is wide. */
-    height: 100%;
-    width: auto;
-    max-width: 100%;
+    /* Square visual with a fluid-but-capped width. The earlier "match
+       content column height" approach hit a flex layout pathology —
+       images inside flex parents inherit min-width from their intrinsic
+       source size (here, 1200px), which fought max-width: 100% on narrow
+       viewports (image overflowed) and let the square grow taller than
+       content on wide ones (image overhung the eyebrow/buttons).
+       Switched to the standard Shopify hero pattern: width fills the
+       column up to a sensible cap, aspect-ratio: 1 / 1 locks the shape.
+       The image is sometimes slightly shorter than the content column
+       (normal for hero layouts) but it never overflows, crops at the
+       edges, or distorts. */
+    width: 100%;
+    max-width: 560px;
+    height: auto;
     aspect-ratio: 1 / 1;
     object-fit: cover;
     border: 1px solid var(--color-border);
@@ -210,17 +212,12 @@
       min-height: 0;
       padding: 0 var(--pad-x);
     }
-    /* Mobile resets the square framing — single-column stack has no
-       neighbor to size against, and the 1:1 brand square reads cleaner
-       than a stretched rectangle on phones. */
-    .ds-hero__visual-inner {
-      height: auto;
-    }
+    /* Phones: shrink the cap to 480px and add 3% side breathing room
+       via the 94% width so the square doesn't kiss the viewport edges. */
     .ds-hero__visual-img,
     .ds-hero__visual-video {
       width: min(94%, 480px);
-      height: auto;
-      aspect-ratio: 1 / 1;
+      max-width: none;
     }
   }
   @media (max-width: 480px) {
