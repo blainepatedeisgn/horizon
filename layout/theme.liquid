@@ -46,6 +46,15 @@
   </head>
 
   <body class="page-width-{{ settings.page_width }} card-hover-effect-{{ settings.card_hover_effect }}">
+    {%- comment -%}
+      Disrupted Studio intro loader.  Rendered as the FIRST child of
+      <body> so it paints before any other content hydrates.  Self-
+      gates via sessionStorage so returning customers within the
+      same browsing session don't see it on every navigation.  See
+      sections/ds-loader.liquid for behaviour + settings + a11y.
+    {%- endcomment -%}
+    {%- section 'ds-loader' -%}
+
     {% render 'skip-to-content-link', href: '#MainContent', text: 'accessibility.skip_to_text' %}
     <div id="header-group">
       {% sections 'header-group' %}

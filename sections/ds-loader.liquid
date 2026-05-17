@@ -1,0 +1,335 @@
+{%- comment -%}
+  sections/ds-loader.liquid — Brutalist intro loader overlay
+
+  Full-screen black overlay that flashes through 6 wordmark frames
+  while the rest of the page paints behind it.  Shown once per
+  browser session (sessionStorage-gated), dismissable on click, and
+  respects prefers-reduced-motion.
+
+  Six frame images ship in /assets as defaults (`ds-loader-1.png`
+  through `ds-loader-6.png`).  Each frame is overridable per-section
+  via the theme customizer — swap one, swap all six, swap none.
+
+  How it's wired
+    The section is rendered from layout/theme.liquid as the FIRST
+    child of <body> — so the loader paints before anything else
+    hydrates.  See the `{%- section 'ds-loader' -%}` call there.
+
+  How it ends
+    A tiny inline script runs `setTimeout(hide, minDuration)` after
+    DOMContentLoaded.  `minDuration` defaults to 1.2s (configurable
+    in the section settings).  After that the overlay fades out and
+    detaches from the DOM.  Subsequent navigations within the same
+    session see the sessionStorage flag and skip the loader entirely.
+
+  Accessibility
+    aria-hidden + role="presentation" — purely decorative, screen
+    readers should pass through.  Click anywhere to skip.  Under
+    prefers-reduced-motion the flashing is disabled; just shows the
+    last frame for a brief moment then fades.
+{%- endcomment -%}
+
+{%- liquid
+  comment
+    Frame-image resolver: prefer the merchant-uploaded section
+    setting (frame_1..6), fall back to the bundled asset
+    `ds-loader-N.png`.  Per-frame so the user can swap any
+    subset and leave the rest as defaults.
+  endcomment
+  if section.settings.frame_1 != blank
+    assign frame_1_url = section.settings.frame_1 | image_url: width: 1600
+  else
+    assign frame_1_url = 'ds-loader-1.png' | asset_url
+  endif
+  if section.settings.frame_2 != blank
+    assign frame_2_url = section.settings.frame_2 | image_url: width: 1600
+  else
+    comment
+      Frame 2 is the radial-glow "DISRUPTED STUDIO" — soft gradients
+      compress ~6× better as JPG than PNG (620KB → 96KB).  All other
+      frames are sharp/pixelated and stay as PNG.
+    endcomment
+    assign frame_2_url = 'ds-loader-2.jpg' | asset_url
+  endif
+  if section.settings.frame_3 != blank
+    assign frame_3_url = section.settings.frame_3 | image_url: width: 1600
+  else
+    assign frame_3_url = 'ds-loader-3.png' | asset_url
+  endif
+  if section.settings.frame_4 != blank
+    assign frame_4_url = section.settings.frame_4 | image_url: width: 1600
+  else
+    assign frame_4_url = 'ds-loader-4.png' | asset_url
+  endif
+  if section.settings.frame_5 != blank
+    assign frame_5_url = section.settings.frame_5 | image_url: width: 1600
+  else
+    assign frame_5_url = 'ds-loader-5.png' | asset_url
+  endif
+  if section.settings.frame_6 != blank
+    assign frame_6_url = section.settings.frame_6 | image_url: width: 1600
+  else
+    assign frame_6_url = 'ds-loader-6.png' | asset_url
+  endif
+
+  assign frame_ms      = section.settings.frame_ms     | default: 80
+  assign min_duration  = section.settings.min_duration | default: 1200
+  assign fade_ms       = section.settings.fade_ms      | default: 400
+  assign show_mode     = section.settings.show_mode    | default: 'first_visit'
+-%}
+
+{%- if section.settings.enabled -%}
+  {%- comment -%}
+    Preload the 6 frame images so they're in cache before the
+    animation needs them.  fetchpriority="high" on the FIRST frame
+    (it shows immediately); the rest are normal priority because
+    they're consumed in sequence over the next ~500ms.
+  {%- endcomment -%}
+  <link rel="preload" as="image" href="{{ frame_1_url }}" fetchpriority="high">
+  <link rel="preload" as="image" href="{{ frame_2_url }}">
+  <link rel="preload" as="image" href="{{ frame_3_url }}">
+  <link rel="preload" as="image" href="{{ frame_4_url }}">
+  <link rel="preload" as="image" href="{{ frame_5_url }}">
+  <link rel="preload" as="image" href="{{ frame_6_url }}">
+
+  <div
+    class="ds-loader"
+    data-ds-loader
+    data-min-duration="{{ min_duration }}"
+    data-fade-ms="{{ fade_ms }}"
+    data-show-mode="{{ show_mode }}"
+    aria-hidden="true"
+    role="presentation"
+  >
+    <div class="ds-loader__stage">
+      {%- comment -%}
+        Six stacked frames.  Only one is opacity:1 at a time via the
+        staggered animation.  --i sets the per-frame animation-delay.
+      {%- endcomment -%}
+      <img class="ds-loader__frame" src="{{ frame_1_url }}" alt="" style="--i: 0" decoding="sync">
+      <img class="ds-loader__frame" src="{{ frame_2_url }}" alt="" style="--i: 1" decoding="sync">
+      <img class="ds-loader__frame" src="{{ frame_3_url }}" alt="" style="--i: 2" decoding="sync">
+      <img class="ds-loader__frame" src="{{ frame_4_url }}" alt="" style="--i: 3" decoding="sync">
+      <img class="ds-loader__frame" src="{{ frame_5_url }}" alt="" style="--i: 4" decoding="sync">
+      <img class="ds-loader__frame" src="{{ frame_6_url }}" alt="" style="--i: 5" decoding="sync">
+    </div>
+  </div>
+
+  <style>
+    /* CSS custom properties driven from section settings.  Putting
+       them in a :root-scoped block means the rest of the styles can
+       reference --ds-loader-frame-ms without re-rendering Liquid
+       interpolation throughout. */
+    .ds-loader {
+      --ds-loader-frame-ms: {{ frame_ms }}ms;
+      --ds-loader-cycle: calc(var(--ds-loader-frame-ms) * 6);
+      --ds-loader-fade-ms: {{ fade_ms }}ms;
+
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: opacity var(--ds-loader-fade-ms) ease-out;
+      /* Block scroll under the overlay while it's up */
+      overflow: hidden;
+      touch-action: none;
+    }
+    .ds-loader.is-hiding {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .ds-loader__stage {
+      position: relative;
+      width: min(80vw, 800px);
+      aspect-ratio: 5 / 1;        /* matches the wordmark images' rough ratio */
+    }
+    .ds-loader__frame {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      animation:
+        ds-loader-flash var(--ds-loader-cycle) steps(1, end) infinite;
+      animation-delay: calc(var(--ds-loader-frame-ms) * var(--i));
+      /* No image smoothing — these are pixelated/sharp by design */
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    @keyframes ds-loader-flash {
+      /* Each frame is visible for one slot of the 6-slot cycle (~16.66%)
+         then hidden for the rest.  Combined with the per-frame delay
+         this gives a sequential strobe. */
+      0%,    16.66% { opacity: 1; }
+      16.67%, 100%  { opacity: 0; }
+    }
+
+    /* Reduced motion: kill the strobe, just show the last frame
+       (most fully-formed wordmark) for the minDuration then fade.
+       The strobe is the visual character but it's epilepsy-adjacent
+       for sensitive viewers, so honour the system preference. */
+    @media (prefers-reduced-motion: reduce) {
+      .ds-loader__frame {
+        animation: none;
+        opacity: 0;
+      }
+      .ds-loader__frame:last-child {
+        opacity: 1;
+      }
+    }
+  </style>
+
+  <script>
+    // Self-contained loader controller.  Runs as soon as the parser
+    // hits this script, which is right after the <div.ds-loader>
+    // has been parsed — so the overlay is in the DOM and the JS can
+    // dismiss it on time.  No DOMContentLoaded wait; we want the
+    // hide-timer to start ticking as early as possible.
+    (function () {
+      var loader = document.querySelector('[data-ds-loader]');
+      if (!loader) return;
+
+      var SESSION_KEY = 'ds-loader-shown-v1';
+      var minDuration = parseInt(loader.getAttribute('data-min-duration'), 10) || 1200;
+      var fadeMs      = parseInt(loader.getAttribute('data-fade-ms'), 10) || 400;
+      var showMode    = loader.getAttribute('data-show-mode') || 'first_visit';
+
+      // Skip if already shown this session (or this load) per the
+      // configured mode.  `every_visit` means show on every page
+      // load; `first_visit` is sessionStorage-gated (default).
+      if (showMode === 'first_visit') {
+        try {
+          if (sessionStorage.getItem(SESSION_KEY)) {
+            // Remove before paint so there's no flash of overlay.
+            loader.parentNode.removeChild(loader);
+            return;
+          }
+        } catch (e) {
+          // Some browsers (private mode in some Safaris, third-party
+          // contexts) throw on sessionStorage.  Treat as no-flag-set
+          // and proceed — better to show the loader once than to
+          // crash the controller.
+        }
+      }
+
+      var hidden = false;
+      function hide() {
+        if (hidden) return;
+        hidden = true;
+        loader.classList.add('is-hiding');
+        try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
+        // Detach after the fade transition so the DOM stays clean.
+        setTimeout(function () {
+          if (loader.parentNode) loader.parentNode.removeChild(loader);
+        }, fadeMs + 50);
+      }
+
+      // Auto-hide after the minimum duration.
+      setTimeout(hide, minDuration);
+
+      // Click-to-skip.  Anywhere on the overlay dismisses.
+      loader.addEventListener('click', hide);
+
+      // Esc key also skips (keyboard a11y).
+      function onKey(e) {
+        if (e.key === 'Escape') {
+          hide();
+          document.removeEventListener('keydown', onKey);
+        }
+      }
+      document.addEventListener('keydown', onKey);
+
+      // Reduced-motion users: cut the minDuration in half — they
+      // get a static frame, no strobe, so the dwell time can be
+      // shorter without missing the "moment."
+      try {
+        var rm = window.matchMedia('(prefers-reduced-motion: reduce)');
+        if (rm && rm.matches) {
+          setTimeout(hide, Math.min(minDuration, 600));
+        }
+      } catch (e) {}
+    })();
+  </script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Page loader",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Behaviour"
+    },
+    {
+      "type": "checkbox",
+      "id": "enabled",
+      "label": "Enable loader overlay",
+      "default": true,
+      "info": "Black full-screen overlay shown briefly on first visit. Click anywhere or press Esc to skip."
+    },
+    {
+      "type": "select",
+      "id": "show_mode",
+      "label": "Show on",
+      "default": "first_visit",
+      "options": [
+        { "value": "first_visit", "label": "First visit per session (recommended)" },
+        { "value": "every_visit", "label": "Every page load" }
+      ],
+      "info": "First-visit-per-session uses sessionStorage so returning customers aren't annoyed during navigation."
+    },
+    {
+      "type": "range",
+      "id": "min_duration",
+      "label": "Minimum show duration (ms)",
+      "min": 400,
+      "max": 3000,
+      "step": 100,
+      "default": 1200,
+      "info": "How long the loader stays visible before fading out. Default 1.2s = ~2.5 strobe cycles."
+    },
+    {
+      "type": "range",
+      "id": "frame_ms",
+      "label": "Frame duration (ms)",
+      "min": 40,
+      "max": 200,
+      "step": 10,
+      "default": 80,
+      "info": "Time each of the 6 frames is on-screen during the strobe. Lower = faster flash."
+    },
+    {
+      "type": "range",
+      "id": "fade_ms",
+      "label": "Fade-out duration (ms)",
+      "min": 100,
+      "max": 1000,
+      "step": 50,
+      "default": 400
+    },
+    {
+      "type": "header",
+      "content": "Frame images"
+    },
+    {
+      "type": "paragraph",
+      "content": "The six wordmark frames that flash in sequence. Leave any field blank to use the bundled default (ds-loader-N.png in /assets). Recommended ratio ~5:1, PNG with transparency, on black."
+    },
+    { "type": "image_picker", "id": "frame_1", "label": "Frame 1" },
+    { "type": "image_picker", "id": "frame_2", "label": "Frame 2" },
+    { "type": "image_picker", "id": "frame_3", "label": "Frame 3" },
+    { "type": "image_picker", "id": "frame_4", "label": "Frame 4" },
+    { "type": "image_picker", "id": "frame_5", "label": "Frame 5" },
+    { "type": "image_picker", "id": "frame_6", "label": "Frame 6" }
+  ],
+  "presets": [
+    { "name": "Page loader" }
+  ]
+}
+{% endschema %}
