@@ -1,0 +1,55 @@
+/*
+ * ------------------------------------------------------------
+ * Disrupted Studio — LICENSE page template
+ *
+ * Renders the full asset-license terms page at /pages/license.
+ * Used for the Page in admin with handle "license" (Shopify
+ * auto-matches page.<handle>.json to a page resource of that handle).
+ *
+ * Merchant setup
+ *   1. Admin → Online Store → Pages → Add page
+ *   2. Title: "License" (this becomes the URL slug too: /pages/license)
+ *   3. Visibility: Visible
+ *   4. Theme template: pick "page.license" from the right-sidebar
+ *      dropdown
+ *   5. Save. Link from footer (Refunds / Terms / Privacy / License) and
+ *      from each product PDP's "License:" spec row (auto-wired).
+ *
+ * Section content
+ *   The legal body is hardcoded in sections/ds-license-terms.liquid for
+ *   version-controlled accuracy. Merchant-editable surface (eyebrow,
+ *   title, version pill, intro paragraph) lives in the section settings
+ *   below — edit via theme editor (Customize → License page).
+ *
+ * Versioning policy
+ *   Per Pangram Pangram convention, the license version in effect at
+ *   order time applies to that order. Therefore:
+ *     • Bump the `version` setting on each amendment
+ *     • Update `version_date`
+ *     • Add a row to the Changelog block in ds-license-terms.liquid
+ *     • NEVER remove past versions — they apply to past orders
+ *
+ * Cart terms-of-service
+ *   To make the license affirmative-accept (rather than browse-wrap),
+ *   enable Shopify's native "Terms of service" checkbox at
+ *   Settings → Checkout → Customer information → "I agree to the terms
+ *   of service" and link it to /pages/license. Browse-wrap EULAs have a
+ *   weak enforceability track record (Society of Fonts, 2019).
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "ds-license-terms",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "eyebrow": "ASSET LICENSE",
+        "title": "License terms",
+        "version": "v1.0",
+        "version_date": "May 2026",
+        "intro": "Plain-language summary first. Full numbered terms below. The version in effect at the time of your order is the one that applies to your purchase — see the changelog at the bottom for prior versions."
+      }
+    }
+  },
+  "order": ["main"]
+}

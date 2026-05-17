@@ -1,0 +1,554 @@
+{%- comment -%}
+  sections/ds-license-terms.liquid — Disrupted Studio license page.
+
+  Rendered on /pages/license via templates/page.license.json. Structure:
+    1. Header (eyebrow, title, version pill + effective date)
+    2. TL;DR (3 plain-language summary tiles)
+    3. Tier comparison tables — one per product type (plugins, fonts,
+       graphics, bundles)
+    4. Numbered full terms (11-clause EULA minimum)
+    5. Changelog at bottom
+
+  --------------------------------------------------------------------
+  VERSIONING
+
+  Per Pangram Pangram convention, the license applicable to a given
+  purchase is the version in effect at order time. Therefore:
+    • Bump the version in the schema (or hardcoded below) on each change
+    • Add a row to the Changelog section listing the date + what changed
+    • NEVER delete prior versions — they apply to past orders
+
+  Legal body text is intentionally in Liquid (not theme settings) so
+  edits are version-controlled in git. Merchant-editable surface is just
+  the header copy (eyebrow, title, version pill, intro paragraph).
+
+  --------------------------------------------------------------------
+  DRAFT — REVIEW BEFORE LAUNCH
+
+  This is reasonable boilerplate for an indie digital-asset shop based
+  on Studio 2am, Mass-Driver, Klim, and Creative Market common patterns.
+  Before going live: have an attorney in your jurisdiction review it,
+  especially the Governing law, Refund, and Warranty sections.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme
+  assign version = section.settings.version | default: 'v1.0'
+  assign version_date = section.settings.version_date | default: 'May 2026'
+  assign eyebrow = section.settings.eyebrow | default: 'ASSET LICENSE'
+  assign title = section.settings.title | default: 'License terms'
+  assign intro = section.settings.intro | default: 'Plain-language summary first. Full numbered terms below. The version in effect at the time of your order is the one that applies to your purchase — see the changelog at the bottom for prior versions.'
+-%}
+
+<section class="ds-license color-{{ cs }}">
+  <div class="ds-license__container">
+
+    {%- comment -%} ============ HEADER ============ {%- endcomment -%}
+    <header class="ds-license__header">
+      <p class="ds-license__eyebrow ds-mono">[ {{ eyebrow }} ]</p>
+      <h1 class="ds-license__title">{{ title }}</h1>
+      <div class="ds-license__version">
+        <span class="ds-license__version-pill ds-mono">{{ version }}</span>
+        <span class="ds-license__version-date ds-mono">Effective {{ version_date }}</span>
+      </div>
+      <p class="ds-license__intro">{{ intro }}</p>
+    </header>
+
+    {%- comment -%} ============ TL;DR ============ {%- endcomment -%}
+    <section class="ds-license__block" aria-labelledby="license-tldr">
+      <h2 class="ds-license__block-title" id="license-tldr">
+        <span class="ds-license__block-num ds-mono">01</span>
+        TL;DR
+      </h2>
+      <div class="ds-license__tldr-grid">
+        <div class="ds-license__tldr-card">
+          <p class="ds-license__tldr-card-eyebrow ds-mono">[ YOU CAN ]</p>
+          <ul class="ds-license__tldr-card-list">
+            <li>Use everything you buy for commercial work — client projects, your own products, billboards, web, apps (per tier).</li>
+            <li>Modify and combine assets as part of your own deliverables.</li>
+            <li>Keep using what you bought, forever.</li>
+          </ul>
+        </div>
+        <div class="ds-license__tldr-card">
+          <p class="ds-license__tldr-card-eyebrow ds-mono">[ YOU CAN'T ]</p>
+          <ul class="ds-license__tldr-card-list">
+            <li>Redistribute, resell, or share the source files.</li>
+            <li>Use anything to train AI/ML models, ever.</li>
+            <li>Transfer your license to another person or company.</li>
+          </ul>
+        </div>
+        <div class="ds-license__tldr-card">
+          <p class="ds-license__tldr-card-eyebrow ds-mono">[ NEED MORE ]</p>
+          <ul class="ds-license__tldr-card-list">
+            <li>Extended tiers exist for bigger teams (plugins), wider media (fonts), or higher-volume products (graphics).</li>
+            <li>Want a custom enterprise license? Email hello@disruptedstudio.com.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    {%- comment -%} ============ TIER COMPARISON ============ {%- endcomment -%}
+    <section class="ds-license__block" aria-labelledby="license-tiers">
+      <h2 class="ds-license__block-title" id="license-tiers">
+        <span class="ds-license__block-num ds-mono">02</span>
+        Tiers by product type
+      </h2>
+      <p class="ds-license__block-intro">Tiers differ by what's being licensed. Plugins gate on seats. Fonts gate on usage type. Graphics gate on end-product volume. Each product page tells you which tier you're buying.</p>
+
+      <h3 class="ds-license__tier-heading ds-mono">[ PLUGINS — BACKLIT, PIXEL PERFECT, ETC. ]</h3>
+      <div class="ds-license__tier-table">
+        <div class="ds-license__tier-col">
+          <h4 class="ds-license__tier-name">Standard</h4>
+          <ul class="ds-license__tier-list">
+            <li><strong>1 designer seat</strong></li>
+            <li>Install on up to 2 of your own devices</li>
+            <li>Commercial use in client work and your own products</li>
+            <li>Lifetime updates within the major version</li>
+          </ul>
+        </div>
+        <div class="ds-license__tier-col ds-license__tier-col--upsell">
+          <h4 class="ds-license__tier-name">Studio</h4>
+          <ul class="ds-license__tier-list">
+            <li><strong>Up to 5 designer seats</strong></li>
+            <li>Install on up to 2 devices per seat</li>
+            <li>Everything in Standard, multiplied by your team</li>
+            <li>Single billing contact for the studio</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="ds-license__tier-heading ds-mono">[ FONTS — NEUE PORTAL, RIVET MONO, ETC. ]</h3>
+      <div class="ds-license__tier-table">
+        <div class="ds-license__tier-col">
+          <h4 class="ds-license__tier-name">Standard</h4>
+          <ul class="ds-license__tier-list">
+            <li><strong>Desktop use only</strong></li>
+            <li>Embed in PDF / static documents</li>
+            <li>Use in logos, identity systems, packaging, print</li>
+            <li>Up to 5 employees / freelancers at one organization</li>
+          </ul>
+        </div>
+        <div class="ds-license__tier-col ds-license__tier-col--upsell">
+          <h4 class="ds-license__tier-name">Extended</h4>
+          <ul class="ds-license__tier-list">
+            <li><strong>Desktop + Web + ePub + App embedding</strong></li>
+            <li>Self-hosted webfont (WOFF/WOFF2) — no pageview cap</li>
+            <li>Embed in mobile and desktop apps you distribute</li>
+            <li>Up to 25 employees / freelancers</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="ds-license__tier-heading ds-mono">[ GRAPHICS — CHROMA, BOTANIC, ETC. ]</h3>
+      <div class="ds-license__tier-table">
+        <div class="ds-license__tier-col">
+          <h4 class="ds-license__tier-name">Standard</h4>
+          <ul class="ds-license__tier-list">
+            <li><strong>Up to 10,000 end products for sale</strong></li>
+            <li>Use in client work, your own products, marketing</li>
+            <li>Modify, combine, recolor freely</li>
+            <li>Cannot redistribute the assets as standalone files</li>
+          </ul>
+        </div>
+        <div class="ds-license__tier-col ds-license__tier-col--upsell">
+          <h4 class="ds-license__tier-name">Extended</h4>
+          <ul class="ds-license__tier-list">
+            <li><strong>Up to 250,000 end products for sale</strong></li>
+            <li>Sublicensing allowed within your end product (not as a standalone asset)</li>
+            <li>Everything in Standard</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="ds-license__tier-note ds-mono">
+        Bundles inherit the highest tier of any included product. The bundle's product page states which tier applies.
+      </p>
+    </section>
+
+    {%- comment -%} ============ FULL TERMS ============ {%- endcomment -%}
+    <section class="ds-license__block" aria-labelledby="license-full">
+      <h2 class="ds-license__block-title" id="license-full">
+        <span class="ds-license__block-num ds-mono">03</span>
+        Full terms
+      </h2>
+
+      <article class="ds-license__terms">
+
+        <h3 id="defs" class="ds-license__term-heading">3.1 Definitions</h3>
+        <p>"<strong>Disrupted Studio</strong>" means Disrupted Studio (the licensor), reachable at hello@disruptedstudio.com.</p>
+        <p>"<strong>Asset</strong>" means any plugin, font, graphic, illustration, template, code, or other digital file delivered as part of an order.</p>
+        <p>"<strong>Licensee</strong>" means the individual or organization named on the order receipt.</p>
+        <p>"<strong>Standard</strong>", "<strong>Studio</strong>", and "<strong>Extended</strong>" mean the license tiers as described in Section 02 above.</p>
+        <p>"<strong>End product</strong>" means any deliverable created using an Asset (a logo, web page, mobile app, packaging design, illustration, animation, video, etc.).</p>
+
+        <h3 id="grant" class="ds-license__term-heading">3.2 License grant</h3>
+        <p>Subject to payment in full and ongoing compliance with these terms, Disrupted Studio grants Licensee a <strong>perpetual, non-exclusive, non-transferable, worldwide</strong> license to use the Asset as described in Section 02 for the tier purchased.</p>
+        <p>The license is granted to the Licensee named on the order. Designers buying for a client should place the order in the client's name (this is industry standard practice).</p>
+
+        <h3 id="permitted" class="ds-license__term-heading">3.3 Permitted uses</h3>
+        <p>Within the limits of the purchased tier, Licensee may:</p>
+        <ul>
+          <li>Use the Asset for commercial purposes including client work, products for sale, marketing materials, and internal projects.</li>
+          <li>Modify, combine, recolor, and remix the Asset as part of Licensee's own end products.</li>
+          <li>Include the Asset (in modified or unmodified form) inside end products distributed to others, provided the Asset is not the primary value of the end product (see 3.4).</li>
+          <li>Make backup copies for personal archival use.</li>
+        </ul>
+
+        <h3 id="prohibited" class="ds-license__term-heading">3.4 Prohibited uses</h3>
+        <p>Regardless of tier, Licensee may NOT:</p>
+        <ul>
+          <li><strong>Redistribute the source Asset</strong> — including selling, sharing, giving away, or making available the original files outside Licensee's organization.</li>
+          <li><strong>Sublicense the Asset as a standalone file</strong> — except as explicitly permitted by Extended Graphics (sublicensing within end products only).</li>
+          <li><strong>Use the Asset in any AI/ML training dataset</strong>, embedding-generation pipeline, or generative model training, in whole or in part.</li>
+          <li><strong>Create competing products</strong> whose primary value is the Asset (e.g., reselling a font as your own font, repackaging a graphics pack as your own).</li>
+          <li><strong>Claim authorship</strong> of the Asset.</li>
+          <li><strong>Transfer the license</strong> to another person, company, or successor organization (except as permitted in 3.9).</li>
+        </ul>
+
+        <h3 id="limits" class="ds-license__term-heading">3.5 Tier limits</h3>
+        <p>The seat / volume / usage limits stated in Section 02 are part of the license grant. Exceeding them — running additional seats, embedding fonts beyond the purchased usage type, manufacturing more than the end-product cap — requires upgrading to the next tier.</p>
+        <p>Tier upgrades are available at any time by emailing hello@disruptedstudio.com. Licensee pays the difference between the original purchase and the higher tier (Grilli Type / Foundry Types model).</p>
+
+        <h3 id="formats" class="ds-license__term-heading">3.6 Permitted embedding and formats</h3>
+        <p>For fonts:</p>
+        <ul>
+          <li><strong>Standard:</strong> embed in PDF as subset (security-locked or print-only). Static documents only.</li>
+          <li><strong>Extended:</strong> includes Standard plus self-hosted webfont (WOFF/WOFF2), iOS / Android app embedding, and ePub embedding.</li>
+        </ul>
+        <p>For plugins and graphics: no embedding restrictions apply beyond Section 3.4.</p>
+
+        <h3 id="refunds" class="ds-license__term-heading">3.7 Refunds</h3>
+        <p>All sales are final. Because Assets are digital files delivered immediately at purchase, refunds are not available except where required by applicable law.</p>
+        <p><strong>EU buyers:</strong> the 14-day right of withdrawal for digital content does not apply once you have downloaded the Asset, per Article 16(m) of the Consumer Rights Directive (2011/83/EU). Before downloading, you may request a refund within 14 days.</p>
+        <p>Defective or non-functional Assets will be replaced at no charge. Email hello@disruptedstudio.com.</p>
+
+        <h3 id="termination" class="ds-license__term-heading">3.8 Termination</h3>
+        <p>This license terminates immediately if Licensee materially breaches any clause, including but not limited to the prohibited uses in 3.4 or the tier limits in 3.5.</p>
+        <p>On termination, Licensee must delete all copies of the Asset and stop distributing any end products that contain the Asset within 30 days. End products already distributed to third parties before termination may remain in those third parties' hands.</p>
+        <p>If a purchase is reversed by chargeback, refund, or dispute, the license terminates automatically.</p>
+
+        <h3 id="transfer" class="ds-license__term-heading">3.9 Transfer and inheritance</h3>
+        <p>Licenses are non-transferable. Exception: in the case of a sale of substantially all of a sole proprietor's business, the license may be assigned to the new owner at no charge by emailing hello@disruptedstudio.com with documentation. The new owner must accept these terms.</p>
+
+        <h3 id="warranty" class="ds-license__term-heading">3.10 Disclaimer of warranties</h3>
+        <p>Assets are provided <strong>"as is"</strong> without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. Disrupted Studio does not warrant that the Asset will be uninterrupted, error-free, or compatible with any specific software or hardware configuration.</p>
+        <p>To the maximum extent permitted by law, Disrupted Studio's total liability under this license is limited to the amount paid for the Asset.</p>
+
+        <h3 id="law" class="ds-license__term-heading">3.11 Governing law</h3>
+        <p>This license is governed by the laws of the United States and the State of <em>[fill in your state]</em>, without regard to conflict-of-laws principles. Any dispute arising under this license shall be resolved in the state or federal courts located in <em>[fill in your county/state]</em>.</p>
+
+      </article>
+    </section>
+
+    {%- comment -%} ============ CHANGELOG ============ {%- endcomment -%}
+    <section class="ds-license__block" aria-labelledby="license-changelog">
+      <h2 class="ds-license__block-title" id="license-changelog">
+        <span class="ds-license__block-num ds-mono">04</span>
+        Changelog
+      </h2>
+      <p class="ds-license__block-intro">The version in effect when you placed your order is the one that applies to your purchase. Older versions are kept here for reference.</p>
+      <ul class="ds-license__changelog">
+        <li>
+          <span class="ds-license__changelog-version ds-mono">v1.0 — May 2026</span>
+          <span class="ds-license__changelog-note">Initial publication. Standard + Studio for plugins, Standard + Extended for fonts and graphics.</span>
+        </li>
+      </ul>
+    </section>
+
+  </div>
+</section>
+
+{% style %}
+  .ds-license {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding: clamp(48px, 6vw, 96px) 0;
+  }
+  .ds-license__container {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 var(--pad-x);
+  }
+
+  /* ----- Header ----- */
+  .ds-license__header {
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: clamp(32px, 4vw, 56px);
+    margin-bottom: clamp(48px, 5vw, 72px);
+  }
+  .ds-license__eyebrow {
+    color: var(--color-accent);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-license__title {
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 var(--space-5);
+  }
+  .ds-license__version {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .ds-license__version-pill {
+    display: inline-block;
+    border: 1px solid var(--color-border);
+    padding: 4px 10px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .ds-license__version-date {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+  .ds-license__intro {
+    max-width: 64ch;
+    font-size: 17px;
+    line-height: 1.5;
+    margin: 0;
+    opacity: 0.85;
+  }
+
+  /* ----- Block (TL;DR / Tiers / Terms / Changelog) ----- */
+  .ds-license__block {
+    padding-block: clamp(40px, 5vw, 64px);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .ds-license__block:last-of-type {
+    border-bottom: none;
+  }
+  .ds-license__block-title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 var(--space-5);
+  }
+  .ds-license__block-num {
+    color: var(--color-accent);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .ds-license__block-intro {
+    max-width: 60ch;
+    line-height: 1.55;
+    margin: 0 0 var(--space-6);
+    opacity: 0.85;
+  }
+
+  /* ----- TL;DR grid ----- */
+  .ds-license__tldr-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+  .ds-license__tldr-card {
+    border: 1px solid var(--color-border);
+    padding: var(--space-5);
+    background: var(--color-bg-elev);
+  }
+  .ds-license__tldr-card-eyebrow {
+    color: var(--color-accent);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-license__tldr-card-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-license__tldr-card-list li::before {
+    content: "→ ";
+    color: var(--color-accent);
+    margin-right: 6px;
+  }
+
+  /* ----- Tier tables ----- */
+  .ds-license__tier-heading {
+    color: var(--color-accent);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    margin: var(--space-6) 0 var(--space-4);
+  }
+  .ds-license__tier-table {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+  }
+  .ds-license__tier-col {
+    padding: var(--space-5);
+  }
+  .ds-license__tier-col + .ds-license__tier-col {
+    border-left: 1px solid var(--color-border);
+  }
+  .ds-license__tier-col--upsell {
+    background: rgba(255, 77, 31, 0.05);
+  }
+  .ds-license__tier-name {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-license__tier-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-license__tier-list li::before {
+    content: "·  ";
+    color: var(--color-accent);
+  }
+  .ds-license__tier-note {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: var(--space-5);
+    letter-spacing: 0.04em;
+  }
+
+  /* ----- Terms body ----- */
+  .ds-license__terms {
+    max-width: 70ch;
+  }
+  .ds-license__term-heading {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: var(--space-6) 0 var(--space-3);
+  }
+  .ds-license__terms p {
+    line-height: 1.6;
+    margin: 0 0 var(--space-3);
+    opacity: 0.9;
+  }
+  .ds-license__terms ul {
+    line-height: 1.6;
+    margin: 0 0 var(--space-3);
+    padding-left: 24px;
+    opacity: 0.9;
+  }
+  .ds-license__terms li {
+    margin-bottom: 6px;
+  }
+  .ds-license__terms strong {
+    font-weight: 600;
+    opacity: 1;
+  }
+
+  /* ----- Changelog ----- */
+  .ds-license__changelog {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-license__changelog > li {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--space-3) 0;
+    border-bottom: 1px dashed var(--color-border);
+  }
+  .ds-license__changelog > li:last-child {
+    border-bottom: none;
+  }
+  .ds-license__changelog-version {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--color-accent);
+  }
+  .ds-license__changelog-note {
+    font-size: 14px;
+    opacity: 0.85;
+    line-height: 1.4;
+  }
+
+  /* ----- Mobile ----- */
+  @media (max-width: 768px) {
+    .ds-license__tldr-grid {
+      grid-template-columns: 1fr;
+    }
+    .ds-license__tier-table {
+      grid-template-columns: 1fr;
+    }
+    .ds-license__tier-col + .ds-license__tier-col {
+      border-left: none;
+      border-top: 1px solid var(--color-border);
+    }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "License terms",
+  "tag": "section",
+  "class": "ds-section ds-section--license",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "default": "ASSET LICENSE",
+      "label": "Eyebrow",
+      "info": "Mono caps text above the title."
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "default": "License terms",
+      "label": "Page title"
+    },
+    {
+      "type": "text",
+      "id": "version",
+      "default": "v1.0",
+      "label": "Version",
+      "info": "Bump on each amendment. Old versions stay in the changelog at the bottom of the page."
+    },
+    {
+      "type": "text",
+      "id": "version_date",
+      "default": "May 2026",
+      "label": "Effective date",
+      "info": "Month + year. Shown next to the version pill."
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "default": "Plain-language summary first. Full numbered terms below. The version in effect at the time of your order is the one that applies to your purchase — see the changelog at the bottom for prior versions.",
+      "label": "Intro paragraph"
+    }
+  ],
+  "presets": [
+    {
+      "name": "License terms",
+      "category": "Disrupted Studio"
+    }
+  ]
+}
+{% endschema %}

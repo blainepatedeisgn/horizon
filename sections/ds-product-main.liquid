@@ -409,7 +409,7 @@
               {%- if plugin_specs.compat.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Compat</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.compat.value | escape }}</span></div>{%- endif -%}
               {%- if plugin_specs.format.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Format</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.format.value | escape }}</span></div>{%- endif -%}
               {%- if plugin_specs.file_size.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">File size</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.file_size.value | escape }}</span></div>{%- endif -%}
-              {%- if plugin_specs.license.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.license.value | escape }}</span></div>{%- endif -%}
+              {%- if plugin_specs.license.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value"><a href="/pages/license" class="ds-pdp__info-spec-link">{{ plugin_specs.license.value | escape }}</a></span></div>{%- endif -%}
               {%- if plugin_specs.updates.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Updates</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.updates.value | escape }}</span></div>{%- endif -%}
               {%- if plugin_specs.support.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Support</span><span class="ds-pdp__info-spec-value">{{ plugin_specs.support.value | escape }}</span></div>{%- endif -%}
             {%- elsif font_specs -%}
@@ -417,12 +417,12 @@
               {%- if font_specs.glyphs.value   != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Glyphs</span><span class="ds-pdp__info-spec-value">{{ font_specs.glyphs.value | escape }}</span></div>{%- endif -%}
               {%- if font_specs.formats.value  != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Formats</span><span class="ds-pdp__info-spec-value">{{ font_specs.formats.value | escape }}</span></div>{%- endif -%}
               {%- if font_specs.language.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Language</span><span class="ds-pdp__info-spec-value">{{ font_specs.language.value | escape }}</span></div>{%- endif -%}
-              {%- if font_specs.license.value  != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ font_specs.license.value | escape }}</span></div>{%- endif -%}
+              {%- if font_specs.license.value  != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value"><a href="/pages/license" class="ds-pdp__info-spec-link">{{ font_specs.license.value | escape }}</a></span></div>{%- endif -%}
             {%- elsif graphics_specs -%}
               {%- if graphics_specs.items.value      != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Items</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.items.value | escape }}</span></div>{%- endif -%}
               {%- if graphics_specs.formats.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Formats</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.formats.value | escape }}</span></div>{%- endif -%}
               {%- if graphics_specs.resolution.value != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Resolution</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.resolution.value | escape }}</span></div>{%- endif -%}
-              {%- if graphics_specs.license.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.license.value | escape }}</span></div>{%- endif -%}
+              {%- if graphics_specs.license.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">License</span><span class="ds-pdp__info-spec-value"><a href="/pages/license" class="ds-pdp__info-spec-link">{{ graphics_specs.license.value | escape }}</a></span></div>{%- endif -%}
               {%- if graphics_specs.updates.value    != blank -%}<div class="ds-pdp__info-spec"><span class="ds-pdp__info-spec-label">Updates</span><span class="ds-pdp__info-spec-value">{{ graphics_specs.updates.value | escape }}</span></div>{%- endif -%}
             {%- elsif specs_list and specs_list.size > 0 -%}
               {%- for spec in specs_list -%}
@@ -873,6 +873,18 @@
   .ds-pdp__info-spec-value {
     color: var(--color-fg);
     text-align: right;
+  }
+  /* License value links to /pages/license — inherit color, brutalist
+     underline so it's obviously clickable without breaking the spec row
+     visual rhythm. */
+  .ds-pdp__info-spec-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+  .ds-pdp__info-spec-link:hover {
+    color: var(--color-accent);
   }
 
   /* Long description */
