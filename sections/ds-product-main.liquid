@@ -442,7 +442,7 @@
               {% unless current_variant.available %}disabled{% endunless %}
             >
               {%- if current_variant.available -%}
-                Add to cart — {{ current_variant.price | money }}
+                Add to cart — <span data-ds-main-atc-price>{{ current_variant.price | money }}</span>
               {%- else -%}
                 Sold out
               {%- endif -%}
@@ -464,11 +464,23 @@
               if (!sec) return;
               var hidden = sec.querySelector('[data-ds-variant-input]');
               if (!hidden) return;
+              var atcPrice = sec.querySelector('[data-ds-main-atc-price]');
+
+              function updatePrice(text) {
+                if (atcPrice && text) atcPrice.textContent = text;
+              }
 
               var select = sec.querySelector('[data-ds-variant-select]');
               if (select) {
                 select.addEventListener('change', function () {
                   hidden.value = select.value;
+                  // Pull price from the selected option's label text
+                  // (we render it as "Title — $XX.YY" in the markup).
+                  var opt = select.options[select.selectedIndex];
+                  if (opt) {
+                    var m = opt.textContent.match(/(\$|€|£)\s?[\d.,]+/);
+                    if (m) updatePrice(m[0]);
+                  }
                 });
                 return;
               }
@@ -476,9 +488,13 @@
               var radios = sec.querySelector('[data-ds-variant-radio-group]');
               if (radios) {
                 radios.addEventListener('change', function (e) {
-                  if (e.target && e.target.matches('input[type="radio"]')) {
-                    hidden.value = e.target.value;
-                  }
+                  if (!e.target || !e.target.matches('input[type="radio"]')) return;
+                  hidden.value = e.target.value;
+                  // Pull price straight from the card's .price span —
+                  // no regex needed, clean DOM read.
+                  var card = e.target.closest('.ds-pdp__tier-card');
+                  var priceEl = card && card.querySelector('.ds-pdp__tier-card-price');
+                  if (priceEl) updatePrice(priceEl.textContent);
                 });
               }
             })();
