@@ -1,18 +1,75 @@
 /*
  * ------------------------------------------------------------
- * Disrupted Studio homepage
+ * IMPORTANT: The contents of this file are auto-generated.
  *
- * Wires the six custom sections of the Disrupted Studio homepage:
- *   hero → trust marquee → product grid → category teasers → newsletter → wordmark.
- * Phase 2 complete. Phase 3 onwards: PDP, collection, about, cart drawer restyles.
- *
- * NB: This file is auto-managed by the Shopify admin theme editor —
- * direct edits there get saved here and may overwrite manual local
- * changes on the next CLI pull.
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
  * ------------------------------------------------------------
  */
 {
   "sections": {
+    "ds_hero_pixelperfect_KLC9fz": {
+      "type": "ds-hero-pixelperfect",
+      "blocks": {
+        "ds_eyebrow_4TdPiq": {
+          "type": "ds-eyebrow",
+          "settings": {
+            "text": "Introducing",
+            "accent": "PIXEL PERFECT v1.0"
+          },
+          "blocks": {}
+        },
+        "ds_hero_title_iA7GRc": {
+          "type": "ds-hero-title",
+          "settings": {
+            "text": "Real pixels.\nOne slider.",
+            "spotlight": false,
+            "size_pct": 100
+          },
+          "blocks": {}
+        },
+        "ds_meta_strip_jqUh7R": {
+          "type": "ds-meta-strip",
+          "settings": {
+            "item_1": "PS 23.3+",
+            "item_2": "UXP plugin",
+            "item_3": "Live now",
+            "last_has_dot": true
+          },
+          "blocks": {}
+        },
+        "ds_rich_text_fxpqzi": {
+          "type": "ds-rich-text",
+          "settings": {
+            "text": "<p><em><strong>Live pixel art for Photoshop.</strong></em></p><p>A plugin that turns any layer into a pixel art grid. Four shape variants. Two color modes. Live preview in the document itself, not a side panel. Output is a real pixel layer you can move, mask, blend, and transform after the fact.</p>"
+          },
+          "blocks": {}
+        },
+        "ds_button_row_YWga6P": {
+          "type": "ds-button-row",
+          "settings": {
+            "primary_label": "BUY PIXEL PERFECT",
+            "primary_url": "",
+            "secondary_label": "Watch the demo",
+            "secondary_url": ""
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ds_eyebrow_4TdPiq",
+        "ds_hero_title_iA7GRc",
+        "ds_meta_strip_jqUh7R",
+        "ds_rich_text_fxpqzi",
+        "ds_button_row_YWga6P"
+      ],
+      "name": "Hero — Pixel Perfect",
+      "settings": {
+        "color_scheme": "",
+        "visual": "shopify://shop_images/Artboard_3.png"
+      }
+    },
     "hero": {
       "type": "ds-hero",
       "blocks": {
@@ -21,13 +78,17 @@
           "settings": {
             "text": "Introducing",
             "accent": "BACKLIT v1.0"
-          }
+          },
+          "blocks": {}
         },
         "title": {
           "type": "ds-hero-title",
           "settings": {
-            "text": "Real light.\nOne click."
-          }
+            "text": "Real light.\nOne click.",
+            "spotlight": true,
+            "size_pct": 100
+          },
+          "blocks": {}
         },
         "meta": {
           "type": "ds-meta-strip",
@@ -36,53 +97,224 @@
             "item_2": "UXP plugin",
             "item_3": "Live now",
             "last_has_dot": true
-          }
+          },
+          "blocks": {}
         },
         "rich": {
-          "type": "ds-rich-text"
+          "type": "ds-rich-text",
+          "settings": {
+            "text": "<p><strong>BACKLIT</strong> is a Photoshop plugin that puts real backlight glow behind anything on your canvas. Type. Logos. Photos. No masks. No fiddling with layer styles. Thirty presets, one click.</p>"
+          },
+          "blocks": {}
         },
         "buttons": {
-          "type": "ds-button-row"
+          "type": "ds-button-row",
+          "settings": {
+            "primary_label": "Buy BACKLIT — $48",
+            "primary_url": "",
+            "secondary_label": "Watch the demo",
+            "secondary_url": ""
+          },
+          "blocks": {}
         }
       },
-      "block_order": ["eyebrow", "title", "meta", "rich", "buttons"]
+      "block_order": [
+        "eyebrow",
+        "title",
+        "meta",
+        "rich",
+        "buttons"
+      ],
+      "disabled": true,
+      "settings": {
+        "color_scheme": ""
+      }
     },
     "trust_marquee": {
       "type": "ds-trust-marquee",
       "blocks": {
-        "logo_1":  { "type": "ds-trust-logo", "settings": { "text": "Adobe" } },
-        "logo_2":  { "type": "ds-trust-logo", "settings": { "text": "Nike.",       "style": "bold"   } },
-        "logo_3":  { "type": "ds-trust-logo", "settings": { "text": "Pentagram",   "style": "serif"  } },
-        "logo_4":  { "type": "ds-trust-logo", "settings": { "text": "WARNER",      "style": "blocky" } },
-        "logo_5":  { "type": "ds-trust-logo", "settings": { "text": "Vans",        "style": "script" } },
-        "logo_6":  { "type": "ds-trust-logo", "settings": { "text": "ESPN",        "style": "mono"   } },
-        "logo_7":  { "type": "ds-trust-logo", "settings": { "text": "Condé Nast",  "style": "thin"   } },
-        "logo_8":  { "type": "ds-trust-logo", "settings": { "text": "Atlantic"  } },
-        "logo_9":  { "type": "ds-trust-logo", "settings": { "text": "VICE",        "style": "bold"   } },
-        "logo_10": { "type": "ds-trust-logo", "settings": { "text": "Ogilvy",      "style": "serif"  } },
-        "logo_11": { "type": "ds-trust-logo", "settings": { "text": "Sony",        "style": "script" } },
-        "logo_12": { "type": "ds-trust-logo", "settings": { "text": "COMPLEX",     "style": "mono"   } }
+        "logo_1": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "Adobe",
+            "style": "default"
+          }
+        },
+        "logo_2": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "Nike.",
+            "style": "bold"
+          }
+        },
+        "logo_3": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "Pentagram",
+            "style": "serif"
+          }
+        },
+        "logo_4": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "WARNER",
+            "style": "blocky"
+          }
+        },
+        "logo_5": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "Vans",
+            "style": "script"
+          }
+        },
+        "logo_6": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "ESPN",
+            "style": "mono"
+          }
+        },
+        "logo_7": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "Condé Nast",
+            "style": "thin"
+          }
+        },
+        "logo_8": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "Atlantic",
+            "style": "default"
+          }
+        },
+        "logo_9": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "VICE",
+            "style": "bold"
+          }
+        },
+        "logo_10": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "Ogilvy",
+            "style": "serif"
+          }
+        },
+        "logo_11": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "Sony",
+            "style": "script"
+          }
+        },
+        "logo_12": {
+          "type": "ds-trust-logo",
+          "settings": {
+            "text": "COMPLEX",
+            "style": "mono"
+          }
+        }
       },
       "block_order": [
-        "logo_1", "logo_2", "logo_3",  "logo_4",  "logo_5",  "logo_6",
-        "logo_7", "logo_8", "logo_9",  "logo_10", "logo_11", "logo_12"
-      ]
+        "logo_1",
+        "logo_2",
+        "logo_3",
+        "logo_4",
+        "logo_5",
+        "logo_6",
+        "logo_7",
+        "logo_8",
+        "logo_9",
+        "logo_10",
+        "logo_11",
+        "logo_12"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "label": "Used by designers at",
+        "duration_seconds": 40
+      }
     },
     "product_grid": {
-      "type": "ds-product-grid"
+      "type": "ds-product-grid",
+      "settings": {
+        "color_scheme": "",
+        "heading": "Featured Work",
+        "num_label": "06",
+        "subhead": "Hand-built plugins, original type, and ready-to-use asset packs — released in small batches.",
+        "collection": "",
+        "products_to_show": 6,
+        "show_view_all": true,
+        "view_all_label": "View all products",
+        "view_all_url": ""
+      }
     },
     "category_teasers": {
       "type": "ds-category-teasers",
       "blocks": {
-        "tile_plugins":  { "type": "ds-category-tile", "settings": { "label": "Plugins",  "meta_line_1": "02 products",    "meta_line_2": "FROM $36" } },
-        "tile_fonts":    { "type": "ds-category-tile", "settings": { "label": "Fonts",    "meta_line_1": "02 families",    "meta_line_2": "FROM $28" } },
-        "tile_graphics": { "type": "ds-category-tile", "settings": { "label": "Graphics", "meta_line_1": "04 collections", "meta_line_2": "FROM $18" } }
+        "tile_plugins": {
+          "type": "ds-category-tile",
+          "settings": {
+            "collection": "",
+            "label": "Plugins",
+            "meta_line_1": "02 products",
+            "meta_line_2": "FROM $36"
+          }
+        },
+        "tile_fonts": {
+          "type": "ds-category-tile",
+          "settings": {
+            "collection": "",
+            "label": "Fonts",
+            "meta_line_1": "02 families",
+            "meta_line_2": "FROM $28"
+          }
+        },
+        "tile_graphics": {
+          "type": "ds-category-tile",
+          "settings": {
+            "collection": "",
+            "label": "Graphics",
+            "meta_line_1": "04 collections",
+            "meta_line_2": "FROM $18"
+          }
+        }
       },
-      "block_order": ["tile_plugins", "tile_fonts", "tile_graphics"]
+      "block_order": [
+        "tile_plugins",
+        "tile_fonts",
+        "tile_graphics"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "heading": "By Category",
+        "num_label": "03",
+        "subhead": ""
+      }
     },
     "newsletter": {
-      "type": "ds-newsletter-card"
+      "type": "ds-newsletter-card",
+      "settings": {
+        "color_scheme": "",
+        "eyebrow": "STAY IN THE LOOP",
+        "title": "New releases.\nFree assets.\nProcess notes.",
+        "subhead": "Roughly twice a month. No spam, no upsells, no nonsense. Unsubscribe in one click.",
+        "placeholder": "your@email.com",
+        "button_label": "Subscribe",
+        "signup_tag": "newsletter",
+        "success_message": "Thanks. See you in your inbox."
+      }
     }
   },
-  "order": ["hero", "trust_marquee", "product_grid", "category_teasers", "newsletter"]
+  "order": [
+    "ds_hero_pixelperfect_KLC9fz",
+    "hero",
+    "trust_marquee",
+    "product_grid",
+    "category_teasers",
+    "newsletter"
+  ]
 }
