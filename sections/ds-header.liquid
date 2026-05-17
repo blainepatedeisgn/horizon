@@ -1302,6 +1302,12 @@
     text-align: center;
     margin: 0;
     line-height: 1.5;
+    /* text-wrap: pretty asks the browser to avoid orphan words on the
+       last line (one-word widows). Paired with the &nbsp; between
+       "after" and "purchase" in the markup as belt-and-suspenders —
+       if pretty isn't supported (older Safari), the non-breaking space
+       still keeps those two words together on the wrap. */
+    text-wrap: pretty;
   }
 
   /* ---- Cart upsell — "Pairs well with" ----
