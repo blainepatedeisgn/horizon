@@ -14,6 +14,7 @@
 {%- endcomment -%}
 
 {%- liquid
+  assign hero_video = section.settings.hero_video
   assign visual = section.settings.visual
   assign cs = section.settings.color_scheme
 -%}
@@ -25,7 +26,27 @@
 
   <div class="ds-hero__visual">
     <div class="ds-hero__visual-inner">
-      {%- if visual != blank -%}
+      {%- if hero_video != blank -%}
+        {%- comment -%}
+          Manual <video> (not the video_tag filter) so we get playsinline
+          (iOS Safari refuses to autoplay without it) and preload=auto
+          for the hero. Poster pulls from the video's auto-generated
+          first frame so there's no blank box while sources fetch.
+        {%- endcomment -%}
+        <video
+          class="ds-hero__visual-img ds-hero__visual-video"
+          autoplay
+          loop
+          muted
+          playsinline
+          preload="auto"
+          poster="{{ hero_video.preview_image | image_url: width: 1200 }}"
+        >
+          {%- for source in hero_video.sources -%}
+            <source src="{{ source.url }}" type="{{ source.mime_type }}">
+          {%- endfor -%}
+        </video>
+      {%- elsif visual != blank -%}
         {{
           visual
           | image_url: width: 1200
@@ -78,7 +99,8 @@
     align-items: center;
     justify-content: center;
   }
-  .ds-hero__visual-img {
+  .ds-hero__visual-img,
+  .ds-hero__visual-video {
     width: min(94%, 480px);
     height: auto;
     aspect-ratio: 1 / 1;
@@ -184,6 +206,20 @@
   }
 {% endstyle %}
 
+<script>
+  /* Reduced-motion: pause hero videos for users who've asked the OS to
+     limit motion. Muted, looped hero video is mild (closer to a GIF
+     than to true animation), but pausing is the safer default — users
+     still see the poster frame as a still image. */
+  (function () {
+    if (!window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.querySelectorAll('.ds-hero__visual-video').forEach(function (v) {
+      v.removeAttribute('autoplay');
+      v.pause();
+    });
+  })();
+</script>
+
 {% schema %}
 {
   "name": "Hero",
@@ -197,10 +233,16 @@
       "label": "Color scheme"
     },
     {
+      "type": "video",
+      "id": "hero_video",
+      "label": "Hero video",
+      "info": "Optional. If set, plays in place of the image — muted, looping, 1:1 square. Encode at 1200×1200 so the layout matches the image. The first frame is used as the poster while loading; reduced-motion users see it as a still."
+    },
+    {
       "type": "image_picker",
       "id": "visual",
       "label": "Hero visual",
-      "info": "Recommend a 1200×1200 square render. Falls back to the BACKLIT CSS-art placeholder if empty."
+      "info": "Recommend a 1200×1200 square render. Used when no video is set, and as the fallback for the CSS-art placeholder if both are empty."
     }
   ],
   "blocks": [
