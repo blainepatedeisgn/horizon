@@ -393,6 +393,51 @@
       letter-spacing: -0.045em;
     }
   }
+
+  /* ============================================================
+     Phone overrides for the footer newsletter form (≤500px).
+     Placed at the END of the stylesheet so they win the cascade
+     against the base .ds-footer__newsletter-* rules earlier in
+     the file (same lesson as ds-newsletter-card).
+
+     Stack input + button vertically and drop the unified flex
+     border.  On mobile the horizontal form was overflowing the
+     footer column on narrow screens — the button's intrinsic
+     width plus the input's min-width pushed the wrapper past the
+     right edge of the column.  Stacking removes that pressure
+     entirely AND matches the brutalist treatment of the card
+     newsletter form.
+     ============================================================ */
+  @media (max-width: 500px) {
+    .ds-footer__newsletter-inner {
+      flex-direction: column;
+      border: 0;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+    .ds-footer__newsletter-inner:focus-within {
+      border-color: transparent;
+    }
+    .ds-footer__newsletter-input {
+      border: 1px solid var(--color-border-strong);
+      padding: 14px 16px;
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color var(--t-fast) var(--ease);
+    }
+    .ds-footer__newsletter-input:focus {
+      border-color: var(--color-fg);
+      outline: none;
+    }
+    .ds-footer__newsletter-btn {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+    }
+  }
 {% endstyle %}
 
 {% schema %}
