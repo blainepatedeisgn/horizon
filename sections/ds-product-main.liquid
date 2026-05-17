@@ -21,15 +21,20 @@
     product.collections        → first non-trivial collection = breadcrumb
 
   PRODUCT METAFIELDS (namespace: "disrupted", optional, per-product):
-    badge_text       (string)  → orange badge text (e.g. "NEW · v1.0"); hidden if blank
-    tagline          (string)  → short paragraph under the title
-    demo_url         (url)     → "Watch the demo →" sub-CTA destination
-    compat           (string)  → spec row
-    format           (string)  → spec row
-    file_size        (string)  → spec row
-    license          (string)  → spec row
-    updates          (string)  → spec row
-    support          (string)  → spec row
+    badge_text       (string)                   → orange badge text (e.g. "NEW · v1.0"); hidden if blank
+    tagline          (string)                   → short paragraph under the title
+    demo_url         (url)                      → sub-CTA link destination (label is sub_cta_label)
+    sub_cta_label    (string)                   → text on the sub-CTA link. Defaults to "Watch the demo"
+                                                  for plugins; set to "See the full specimen" for fonts, etc.
+    specs            (list of Spec metaobjects) → specs table rows. Each Spec has
+                                                  `label` + `value` text fields. Works for any
+                                                  product type — plugins, fonts, graphics, etc.
+                                                  Hides panel if no specs are set.
+
+  DEPRECATED (still works if set, but specs metafield supersedes them):
+    compat / format / file_size / license / updates / support — old hardcoded
+    spec metafields. The new `specs` metafield handles all spec rows
+    generically. Leave these blank to use only `specs`.
 
   All metafields are OPTIONAL. Rows without a value just don't render.
   See docs/changes.md for the metafield definition setup steps.
@@ -89,24 +94,31 @@
   endcomment
   assign tagline = product.metafields.disrupted.tagline.value
   assign demo_url = product.metafields.disrupted.demo_url.value
+  assign sub_cta_label = product.metafields.disrupted.sub_cta_label.value | default: 'Watch the demo'
 
   comment
-    Specs (keys + display labels, in display order).
+    Specs — generic Spec metaobject list. Each entry has `label` + `value`
+    text fields. Falls back to the deprecated hardcoded keys
+    (compat/format/file_size/license/updates/support) for backward
+    compatibility if `disrupted.specs` isn't set on the product.
   endcomment
-  assign spec_keys = 'compat,format,file_size,license,updates,support' | split: ','
-  assign spec_labels = 'Compat,Format,File size,License,Updates,Support' | split: ','
+  assign specs_list = product.metafields.disrupted.specs.value
 
-  comment
-    Detect whether any specs exist (so we can hide the whole panel if not).
-  endcomment
+  assign legacy_spec_keys = 'compat,format,file_size,license,updates,support' | split: ','
+  assign legacy_spec_labels = 'Compat,Format,File size,License,Updates,Support' | split: ','
+
   assign has_specs = false
-  for key in spec_keys
-    assign v = product.metafields.disrupted[key].value
-    if v != blank
-      assign has_specs = true
-      break
-    endif
-  endfor
+  if specs_list and specs_list.size > 0
+    assign has_specs = true
+  else
+    for key in legacy_spec_keys
+      assign v = product.metafields.disrupted[key].value
+      if v != blank
+        assign has_specs = true
+        break
+      endif
+    endfor
+  endif
 
   assign current_variant = product.selected_or_first_available_variant
 -%}
@@ -248,24 +260,38 @@
         {%- if demo_url != blank -%}
           <div class="ds-pdp__info-sub-cta">
             <a href="{{ demo_url }}" class="ds-text-link">
-              Watch the demo
+              {{ sub_cta_label }}
               <span class="ds-text-link__arrow" aria-hidden="true">→</span>
             </a>
           </div>
         {%- endif -%}
 
-        {%- comment -%} SPECS TABLE (metafields) {%- endcomment -%}
+        {%- comment -%} SPECS TABLE — generic Spec metaobject list (preferred), legacy fallback {%- endcomment -%}
         {%- if has_specs -%}
           <div class="ds-pdp__info-specs">
-            {%- for key in spec_keys -%}
-              {%- assign value = product.metafields.disrupted[key].value -%}
-              {%- if value != blank -%}
-                <div class="ds-pdp__info-spec">
-                  <span class="ds-pdp__info-spec-label">{{ spec_labels[forloop.index0] }}</span>
-                  <span class="ds-pdp__info-spec-value">{{ value }}</span>
-                </div>
-              {%- endif -%}
-            {%- endfor -%}
+            {%- if specs_list and specs_list.size > 0 -%}
+              {%- for spec in specs_list -%}
+                {%- assign label = spec.label.value -%}
+                {%- assign value = spec.value.value -%}
+                {%- if label != blank and value != blank -%}
+                  <div class="ds-pdp__info-spec">
+                    <span class="ds-pdp__info-spec-label">{{ label }}</span>
+                    <span class="ds-pdp__info-spec-value">{{ value }}</span>
+                  </div>
+                {%- endif -%}
+              {%- endfor -%}
+            {%- else -%}
+              {%- comment -%} Legacy fallback {%- endcomment -%}
+              {%- for key in legacy_spec_keys -%}
+                {%- assign value = product.metafields.disrupted[key].value -%}
+                {%- if value != blank -%}
+                  <div class="ds-pdp__info-spec">
+                    <span class="ds-pdp__info-spec-label">{{ legacy_spec_labels[forloop.index0] }}</span>
+                    <span class="ds-pdp__info-spec-value">{{ value }}</span>
+                  </div>
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
           </div>
         {%- endif -%}
 

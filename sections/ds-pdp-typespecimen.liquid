@@ -86,6 +86,13 @@
         </div>
       {%- endif -%}
 
+      {%- if section.settings.link_label != blank -%}
+        <a href="{{ section.settings.link_url | default: '#' }}" class="ds-pdp-typespecimen__link">
+          {{ section.settings.link_label }}
+          <span class="ds-pdp-typespecimen__link-arrow" aria-hidden="true">→</span>
+        </a>
+      {%- endif -%}
+
     </div>
   </section>
 {%- endif -%}
@@ -141,6 +148,34 @@
       grid-template-columns: 1fr;
       gap: var(--space-2);
     }
+  }
+
+  /* "See the full specimen →" link */
+  .ds-pdp-typespecimen__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: var(--space-5);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-strong);
+    padding-bottom: 4px;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-pdp-typespecimen__link:hover {
+    border-bottom-color: var(--color-fg);
+  }
+  .ds-pdp-typespecimen__link-arrow {
+    display: inline-block;
+    transition: transform var(--t-fast) var(--ease);
+  }
+  .ds-pdp-typespecimen__link:hover .ds-pdp-typespecimen__link-arrow {
+    transform: translateX(3px);
   }
 {% endstyle %}
 
@@ -205,6 +240,20 @@
     {
       "type": "paragraph",
       "content": "Requires the product's `disrupted.font_file` metafield to be set with a .woff2 / .ttf / .otf file. Section hides if no font is uploaded."
+    },
+    { "type": "header", "content": "Full specimen link" },
+    {
+      "type": "text",
+      "id": "link_label",
+      "default": "See the full specimen",
+      "label": "Link label",
+      "info": "Small mono link below the specimen. Leave blank to hide."
+    },
+    {
+      "type": "url",
+      "id": "link_url",
+      "label": "Link URL",
+      "info": "Where the link points (e.g. a downloadable PDF specimen, or a /pages/X specimen page)."
     }
   ],
   "presets": [

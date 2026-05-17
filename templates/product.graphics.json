@@ -1,0 +1,54 @@
+/*
+ * ------------------------------------------------------------
+ * Disrupted Studio — GRAPHICS product template
+ *
+ * Used for asset/graphics products (Chroma Vol. 01, Botanic Library,
+ * Arcade Icons, Grain Studies, etc.). Assigned per-product in admin
+ * via the "Theme template" dropdown.
+ *
+ * Section order:
+ *   main → features → faq → related
+ *
+ * Same composition as the default product.json for now — graphics
+ * products typically don't need video, CTAs, or font specimen.
+ * Per-product content (features, faq, specs) comes from metafields.
+ *
+ * If you want graphics-specific sections later (e.g. a preview grid
+ * showing all SVGs in a pack, or an asset-format selector), add them
+ * here without touching plugin/font templates.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "ds-product-main",
+      "settings": {
+        "color_scheme": "scheme-1"
+      }
+    },
+    "features": {
+      "type": "ds-pdp-features",
+      "settings": {
+        "color_scheme": "scheme-1"
+      }
+    },
+    "faq": {
+      "type": "ds-pdp-faq",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Questions",
+        "num_label": "04"
+      }
+    },
+    "related": {
+      "type": "ds-pdp-related",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "More assets",
+        "num_label": "03",
+        "products_to_show": 3
+      }
+    }
+  },
+  "order": ["main", "features", "faq", "related"]
+}
