@@ -162,8 +162,18 @@
                 {%- if cart.empty? -%}
                   {%- render 'ds-cart-products', force_empty: true -%}
                 {%- else -%}
-                  {%- render 'ds-cart-products' -%}
-                  {%- render 'ds-cart-upsell', section: section -%}
+                  {%- comment -%}
+                    Items + upsell share one scrollable column so when
+                    the cart has multiple items, the user can scroll
+                    through them AND the upsell suggestions together
+                    without the items area getting squeezed by the
+                    upsell + summary footer. Summary stays pinned
+                    below as a separate flex child.
+                  {%- endcomment -%}
+                  <div class="ds-cart__scrollable">
+                    {%- render 'ds-cart-products' -%}
+                    {%- render 'ds-cart-upsell', section: section -%}
+                  </div>
                   {%- render 'ds-cart-summary' -%}
                 {%- endif -%}
               </cart-items-component>
@@ -964,16 +974,29 @@
   }
   .ds-cart-drawer__close:hover { background: var(--color-border); }
 
-  /* Body: items list (scrollable) + summary footer */
+  /* Body: scrollable area (items + upsell) + pinned summary footer */
   .ds-cart-drawer__body {
     display: flex;
     flex-direction: column;
     flex: 1;
     min-height: 0;
   }
-  .ds-cart__items-wrap {
+  /* The new shared scrollable wrapper — holds both items and upsell so
+     when the cart has 2+ items, the area dedicated to them isn't
+     squeezed by the upsell + summary growing alongside. Everything
+     above the summary scrolls together; summary stays pinned below. */
+  .ds-cart__scrollable {
     flex: 1;
     overflow-y: auto;
+    min-height: 0;
+    /* Subtle inner padding so items / upsell don't kiss the panel
+       edges. Each inner snippet (items-wrap, upsell) handles its own
+       horizontal/vertical padding for its content rhythm. */
+  }
+  .ds-cart__items-wrap {
+    /* No longer the scrollable element — its parent
+       .ds-cart__scrollable handles that. Just keeps its content
+       padding for breathing room. */
     padding: var(--space-5);
   }
 
