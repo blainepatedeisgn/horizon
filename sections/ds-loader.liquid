@@ -170,46 +170,28 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
+      /* Default hidden — JS sets opacity: 1 on the active frame each
+         tick. CSS-based @keyframes animation was the previous approach
+         but iOS Safari was throttling it during page load, producing
+         a static (non-cycling) loader on mobile. JS setInterval is
+         bulletproof across browsers — same code path everywhere. */
       opacity: 0;
-      animation:
-        ds-loader-flash var(--ds-loader-cycle) steps(1, end) infinite;
-      animation-delay: calc(var(--ds-loader-frame-ms) * var(--i));
-      /* GPU-promote so iOS Safari doesn't drop frames during the
-         rapid opacity strobe. Without this, mobile renders the
-         strobe on the CPU and either freezes on one frame or
-         appears not to cycle at all. */
+      /* GPU-promote so Safari doesn't repaint on the main thread
+         for each opacity flip. Same purpose as before; the JS
+         driver still benefits. */
       will-change: opacity;
       transform: translateZ(0);
-      /* Backface-hidden + translateZ together force composited
-         rendering on older Safari versions that ignore will-change
-         alone. Belt and suspenders for mobile compatibility. */
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       /* No image smoothing — these are pixelated/sharp by design */
       image-rendering: pixelated;
       image-rendering: crisp-edges;
     }
-    @keyframes ds-loader-flash {
-      /* Each frame is visible for one slot of the 6-slot cycle (~16.66%)
-         then hidden for the rest.  Combined with the per-frame delay
-         this gives a sequential strobe. */
-      0%,    16.66% { opacity: 1; }
-      16.67%, 100%  { opacity: 0; }
-    }
 
-    /* Reduced motion: kill the strobe, just show the last frame
-       (most fully-formed wordmark) for the minDuration then fade.
-       The strobe is the visual character but it's epilepsy-adjacent
-       for sensitive viewers, so honour the system preference. */
-    @media (prefers-reduced-motion: reduce) {
-      .ds-loader__frame {
-        animation: none;
-        opacity: 0;
-      }
-      .ds-loader__frame:last-child {
-        opacity: 1;
-      }
-    }
+    /* Reduced-motion handling lives in the JS controller now (it
+       skips the strobe and parks on the last frame). The CSS media
+       query block was redundant once the strobe moved off CSS
+       animations. */
   </style>
 
   <script>
@@ -245,10 +227,55 @@
         }
       }
 
+      // ----- JS-DRIVEN STROBE -----
+      // Cycle the 6 frames manually with setInterval. The previous
+      // CSS @keyframes implementation worked on desktop but iOS Safari
+      // was throttling it during page load — the loader would appear
+      // static. setInterval is reliable on every browser, no animation
+      // engine to fight with.
+      var frames = loader.querySelectorAll('.ds-loader__frame');
+      var frameIndex = 0;
+      var frameMsRaw = (
+        getComputedStyle(loader).getPropertyValue('--ds-loader-frame-ms') || '80'
+      ).trim();
+      var frameMs = parseInt(frameMsRaw, 10) || 80;
+      var strobeTimer = null;
+
+      function showFrame(idx) {
+        for (var i = 0; i < frames.length; i++) {
+          frames[i].style.opacity = i === idx ? '1' : '0';
+        }
+      }
+
+      // Reduced motion: skip the strobe, just park on the last frame
+      // (most-fully-formed wordmark). Same UX intent as the previous
+      // CSS media query, just driven from JS now.
+      var prefersReducedMotion = false;
+      try {
+        var rmm = window.matchMedia('(prefers-reduced-motion: reduce)');
+        prefersReducedMotion = !!(rmm && rmm.matches);
+      } catch (e) {}
+
+      if (frames.length > 0) {
+        if (prefersReducedMotion) {
+          showFrame(frames.length - 1);
+        } else {
+          showFrame(0);
+          strobeTimer = setInterval(function () {
+            frameIndex = (frameIndex + 1) % frames.length;
+            showFrame(frameIndex);
+          }, frameMs);
+        }
+      }
+
       var hidden = false;
       function hide() {
         if (hidden) return;
         hidden = true;
+        if (strobeTimer) {
+          clearInterval(strobeTimer);
+          strobeTimer = null;
+        }
         loader.classList.add('is-hiding');
         try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
         // Detach after the fade transition so the DOM stays clean.
@@ -273,14 +300,11 @@
       document.addEventListener('keydown', onKey);
 
       // Reduced-motion users: cut the minDuration in half — they
-      // get a static frame, no strobe, so the dwell time can be
-      // shorter without missing the "moment."
-      try {
-        var rm = window.matchMedia('(prefers-reduced-motion: reduce)');
-        if (rm && rm.matches) {
-          setTimeout(hide, Math.min(minDuration, 600));
-        }
-      } catch (e) {}
+      // get a static frame (handled above in the strobe setup) so
+      // the dwell time can be shorter without missing the "moment."
+      if (prefersReducedMotion) {
+        setTimeout(hide, Math.min(minDuration, 600));
+      }
     })();
   </script>
 {%- endif -%}
