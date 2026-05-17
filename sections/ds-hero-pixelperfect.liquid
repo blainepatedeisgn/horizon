@@ -27,7 +27,7 @@
   assign cs = section.settings.color_scheme
 -%}
 
-<div class="ds-hero color-{{ cs }}">
+<div class="ds-hero ds-hero--pixelperfect color-{{ cs }}">
   <div class="ds-hero__content">
     {%- content_for 'blocks' -%}
   </div>
@@ -191,6 +191,26 @@
   @media (max-width: 480px) {
     .ds-hero__visual { padding: 0 var(--space-3); }
   }
+
+  /* ============================================================
+     PIXEL PERFECT hero — no spotlight, ever.
+     ============================================================
+     The shared ds-hero-title block has a `spotlight` boolean that
+     adds an orange figure-eight glow behind the H1 (BACKLIT's
+     signature "live demo" effect).  The preset for this section
+     defaults that toggle to OFF, but a merchant could still enable
+     it via the block settings — so we belt-and-braces hide the
+     pseudo-element entirely inside this section.  Also clears the
+     static white halo blur since "Real pixels. One slider." reads
+     cleaner as a flat headline without ambient glow. */
+  .ds-hero--pixelperfect .ds-hero-title--spotlight::before {
+    content: none;
+    display: none;
+    animation: none;
+  }
+  .ds-hero--pixelperfect .ds-hero-title__glow {
+    display: none;
+  }
 {% endstyle %}
 
 {% schema %}
@@ -224,7 +244,7 @@
       "name": "Hero — Pixel Perfect",
       "blocks": [
         { "type": "ds-eyebrow",    "settings": { "text": "Introducing", "accent": "PIXEL PERFECT v1.0" } },
-        { "type": "ds-hero-title", "settings": { "text": "Real pixels.\nOne slider." } },
+        { "type": "ds-hero-title", "settings": { "text": "Real pixels.\nOne slider.", "spotlight": false } },
         { "type": "ds-meta-strip", "settings": { "item_1": "PS 23.3+", "item_2": "UXP plugin", "item_3": "Live now", "last_has_dot": true } },
         { "type": "ds-rich-text"  },
         { "type": "ds-button-row" }
