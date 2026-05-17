@@ -927,21 +927,29 @@
   /* Tier upsell — rendered inside .ds-cart__item as a full-width row
      below the item content (spans all 3 grid columns). Visible only
      when the cart item has a higher-priced available variant. Click
-     swaps the line item for the upgrade tier via Cart Ajax API. */
+     swaps the line item for the upgrade tier via Cart Ajax API.
+
+     Styling matches the cart's existing mono-caps actions ("REMOVE",
+     "PLUGIN" type tags, etc.) — single font family + casing + size
+     so the upsell reads as part of the cart's visual rhythm rather
+     than a foreign element. Left-aligned label, right-aligned diff. */
   .ds-cart__upsell {
     grid-column: 1 / -1;
     margin-top: var(--space-3);
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 16px;
     width: 100%;
-    padding: 10px 14px;
+    padding: 12px 14px;
     background: rgba(255, 77, 31, 0.06);
     border: 1px dashed var(--color-accent);
     color: var(--color-fg);
-    font: inherit;
+    font-family: var(--font-mono);
     font-size: 12px;
-    letter-spacing: 0.02em;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     cursor: pointer;
     text-align: left;
     transition: background var(--t-fast) var(--ease);
@@ -949,28 +957,14 @@
   .ds-cart__upsell:hover {
     background: rgba(255, 77, 31, 0.14);
   }
-  .ds-cart__upsell-eyebrow {
-    flex-shrink: 0;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    color: var(--color-accent);
-  }
   .ds-cart__upsell-text {
-    flex: 1;
+    color: var(--color-fg);
   }
   .ds-cart__upsell-diff {
-    margin-left: 6px;
+    color: var(--color-accent);
     font-weight: 600;
-    color: var(--color-accent);
     font-variant-numeric: tabular-nums;
-  }
-  .ds-cart__upsell-arrow {
-    color: var(--color-accent);
     flex-shrink: 0;
-    transition: transform var(--t-fast) var(--ease);
-  }
-  .ds-cart__upsell:hover .ds-cart__upsell-arrow {
-    transform: translateX(3px);
   }
   /* Loading state — set by JS during the /cart/change → /cart/add
      round-trip so the user gets feedback that the click registered. */

@@ -186,12 +186,8 @@
                 data-upgrade-to="{{ upsell_v_id }}"
                 aria-label="Upgrade {{ item.product.title | escape }} to {{ upsell_v_title | escape }} for {{ price_diff | money }} more"
               >
-                <span class="ds-cart__upsell-eyebrow ds-mono" aria-hidden="true">↑ UPGRADE</span>
-                <span class="ds-cart__upsell-text">
-                  to {{ upsell_v_title }}
-                  <span class="ds-cart__upsell-diff">+{{ price_diff | money }}</span>
-                </span>
-                <span class="ds-cart__upsell-arrow" aria-hidden="true">→</span>
+                <span class="ds-cart__upsell-text">Upgrade to {{ upsell_v_title }}</span>
+                <span class="ds-cart__upsell-diff" aria-hidden="true">+{{ price_diff | money }}</span>
               </button>
             {%- endif -%}
           </li>
