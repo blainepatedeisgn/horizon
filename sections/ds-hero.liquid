@@ -95,7 +95,9 @@
   }
   .ds-hero .ds-rich-text { max-width: 38ch; }
 
-  /* Display title with white glow halo */
+  /* Display title with white glow halo (static) + optional animated
+     orange spotlight (.ds-hero-title--spotlight) that orbits behind
+     the text. The spotlight is an on-brand demo of BACKLIT itself. */
   .ds-hero-title {
     font-size: var(--fs-display);
     font-weight: 600;
@@ -104,7 +106,11 @@
     position: relative;
     display: inline-block;
     margin: 0;
+    /* Tame overflow so the spotlight pseudo can extend beyond the
+       glyph bounds without pushing siblings around. */
+    isolation: isolate;
   }
+  /* Static white halo — slightly diffused duplicate of the text */
   .ds-hero-title__glow {
     position: absolute;
     inset: 0;
@@ -114,6 +120,48 @@
     z-index: -1;
     user-select: none;
     pointer-events: none;
+  }
+
+  /* ----- Animated spotlight ----- */
+  .ds-hero-title--spotlight::before {
+    content: "";
+    position: absolute;
+    /* Modest overhang — keeps the spotlight close to the text rather
+       than letting it roam over surrounding space. */
+    inset: -15%;
+    background:
+      radial-gradient(
+        circle at center,
+        rgba(255, 77, 31, 0.55) 0%,
+        rgba(255, 77, 31, 0.22) 28%,
+        rgba(255, 77, 31, 0) 60%
+      );
+    filter: blur(40px);
+    z-index: -2;
+    pointer-events: none;
+    user-select: none;
+    /* Slow figure-eight orbit — tightened range so the light traces
+       just behind the glyphs, not across the whole hero. */
+    animation: ds-hero-spotlight 9s ease-in-out infinite;
+    will-change: transform, opacity;
+    /* Mix the warm spotlight in additively over the (dark) bg */
+    mix-blend-mode: screen;
+  }
+  @keyframes ds-hero-spotlight {
+    0%   { transform: translate(-10%,  -8%) scale(0.95); opacity: 0.85; }
+    20%  { transform: translate(  6%, -10%) scale(1.05); opacity: 1;    }
+    40%  { transform: translate( 12%,   3%) scale(1.0);  opacity: 0.95; }
+    60%  { transform: translate(  2%,  10%) scale(1.08); opacity: 1;    }
+    80%  { transform: translate(-10%,   6%) scale(0.95); opacity: 0.9;  }
+    100% { transform: translate(-10%,  -8%) scale(0.95); opacity: 0.85; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-hero-title--spotlight::before {
+      animation: none;
+      /* Park the spotlight roughly centered so users with reduced
+         motion still see the glow effect, just stationary. */
+      transform: translate(0, 0) scale(1);
+    }
   }
 
   @media (max-width: 900px) {

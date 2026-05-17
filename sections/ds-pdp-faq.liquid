@@ -20,7 +20,7 @@
 -%}
 
 {%- if faq_items and faq_items.size > 0 -%}
-<section class="ds-pdp-faq color-{{ cs }}">
+<section id="faq" class="ds-pdp-faq color-{{ cs }}">
   <div class="ds-pdp-faq__inner">
 
     {%- if section.settings.heading != blank or section.settings.subhead != blank -%}
@@ -162,6 +162,26 @@
   /* Reduced-motion: drop the rotate transition */
   @media (prefers-reduced-motion: reduce) {
     .ds-pdp-faq__q-toggle { transition: none; }
+  }
+
+  /* Mobile — pull the answer back flush so paragraphs aren't squeezed,
+     tighten the question row, shrink gap between num + text */
+  @media (max-width: 700px) {
+    .ds-pdp-faq__q {
+      padding: var(--space-4) 0;
+      font-size: 17px;
+      gap: var(--space-3);
+    }
+    .ds-pdp-faq__q-num {
+      margin-right: var(--space-2);
+      font-size: 11px;
+    }
+    .ds-pdp-faq__a {
+      padding-left: 0;        /* drop the 48px desktop indent */
+    }
+    .ds-pdp-faq__a-inner {
+      padding-bottom: var(--space-4);
+    }
   }
 {% endstyle %}
 

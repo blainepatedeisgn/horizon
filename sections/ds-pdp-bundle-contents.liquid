@@ -1,0 +1,360 @@
+{%- comment -%}
+  sections/ds-pdp-bundle-contents.liquid — "What's included" for bundle PDPs
+
+  Reads `product.metafields.disrupted.bundle_contents` (a list of product
+  references) and renders an itemized breakdown of every item included
+  in this bundle, plus a savings-math footer that none of the reference
+  foundries actually show — our quiet differentiator.
+
+  Math
+    total_value  = sum of each included item's individual price
+    you_pay      = this bundle product's own price (product.price)
+    you_save     = total_value − product.price
+    you_save_pct = round(you_save / total_value × 100)
+
+  Behaviour
+    • Hides silently if the metafield is unset/empty (safe to drop into
+      every product template without polluting non-bundle PDPs)
+    • Hides the savings card if savings ≤ 0 (e.g. a bundle priced same
+      as the sum — items list still renders)
+    • Each item row links to its own PDP (transparency > friction)
+
+  Merchant setup
+    1. Settings → Custom data → Products → Add definition
+         Name:       Bundle contents
+         Namespace:  disrupted.bundle_contents
+         Type:       Product (list)
+    2. On the bundle product, set Compare-at price = sum of items'
+       prices (so Shopify's native strike-through renders on the PDP)
+    3. Add this section to a product template (e.g. product.bundle.json)
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+  assign bundle_items = product.metafields.disrupted.bundle_contents.value
+
+  comment
+    Compute totals if we have items
+  endcomment
+  assign has_items   = false
+  assign total_value = 0
+  if bundle_items and bundle_items.size > 0
+    assign has_items = true
+    for item in bundle_items
+      assign total_value = total_value | plus: item.price
+    endfor
+  endif
+
+  assign you_pay  = product.price
+  assign you_save = total_value | minus: you_pay
+
+  assign savings_pct = 0
+  if total_value > 0 and you_save > 0
+    assign savings_pct = you_save | times: 100 | divided_by: total_value
+  endif
+
+  assign show_savings = section.settings.show_savings_math
+  assign show_prices  = section.settings.show_individual_prices
+-%}
+
+{%- if has_items -%}
+<section id="includes" class="ds-pdp-bundle color-{{ cs }}">
+  <div class="ds-pdp-bundle__inner">
+
+    {%- comment -%} ----- HEAD ----- {%- endcomment -%}
+    <div class="ds-section-head">
+      <h2 class="ds-section-head__title">
+        {{ section.settings.heading | default: "What's included" }}
+        {%- if section.settings.num_label != blank -%}
+          <span class="ds-section-head__num">{{ section.settings.num_label }}</span>
+        {%- else -%}
+          <span class="ds-section-head__num">
+            {%- if bundle_items.size < 10 %}0{% endif -%}{{ bundle_items.size }}
+          </span>
+        {%- endif -%}
+      </h2>
+      {%- if section.settings.subhead != blank -%}
+        <p class="ds-section-head__sub">{{ section.settings.subhead }}</p>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%} ----- ITEMS LIST ----- {%- endcomment -%}
+    <ul class="ds-pdp-bundle__list" role="list">
+      {%- for item in bundle_items -%}
+        <li class="ds-pdp-bundle__item">
+          <a href="{{ item.url }}" class="ds-pdp-bundle__item-link">
+            <div class="ds-pdp-bundle__item-media">
+              {%- if item.featured_image -%}
+                {{
+                  item.featured_image
+                  | image_url: width: 200
+                  | image_tag:
+                      class: 'ds-pdp-bundle__item-img',
+                      alt: item.title,
+                      loading: 'lazy',
+                      widths: '64,128,192'
+                }}
+              {%- else -%}
+                <span class="ds-pdp-bundle__item-img-placeholder" aria-hidden="true"></span>
+              {%- endif -%}
+            </div>
+
+            <div class="ds-pdp-bundle__item-info">
+              <div class="ds-pdp-bundle__item-name">{{ item.title }}</div>
+              {%- if item.type != blank -%}
+                <div class="ds-pdp-bundle__item-cat">{{ item.type }}</div>
+              {%- endif -%}
+            </div>
+
+            {%- if show_prices -%}
+              <div class="ds-pdp-bundle__item-price">{{ item.price | money }}</div>
+            {%- endif -%}
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+
+    {%- comment -%} ----- SAVINGS MATH CARD ----- {%- endcomment -%}
+    {%- if show_savings and you_save > 0 -%}
+      <div class="ds-pdp-bundle__math">
+        <div class="ds-pdp-bundle__math-row">
+          <span class="ds-pdp-bundle__math-label">Total value</span>
+          <span class="ds-pdp-bundle__math-leader" aria-hidden="true"></span>
+          <span class="ds-pdp-bundle__math-value ds-pdp-bundle__math-value--strike">
+            {{ total_value | money }}
+          </span>
+        </div>
+        <div class="ds-pdp-bundle__math-row">
+          <span class="ds-pdp-bundle__math-label">You pay</span>
+          <span class="ds-pdp-bundle__math-leader" aria-hidden="true"></span>
+          <span class="ds-pdp-bundle__math-value ds-pdp-bundle__math-value--pay">
+            {{ you_pay | money }}
+          </span>
+        </div>
+        <div class="ds-pdp-bundle__math-row ds-pdp-bundle__math-row--save">
+          <span class="ds-pdp-bundle__math-label">You save</span>
+          <span class="ds-pdp-bundle__math-leader" aria-hidden="true"></span>
+          <span class="ds-pdp-bundle__math-value ds-pdp-bundle__math-value--save">
+            {{ you_save | money }}
+            {%- if savings_pct > 0 -%}
+              <span class="ds-pdp-bundle__math-pct">({{ savings_pct }}%)</span>
+            {%- endif -%}
+          </span>
+        </div>
+      </div>
+    {%- endif -%}
+
+  </div>
+</section>
+{%- endif -%}
+
+{% style %}
+  /* ds-pdp-bundle-contents — "What's included" for bundle products */
+  .ds-pdp-bundle {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding-top: clamp(48px, 6vw, 80px);
+    padding-bottom: clamp(48px, 6vw, 80px);
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-pdp-bundle__inner {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* Items list — bordered card, one row per included product */
+  .ds-pdp-bundle__list {
+    list-style: none;
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    border: 1px solid var(--color-border);
+  }
+  .ds-pdp-bundle__item + .ds-pdp-bundle__item {
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-pdp-bundle__item-link {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: var(--space-4);
+    align-items: center;
+    padding: var(--space-4) var(--space-5);
+    text-decoration: none;
+    color: inherit;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .ds-pdp-bundle__item-link:hover {
+    background: var(--color-bg-elev);
+  }
+  .ds-pdp-bundle__item-media {
+    aspect-ratio: 1 / 1;
+    width: 64px;
+    background: var(--color-bg-elev);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+  .ds-pdp-bundle__item-img,
+  .ds-pdp-bundle__item-img-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: var(--color-bg);
+  }
+  .ds-pdp-bundle__item-info { min-width: 0; }
+  .ds-pdp-bundle__item-name {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--color-fg);
+    line-height: 1.3;
+  }
+  .ds-pdp-bundle__item-cat {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin-top: 4px;
+  }
+  .ds-pdp-bundle__item-price {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--color-fg-muted);
+    text-decoration: line-through;
+    white-space: nowrap;
+    font-feature-settings: "tnum";
+  }
+
+  /* Savings math card — the differentiator */
+  .ds-pdp-bundle__math {
+    border: 1px solid var(--color-border-strong);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 480px;
+    margin-left: auto;  /* right-align under the items list */
+  }
+  .ds-pdp-bundle__math-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .ds-pdp-bundle__math-label {
+    color: var(--color-fg-muted);
+    letter-spacing: 0.04em;
+  }
+  .ds-pdp-bundle__math-leader {
+    border-bottom: 1px dotted var(--color-fg-faint);
+    transform: translateY(-3px);
+  }
+  .ds-pdp-bundle__math-value {
+    color: var(--color-fg);
+    font-weight: 500;
+    font-feature-settings: "tnum";
+  }
+  .ds-pdp-bundle__math-value--strike {
+    color: var(--color-fg-muted);
+    text-decoration: line-through;
+  }
+  .ds-pdp-bundle__math-value--pay {
+    font-size: 16px;
+  }
+  /* The headline row — the SAVE callout in accent orange */
+  .ds-pdp-bundle__math-row--save {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    margin-top: var(--space-2);
+  }
+  .ds-pdp-bundle__math-row--save .ds-pdp-bundle__math-label {
+    color: var(--color-fg);
+    font-weight: 500;
+  }
+  .ds-pdp-bundle__math-value--save {
+    color: var(--color-accent);
+    font-size: 18px;
+  }
+  .ds-pdp-bundle__math-pct {
+    font-size: 13px;
+    color: var(--color-accent);
+    margin-left: 4px;
+  }
+
+  /* Mobile — math card stretches, item row tightens */
+  @media (max-width: 600px) {
+    .ds-pdp-bundle__math { max-width: none; }
+    .ds-pdp-bundle__item-link {
+      grid-template-columns: 56px 1fr auto;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+    }
+    .ds-pdp-bundle__item-media { width: 56px; }
+    .ds-pdp-bundle__item-name { font-size: 14px; }
+    .ds-pdp-bundle__item-price { font-size: 13px; }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted bundle",
+  "tag": "section",
+  "class": "ds-section ds-section--pdp-bundle",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    { "type": "header", "content": "Heading" },
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "What's included",
+      "label": "Title"
+    },
+    {
+      "type": "text",
+      "id": "num_label",
+      "label": "Number badge",
+      "info": "Mono superscript next to the title. Leave blank to auto-display the item count."
+    },
+    {
+      "type": "text",
+      "id": "subhead",
+      "label": "Subhead"
+    },
+    { "type": "header", "content": "Display" },
+    {
+      "type": "checkbox",
+      "id": "show_individual_prices",
+      "default": true,
+      "label": "Show each item's individual price",
+      "info": "Renders the item's normal price (struck through) next to its name — makes the bundle savings tangible."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_savings_math",
+      "default": true,
+      "label": "Show savings math card",
+      "info": "Total value / You pay / You save. Hides automatically if savings ≤ 0."
+    },
+    {
+      "type": "paragraph",
+      "content": "Bundle items come from the `disrupted.bundle_contents` product metafield (Product list). Set the bundle product's Compare-at price = sum of included items so the savings render correctly."
+    }
+  ],
+  "presets": [
+    { "name": "Disrupted bundle" }
+  ]
+}
+{% endschema %}

@@ -41,7 +41,7 @@
     <div class="ds-header__left">
       {%- if main_menu != blank and linklists[main_menu].links.size > 0 -%}
         <button class="ds-header__icon-btn ds-header__menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" data-ds-menu-toggle>
-          <svg viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <svg viewBox="0 0 22 16" width="22" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
             <line x1="0" y1="2"  x2="22" y2="2"  stroke="currentColor" stroke-width="1.5"/>
             <line x1="0" y1="8"  x2="22" y2="8"  stroke="currentColor" stroke-width="1.5"/>
             <line x1="0" y1="14" x2="22" y2="14" stroke="currentColor" stroke-width="1.5"/>
@@ -80,50 +80,273 @@
 
     <div class="ds-header__actions">
       {%- if show_search -%}
-        <a href="{{ routes.search_url }}" class="ds-header__icon-btn" aria-label="Search">
+        {%- comment -%}
+          Button (not <a>) — opens the centered search modal mounted below.
+          on:click="#<id>/<method>" is Horizon's declarative event syntax
+          for referencing a sibling/global custom element by id.
+        {%- endcomment -%}
+        <button
+          type="button"
+          class="ds-header__icon-btn ds-header__search-trigger"
+          on:click="#ds-search-modal/showDialog"
+          aria-haspopup="dialog"
+          aria-label="Open search"
+        >
           <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false" width="16" height="16">
             <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/>
             <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="1.5"/>
           </svg>
           <span>Search</span>
-        </a>
+        </button>
       {%- endif -%}
       {%- if show_cart -%}
-        <a href="{{ routes.cart_url }}" class="ds-header__icon-btn ds-header__cart-link" aria-label="Cart, {{ cart.item_count }} items">
-          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false" width="16" height="16">
-            <path d="M3 4h2l1.6 9.4a1 1 0 0 0 1 .8h7.2a1 1 0 0 0 1-.8L17.5 7H6" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-            <circle cx="8" cy="17" r="1.2" fill="currentColor"/>
-            <circle cx="15" cy="17" r="1.2" fill="currentColor"/>
-          </svg>
-          <span>Cart</span>
-          {%- if cart.item_count > 0 -%}
-            <span class="ds-header__cart-count">{{ cart.item_count }}</span>
-          {%- endif -%}
-        </a>
+        {%- comment -%}
+          Cart trigger + drawer dialog wrapped in Horizon's
+          <cart-drawer-component>. The component listens for `on:click="/open"`
+          on any descendant and calls `.showModal()` on the [ref="dialog"]
+          child. AJAX line-item updates flow through the inner
+          <cart-items-component> using the Section Rendering API
+          (data-section-id must match this section's id).
+
+          A native <dialog> element renders in the browser's top-layer when
+          opened with showModal(), so the dialog escapes any containing
+          block / backdrop-filter trap from the sticky header — same gotcha
+          we just hit with the mobile menu drawer.
+        {%- endcomment -%}
+        <script src="{{ 'cart-drawer.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+        <cart-drawer-component class="ds-header__cart-component" auto-open>
+          <button
+            type="button"
+            class="ds-header__icon-btn ds-header__cart-link"
+            on:click="/open"
+            aria-haspopup="dialog"
+            aria-label="Cart, {{ cart.item_count }} items"
+          >
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false" width="16" height="16">
+              <path d="M3 4h2l1.6 9.4a1 1 0 0 0 1 .8h7.2a1 1 0 0 0 1-.8L17.5 7H6" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              <circle cx="8" cy="17" r="1.2" fill="currentColor"/>
+              <circle cx="15" cy="17" r="1.2" fill="currentColor"/>
+            </svg>
+            <span>Cart</span>
+            {%- if cart.item_count > 0 -%}
+              <span class="ds-header__cart-count">{{ cart.item_count }}</span>
+            {%- endif -%}
+          </button>
+
+          <dialog
+            ref="dialog"
+            class="ds-cart-drawer"
+            aria-labelledby="ds-cart-drawer-title"
+          >
+            <div class="ds-cart-drawer__panel">
+              <div class="ds-cart-drawer__head">
+                <h2 id="ds-cart-drawer-title" class="ds-cart-drawer__title">
+                  Cart
+                  {%- if cart.item_count > 0 -%}
+                    <span class="ds-cart-drawer__title-num">({{ cart.item_count }})</span>
+                  {%- endif -%}
+                </h2>
+                <button
+                  type="button"
+                  class="ds-cart-drawer__close"
+                  on:click="cart-drawer-component/close"
+                  aria-label="Close cart"
+                >×</button>
+              </div>
+
+              <cart-items-component
+                class="ds-cart-drawer__body"
+                data-section-id="{{ section.id }}"
+              >
+                {%- if cart.empty? -%}
+                  {%- render 'ds-cart-products', force_empty: true -%}
+                {%- else -%}
+                  {%- render 'ds-cart-products' -%}
+                  {%- render 'ds-cart-summary' -%}
+                {%- endif -%}
+              </cart-items-component>
+            </div>
+          </dialog>
+        </cart-drawer-component>
       {%- endif -%}
     </div>
   </div>
-
-  {%- comment -%} ----- MOBILE DRAWER ----- {%- endcomment -%}
-  {%- if main_menu != blank and linklists[main_menu].links.size > 0 -%}
-    <div class="ds-header__drawer" data-ds-drawer aria-hidden="true" role="dialog" aria-label="Menu">
-      <div class="ds-header__drawer-inner">
-        <div class="ds-header__drawer-head">
-          <span class="ds-header__drawer-eyebrow">[ Menu ]</span>
-          <button class="ds-header__drawer-close" type="button" aria-label="Close menu" data-ds-menu-toggle>×</button>
-        </div>
-        <nav class="ds-header__drawer-nav" aria-label="Mobile main navigation">
-          {%- for link in linklists[main_menu].links -%}
-            <a
-              href="{{ link.url }}"
-              class="ds-header__drawer-link{% if link.active or link.child_active %} is-active{% endif %}"
-            >{{ link.title }}</a>
-          {%- endfor -%}
-        </nav>
-      </div>
-    </div>
-  {%- endif -%}
 </div>
+
+{%- comment -%}
+  ----- MOBILE DRAWER -----
+  IMPORTANT: this lives OUTSIDE .ds-header on purpose. When the header
+  is sticky it has `backdrop-filter: blur(12px)`, which creates a
+  containing block for `position: fixed` descendants. If the drawer
+  were nested inside, its `inset: 0` would be relative to the header
+  bar (just the 64px strip) and the overlay wouldn't cover the page.
+{%- endcomment -%}
+{%- if main_menu != blank and linklists[main_menu].links.size > 0 -%}
+  <div class="ds-header__drawer" data-ds-drawer aria-hidden="true" role="dialog" aria-label="Menu">
+    <div class="ds-header__drawer-inner">
+      <div class="ds-header__drawer-head">
+        <span class="ds-header__drawer-eyebrow">[ Menu ]</span>
+        <button class="ds-header__drawer-close" type="button" aria-label="Close menu" data-ds-menu-toggle>×</button>
+      </div>
+      <nav class="ds-header__drawer-nav" aria-label="Mobile main navigation">
+        {%- for link in linklists[main_menu].links -%}
+          <a
+            href="{{ link.url }}"
+            class="ds-header__drawer-link{% if link.active or link.child_active %} is-active{% endif %}"
+          >{{ link.title }}</a>
+        {%- endfor -%}
+      </nav>
+    </div>
+  </div>
+{%- endif -%}
+
+{%- comment -%}
+  ----- SEARCH MODAL -----
+  Centered cmdk-style search popup. Mounted outside .ds-header (same
+  reason as the cart drawer + mobile menu — escape backdrop-filter
+  containing block). Uses Horizon's <dialog-component> for open/close
+  + <predictive-search-component> for the search API + section render.
+
+  Trigger lives in the header bar: <button on:click="#ds-search-modal/showDialog">
+  Required refs (don't rename — JS depends on them):
+    form, searchInput, resetButton, predictiveSearchResults, viewAllButton
+{%- endcomment -%}
+{%- if show_search -%}
+  <script src="{{ 'dialog.js' | asset_url }}" type="module"></script>
+  <script src="{{ 'predictive-search.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+  <dialog-component id="ds-search-modal" class="ds-search-modal">
+    <dialog
+      ref="dialog"
+      class="ds-search-modal__dialog"
+      on:click="/closeDialogOnClickOutside"
+      on:keydown="/closeDialogOnEscapePress"
+      aria-labelledby="ds-search-modal-title"
+    >
+      <h2 id="ds-search-modal-title" class="visually-hidden">Search</h2>
+
+      <predictive-search-component
+        class="ds-search-modal__panel"
+        data-section-id="ds-predictive-search"
+        role="search"
+        aria-label="Search"
+      >
+        <form
+          action="{{ routes.search_url }}"
+          method="get"
+          role="search"
+          class="ds-search-modal__form"
+          ref="form"
+          on:keydown="/onSearchKeyDown"
+        >
+          <div class="ds-search-modal__inputbar">
+            <svg class="ds-search-modal__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false" width="16" height="16">
+              <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/>
+              <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            <label for="ds-search-input" class="visually-hidden">Search</label>
+            <input
+              id="ds-search-input"
+              ref="searchInput"
+              type="search"
+              name="q"
+              placeholder="Search products, fonts, plugins…"
+              class="ds-search-modal__input"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="predictive-search-results"
+              aria-haspopup="listbox"
+              aria-autocomplete="list"
+              autocomplete="off"
+              on:input="/search"
+              on:keydown="/onSearchKeyDown"
+            >
+            <input name="options[prefix]" type="hidden" value="last">
+            <input name="type" type="hidden" value="product">
+            <input name="options[unavailable_products]" type="hidden" value="last">
+
+            <button
+              type="button"
+              ref="resetButton"
+              hidden
+              class="ds-search-modal__reset"
+              on:click="/resetSearch"
+              aria-label="Clear search"
+            >Clear</button>
+
+            <button
+              type="button"
+              class="ds-search-modal__close"
+              on:click="dialog-component/closeDialog"
+              aria-label="Close search"
+            >×</button>
+          </div>
+
+          {%- comment -%}
+            Two-column body for desktop:
+              [ BROWSE sidebar | live results ]
+            Sidebar hides on mobile (≤900px) so the results take the full
+            width — mobile keeps the simple single-column flow.
+
+            Recent searches column is a TODO (Phase 5 polish — requires
+            localStorage write on form submit + read on dropdown open).
+          {%- endcomment -%}
+          <div class="ds-search-modal__body">
+            <aside class="ds-search-modal__sidebar" aria-label="Browse">
+              <div class="ds-search-modal__sidebar-group">
+                <div class="ds-search-modal__sidebar-head">Browse</div>
+                <a href="{{ routes.all_products_collection_url }}" class="ds-search-modal__sidebar-link">All products</a>
+                <a href="/collections/plugins" class="ds-search-modal__sidebar-link">Plugins</a>
+                <a href="/collections/fonts"   class="ds-search-modal__sidebar-link">Fonts</a>
+                <a href="/collections/graphics" class="ds-search-modal__sidebar-link">Graphics</a>
+              </div>
+
+              {%- comment -%}
+                Recent searches — populated client-side from localStorage by
+                the script at the bottom of this section. Renders hidden by
+                default; the script reveals it once it has at least one entry.
+              {%- endcomment -%}
+              <div class="ds-search-modal__sidebar-group ds-search-modal__sidebar-group--recent" data-ds-recent-group hidden>
+                <div class="ds-search-modal__sidebar-head ds-search-modal__sidebar-head--with-action">
+                  <span>Recent</span>
+                  <button type="button" class="ds-search-modal__sidebar-clear" data-ds-recent-clear aria-label="Clear recent searches">Clear</button>
+                </div>
+                <ul class="ds-search-modal__sidebar-recent-list" data-ds-recent-list role="list"></ul>
+              </div>
+            </aside>
+
+            <div
+              class="ds-search-modal__results"
+              ref="predictiveSearchResults"
+              tabindex="-1"
+              on:click="/handleModalClick"
+            >
+              <div class="ds-search-results ds-search-results--idle">
+                <p class="ds-search-results__hint">
+                  Start typing to search products, collections &amp; more.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="ds-search-modal__foot">
+            <button
+              type="submit"
+              ref="viewAllButton"
+              class="ds-search-modal__viewall"
+            >
+              View all results →
+            </button>
+            <span class="ds-search-modal__hint">
+              <kbd>Esc</kbd> to close
+            </span>
+          </div>
+        </form>
+      </predictive-search-component>
+    </dialog>
+  </dialog-component>
+{%- endif -%}
 
 {% style %}
   /* ds-header — port of mockup .header (lines 211-320) */
@@ -329,6 +552,775 @@
   .ds-header__drawer-link.is-active {
     color: var(--color-accent);
   }
+
+  /* ============================================================
+     CART DRAWER (ds-cart-drawer)
+     Slides in from the right, native <dialog> in the top layer.
+     ============================================================ */
+  .ds-cart-drawer {
+    /* Reset native dialog chrome */
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-fg);
+    max-width: none;
+    max-height: none;
+    width: 100vw;
+    height: 100svh;
+    inset: 0;
+    /* Hidden by default — :modal styles take over when .showModal() is called */
+    overflow: visible;
+  }
+  .ds-cart-drawer::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  /* The actual sliding panel — flush right, full height.
+     IMPORTANT: panel sits at translateX(0) by default (visible position
+     when the dialog is open). The slide-in is a one-shot @keyframes
+     animation, NOT a CSS transition. Transitions re-fire on any style
+     recalculation, and morphSection touching the section caused the
+     panel to "close + reopen" mid-cart-update. Animations only play on
+     first rule application, so morph touches don't replay them. */
+  .ds-cart-drawer__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: min(440px, 92vw);
+    height: 100svh;
+    background: var(--color-bg-elev);
+    border-left: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(0);
+  }
+  /* Slide-in animation runs once when the dialog gains [open] */
+  @keyframes ds-cart-drawer-slide-in {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  .ds-cart-drawer[open] .ds-cart-drawer__panel {
+    animation: ds-cart-drawer-slide-in 360ms cubic-bezier(.2, .7, .2, 1);
+  }
+
+  /* DialogComponent.closeDialog() waits for animationend on the dialog
+     before calling .close(). We give it a near-instant opacity tick so
+     the close path resolves immediately — visible result: drawer just
+     disappears (consistent with native <dialog> behavior). */
+  @keyframes ds-cart-drawer-close-noop {
+    to { opacity: 1; }
+  }
+  .ds-cart-drawer.dialog-closing {
+    animation: ds-cart-drawer-close-noop 1ms forwards;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-cart-drawer[open] .ds-cart-drawer__panel { animation: none; }
+  }
+  /* Head — Title + close X */
+  .ds-cart-drawer__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+  .ds-cart-drawer__title {
+    font-family: var(--font-sans);
+    font-size: var(--fs-caps);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-fg);
+    margin: 0;
+  }
+  .ds-cart-drawer__title-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0;
+    margin-left: 6px;
+    color: var(--color-fg-muted);
+  }
+  .ds-cart-drawer__close {
+    background: transparent;
+    border: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: var(--color-fg);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .ds-cart-drawer__close:hover { background: var(--color-border); }
+
+  /* Body: items list (scrollable) + summary footer */
+  .ds-cart-drawer__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+  .ds-cart__items-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-5);
+  }
+
+  /* Empty state */
+  .ds-cart__empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-5);
+    text-align: center;
+  }
+  .ds-cart__empty-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin: 0;
+  }
+
+  /* Items list */
+  .ds-cart__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .ds-cart__item {
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: var(--space-3);
+    align-items: start;
+  }
+  .ds-cart__item-media {
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    overflow: hidden;
+    display: block;
+    width: 72px;
+  }
+  .ds-cart__item-img,
+  .ds-cart__item-img-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: var(--color-bg);
+  }
+  .ds-cart__item-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ds-cart__item-title {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--color-fg);
+    text-decoration: none;
+    line-height: 1.3;
+  }
+  .ds-cart__item-title:hover { color: var(--color-accent); }
+  .ds-cart__item-cat {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-cart__item-variant {
+    font-size: 12px;
+    color: var(--color-fg-muted);
+    margin-top: 4px;
+  }
+  .ds-cart__item-actions {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: 6px;
+  }
+  .ds-cart__item-remove {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    cursor: pointer;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-cart__item-remove:hover { color: var(--color-fg); }
+  .ds-cart__item-price {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--color-fg);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .ds-cart__item-price-strike {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--color-fg-muted);
+  }
+  .ds-cart__item-error {
+    grid-column: 1 / -1;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-sale, #ff4d1f);
+    padding-top: 4px;
+  }
+  .ds-cart__item-error.hidden { display: none; }
+
+  /* Summary footer */
+  .ds-cart__summary {
+    padding: var(--space-5);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    flex-shrink: 0;
+    background: var(--color-bg-elev);
+  }
+  .ds-cart__summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ds-cart__sub-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  .ds-cart__sub-label { color: var(--color-fg-muted); }
+  .ds-cart__sub-value { color: var(--color-fg); }
+  .ds-cart__sub-row--discount .ds-cart__sub-value { color: var(--color-accent); }
+  .ds-cart__sub-row--total {
+    font-size: 16px;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    margin-top: var(--space-2);
+  }
+  .ds-cart__sub-row--total .ds-cart__sub-label,
+  .ds-cart__sub-row--total .ds-cart__sub-value {
+    color: var(--color-fg);
+    font-weight: 500;
+  }
+  .ds-cart__checkout-form { margin: 0; }
+  .ds-cart__checkout-btn { width: 100%; }
+  .ds-cart__note {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    text-align: center;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* Small phones: drawer takes full width */
+  @media (max-width: 480px) {
+    .ds-cart-drawer__panel {
+      width: 100vw;
+    }
+    .ds-cart__items-wrap,
+    .ds-cart__summary,
+    .ds-cart-drawer__head {
+      padding-left: var(--space-4);
+      padding-right: var(--space-4);
+    }
+  }
+
+  /* ============================================================
+     SEARCH MODAL (ds-search-modal)
+     Full-width dropdown anchored beneath the header bar.
+     The native <dialog> renders in the top layer, so we just pin it
+     with `inset` to slot directly under the sticky header — header
+     stays visible above, dropdown spans the full viewport width.
+     ============================================================ */
+  .ds-search-modal { display: contents; }
+  .ds-search-modal__dialog {
+    /* Native <dialog> defaults to margin:auto centering — beat it with
+       explicit position + size + zero margin. Important note: some
+       browsers honor `margin: 0` only on `position: fixed`, so we set
+       both explicitly (top-layer dialogs are positioned by the browser
+       but we re-pin them via inset). */
+    position: fixed;
+    margin: 0 !important;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-fg);
+    /* --ds-search-top is updated by JS below to track the live bottom
+       edge of the header (handles announce bar + scroll states). */
+    top: var(--ds-search-top, 64px);
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: 100vw !important;
+    max-width: none !important;
+    max-height: calc(100vh - var(--ds-search-top, 64px));
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+  /* Transparent backdrop — we don't want to dim the header. The dropdown
+     panel itself is dark; the page below remains visible as context. */
+  .ds-search-modal__dialog::backdrop {
+    background: transparent;
+  }
+  /* Slide-down entrance — @starting-style is the modern way to animate
+     an element from display:none → display:block (which transitions
+     normally can't catch). */
+  .ds-search-modal__dialog[open] {
+    transform: translateY(0);
+    opacity: 1;
+    transition:
+      transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      opacity   180ms ease;
+    @starting-style {
+      transform: translateY(-16px);
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-search-modal__dialog[open] {
+      transition: none;
+      @starting-style { transform: none; opacity: 1; }
+    }
+  }
+  .ds-search-modal__panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - var(--ds-search-top, 64px));
+    min-height: 0;
+    width: 100%;
+    /* Span full viewport width — inner blocks use --pad-x for their own
+       gutters, matching the header's padding so input/results align with
+       the logo + nav above them. */
+  }
+  .ds-search-modal__form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+    margin: 0;
+  }
+
+  /* Input bar (top) — horizontal padding matches the header's --pad-x
+     so the search icon lines up with the logo above it. */
+  .ds-search-modal__inputbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--pad-x);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+  .ds-search-modal__icon {
+    color: var(--color-fg-muted);
+    flex-shrink: 0;
+  }
+  .ds-search-modal__input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    padding: 6px 0;
+    outline: none;
+  }
+  .ds-search-modal__input::placeholder {
+    color: var(--color-fg-faint);
+    font-weight: 400;
+  }
+  /* Hide native search cancel button (Safari) — we use our own */
+  .ds-search-modal__input::-webkit-search-cancel-button { -webkit-appearance: none; }
+  .ds-search-modal__reset {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-fg-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+  }
+  .ds-search-modal__reset:hover { color: var(--color-fg); border-color: var(--color-fg); }
+  .ds-search-modal__close {
+    background: transparent;
+    border: 0;
+    color: var(--color-fg);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .ds-search-modal__close:hover { background: var(--color-border); }
+
+  /* Body: 2-column on desktop (sidebar + results), single column on mobile */
+  .ds-search-modal__body {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Sidebar (desktop only) */
+  .ds-search-modal__sidebar {
+    border-right: 1px solid var(--color-border);
+    overflow-y: auto;
+    padding: var(--space-5) var(--pad-x);
+    min-height: 0;
+  }
+  .ds-search-modal__sidebar-group + .ds-search-modal__sidebar-group {
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-search-modal__sidebar-head {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin-bottom: var(--space-3);
+  }
+  .ds-search-modal__sidebar-link {
+    display: block;
+    font-size: 14px;
+    color: var(--color-fg);
+    text-decoration: none;
+    padding: 6px 0;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-search-modal__sidebar-link:hover { color: var(--color-accent); }
+
+  /* Recent searches group — head has an inline "Clear" action */
+  .ds-search-modal__sidebar-head--with-action {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .ds-search-modal__sidebar-clear {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-fg-faint);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-search-modal__sidebar-clear:hover { color: var(--color-fg-muted); }
+
+  .ds-search-modal__sidebar-recent-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ds-search-modal__sidebar-recent-link {
+    background: transparent;
+    border: 0;
+    padding: 4px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--color-fg-muted);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-search-modal__sidebar-recent-link span:first-child {
+    color: var(--color-fg-faint);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .ds-search-modal__sidebar-recent-link:hover {
+    color: var(--color-fg);
+  }
+  .ds-search-modal__sidebar-recent-link:hover span:first-child {
+    color: var(--color-accent);
+  }
+
+  /* Results column (right on desktop, full on mobile) */
+  .ds-search-modal__results {
+    overflow-y: auto;
+    min-height: 0;
+    padding: 0;
+  }
+
+  /* Desktop (sidebar visible): tighten padding near the divider so the
+     gap between sidebar text and results text isn't a giant 2× --pad-x
+     dead zone on big screens. Outer edges (sidebar-left + results-right)
+     still align with the header's --pad-x. */
+  @media (min-width: 901px) {
+    .ds-search-modal__sidebar {
+      padding-right: var(--space-5);
+    }
+    .ds-search-modal__body .ds-search-results__group-head,
+    .ds-search-modal__body .ds-search-results__product-link,
+    .ds-search-modal__body .ds-search-results__suggestion-link,
+    .ds-search-modal__body .ds-search-results__collection-link,
+    .ds-search-modal__body .ds-search-results__empty,
+    .ds-search-modal__body .ds-search-results--idle {
+      padding-left: var(--space-5);
+    }
+  }
+
+  /* Mobile: collapse to single-column flow (sidebar hidden) */
+  @media (max-width: 900px) {
+    .ds-search-modal__body {
+      grid-template-columns: 1fr;
+    }
+    .ds-search-modal__sidebar { display: none; }
+  }
+
+  /* Footer */
+  .ds-search-modal__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--pad-x);
+    border-top: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+  .ds-search-modal__viewall {
+    background: transparent;
+    border: 0;
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 6px 0;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-search-modal__viewall:hover { color: var(--color-accent); }
+  .ds-search-modal__hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--color-fg-faint);
+    text-transform: uppercase;
+  }
+  .ds-search-modal__hint kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--color-border);
+    color: var(--color-fg);
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-right: 4px;
+  }
+
+  /* --- Inner result groups (rendered by ds-predictive-search section) --- */
+  .ds-search-results {
+    display: flex;
+    flex-direction: column;
+  }
+  /* Reset any vendor styles leaking from Horizon's base.css for items
+     that still carry .predictive-search-results__card (needed for the
+     component's keyboard nav). We strip transitions, hover transforms,
+     shadows, and any unintended borders. */
+  .ds-search-modal .predictive-search-results__card,
+  .ds-search-modal .predictive-search-results__card:hover {
+    transition: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    background: transparent !important;
+    will-change: auto !important;
+  }
+  /* Same for the list/wrapper containers — strip any vendor padding/spacing */
+  .ds-search-modal .predictive-search-results__list,
+  .ds-search-modal .predictive-search-results__wrapper-queries,
+  .ds-search-modal .predictive-search-results__wrapper-products {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .ds-search-results--idle {
+    padding: var(--space-7) var(--pad-x);
+    align-items: center;
+    text-align: center;
+  }
+  .ds-search-results__hint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-faint);
+    margin: 0;
+  }
+  .ds-search-results__empty {
+    padding: var(--space-6) var(--pad-x);
+    text-align: center;
+  }
+  .ds-search-results__empty-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-fg-muted);
+    margin: 0;
+  }
+  .ds-search-results__group {
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-search-results__group:first-child { border-top: 0; }
+  .ds-search-results__group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--pad-x);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    background: var(--color-bg);
+  }
+  .ds-search-results__group-count {
+    color: var(--color-fg-faint);
+    letter-spacing: 0;
+  }
+  .ds-search-results__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Product result row */
+  .ds-search-results__product-link {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-3) var(--pad-x);
+    text-decoration: none;
+    color: inherit;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .ds-search-results__product:hover .ds-search-results__product-link,
+  .ds-search-results__product:focus-within .ds-search-results__product-link,
+  .ds-search-results__product.is-active .ds-search-results__product-link {
+    background: var(--color-border);
+  }
+  .ds-search-results__product-media {
+    aspect-ratio: 1 / 1;
+    width: 48px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+  .ds-search-results__product-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .ds-search-results__product-info { min-width: 0; }
+  .ds-search-results__product-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-fg);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ds-search-results__product-cat {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin-top: 2px;
+  }
+  .ds-search-results__product-price {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-fg);
+    white-space: nowrap;
+  }
+
+  /* Suggestion + collection rows */
+  .ds-search-results__suggestion-link,
+  .ds-search-results__collection-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--pad-x);
+    text-decoration: none;
+    color: var(--color-fg);
+    font-size: 13px;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .ds-search-results__suggestion:hover .ds-search-results__suggestion-link,
+  .ds-search-results__collection:hover .ds-search-results__collection-link {
+    background: var(--color-border);
+  }
+  .ds-search-results__collection-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-fg-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* No mobile-specific overrides needed — all inner blocks use --pad-x
+     which already clamps from 16px on phones up to 80px on big monitors. */
 {% endstyle %}
 
 {% schema %}
@@ -393,6 +1385,7 @@
 {% endschema %}
 
 <script>
+  // Mobile menu drawer toggle
   (function () {
     var toggles = document.querySelectorAll('[data-ds-menu-toggle]');
     var drawer = document.querySelector('[data-ds-drawer]');
@@ -404,6 +1397,122 @@
         toggles.forEach(function (t) { t.setAttribute('aria-expanded', isOpen ? 'true' : 'false'); });
         document.body.style.overflow = isOpen ? 'hidden' : '';
       });
+    });
+  })();
+
+  // Search dropdown positioning — keep --ds-search-top in sync with the
+  // live bottom edge of the header. This accounts for:
+  //   • Announcement bar above the header (only visible at top of scroll)
+  //   • Sticky header (which stays at top when scrolled)
+  // So the dropdown always slots right under whatever's visible.
+  (function () {
+    var header = document.querySelector('.ds-header');
+    if (!header) return;
+
+    var ticking = false;
+    function syncTop() {
+      var bottom = Math.max(0, header.getBoundingClientRect().bottom);
+      document.documentElement.style.setProperty('--ds-search-top', bottom + 'px');
+      ticking = false;
+    }
+    function onScrollOrResize() {
+      if (!ticking) {
+        requestAnimationFrame(syncTop);
+        ticking = true;
+      }
+    }
+
+    syncTop();
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
+  })();
+
+  // Recent searches — track the last N queries in localStorage and
+  // render them in the sidebar of the search dropdown. Stored under a
+  // namespaced key so it doesn't collide with other Shopify themes.
+  (function () {
+    var modal       = document.getElementById('ds-search-modal');
+    if (!modal) return;
+    var dialog      = modal.querySelector('dialog');
+    var form        = modal.querySelector('.ds-search-modal__form');
+    var input       = modal.querySelector('.ds-search-modal__input');
+    var group       = modal.querySelector('[data-ds-recent-group]');
+    var list        = modal.querySelector('[data-ds-recent-list]');
+    var clearBtn    = modal.querySelector('[data-ds-recent-clear]');
+    if (!form || !input || !group || !list || !clearBtn) return;
+
+    var STORAGE_KEY = 'ds:recent-searches';
+    var MAX_ENTRIES = 6;
+
+    function read() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        var parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed.filter(function (q) { return typeof q === 'string' && q.length > 0; }) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    function write(arr) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (e) { /* quota or blocked */ }
+    }
+    function add(query) {
+      query = (query || '').trim();
+      if (!query) return;
+      var arr = read();
+      // de-dupe case-insensitively, keep newest first
+      arr = arr.filter(function (q) { return q.toLowerCase() !== query.toLowerCase(); });
+      arr.unshift(query);
+      if (arr.length > MAX_ENTRIES) arr = arr.slice(0, MAX_ENTRIES);
+      write(arr);
+    }
+    function render() {
+      var arr = read();
+      if (arr.length === 0) {
+        group.hidden = true;
+        list.innerHTML = '';
+        return;
+      }
+      // Build LI list. Each item is a button that fills the search input
+      // and triggers the predictive-search-component's own input handler.
+      list.innerHTML = arr.map(function (q) {
+        var safe = q.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        return '<li><button type="button" class="ds-search-modal__sidebar-recent-link" data-q="' + safe + '"><span aria-hidden="true">↗</span><span>' + safe + '</span></button></li>';
+      }).join('');
+      group.hidden = false;
+    }
+
+    // Re-render whenever the dialog opens, in case another tab added entries
+    if (dialog) {
+      dialog.addEventListener('toggle', function () {
+        if (dialog.open) render();
+      });
+    }
+    // Initial render on page load (in case dialog is auto-opened or pre-rendered)
+    render();
+
+    // Save on form submit (when user hits enter or clicks "View all results")
+    form.addEventListener('submit', function () {
+      add(input.value);
+    });
+
+    // Clicking a recent entry: fill the input and dispatch an input event
+    // so <predictive-search-component> picks it up via its `on:input="/search"`
+    list.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-q]');
+      if (!btn) return;
+      e.preventDefault();
+      input.value = btn.getAttribute('data-q') || '';
+      input.focus();
+      input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+    });
+
+    // Clear-all button
+    clearBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      write([]);
+      render();
     });
   })();
 </script>

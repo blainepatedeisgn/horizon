@@ -1,0 +1,67 @@
+{%- comment -%}
+  snippets/ds-cart-summary.liquid — Disrupted Studio cart drawer footer
+
+  Renders the bottom of the cart drawer: subtotal, any cart-level
+  discounts, total, checkout button, taxes/shipping note.
+
+  Designed to match the mockup's brutalist look:
+    Subtotal       $80.00
+    Launch −20%   −$16.00   (orange, only if discount present)
+    ──────────────────────
+    Total      $64.00 USD
+    [ CHECKOUT — $64.00 ]
+    Taxes calculated at checkout · Instant download
+
+  Cart-level discounts use Shopify's `cart.cart_level_discount_applications`
+  (auto-applied via discount codes or scripts). Line-level discounts are
+  already reflected in line `final_price` so they don't need a separate row.
+{%- endcomment -%}
+
+<div class="ds-cart__summary">
+  <div class="ds-cart__summary-rows">
+    <div class="ds-cart__sub-row">
+      <span class="ds-cart__sub-label">Subtotal</span>
+      <span class="ds-cart__sub-value">
+        <text-component value="{{ cart.original_total_price | money | strip_html }}">
+          {{ cart.original_total_price | money }}
+        </text-component>
+      </span>
+    </div>
+
+    {%- for discount in cart.cart_level_discount_applications -%}
+      <div class="ds-cart__sub-row ds-cart__sub-row--discount">
+        <span class="ds-cart__sub-label">{{ discount.title }}</span>
+        <span class="ds-cart__sub-value">−{{ discount.total_allocated_amount | money }}</span>
+      </div>
+    {%- endfor -%}
+
+    <div class="ds-cart__sub-row ds-cart__sub-row--total">
+      <span class="ds-cart__sub-label">Total</span>
+      <span class="ds-cart__sub-value">
+        <text-component value="{{ cart.total_price | money_with_currency | strip_html }}">
+          {{ cart.total_price | money_with_currency }}
+        </text-component>
+      </span>
+    </div>
+  </div>
+
+  <form
+    action="{{ routes.cart_url }}"
+    method="post"
+    id="cart-checkout-form"
+    class="ds-cart__checkout-form"
+    novalidate
+  >
+    <button
+      type="submit"
+      name="checkout"
+      class="ds-btn ds-btn--lg ds-btn--accent ds-cart__checkout-btn"
+    >
+      Checkout — {{ cart.total_price | money }}
+    </button>
+  </form>
+
+  <p class="ds-cart__note">
+    Taxes calculated at checkout · Instant download after purchase
+  </p>
+</div>

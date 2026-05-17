@@ -175,7 +175,7 @@
           {%- endif -%}
         </div>
         {%- if product.media.size > 1 -%}
-          <div class="ds-pdp__gallery-thumbs" data-target-id="ds-pdp-main-img-{{ section.id }}">
+          <div class="ds-pdp__gallery-thumbs">
             {%- for media in product.media limit: 8 -%}
               <button
                 type="button"
@@ -229,46 +229,112 @@
           {%- endif -%}
         </div>
 
-        {%- comment -%} BUY FORM (ATC, no quantity) {%- endcomment -%}
-        {%- form 'product', product, class: 'ds-pdp__info-form', novalidate: 'novalidate' -%}
-          {%- if product.has_only_default_variant -%}
-            <input type="hidden" name="id" value="{{ current_variant.id }}">
-          {%- else -%}
-            <div class="ds-pdp__info-variant">
-              <label class="ds-pdp__info-variant-label" for="ds-variant-{{ section.id }}">
-                {{ product.options.first | default: 'Variant' }}
-              </label>
-              <select
-                name="id"
-                id="ds-variant-{{ section.id }}"
-                class="ds-pdp__info-variant-select"
-              >
-                {%- for variant in product.variants -%}
-                  <option
-                    value="{{ variant.id }}"
-                    {% if variant.id == current_variant.id %}selected{% endif %}
-                    {% unless variant.available %}disabled{% endunless %}
-                  >
-                    {{ variant.title }} — {{ variant.price | money }}{% unless variant.available %} (sold out){% endunless %}
-                  </option>
-                {%- endfor -%}
-              </select>
-            </div>
-          {%- endif -%}
+        {%- comment -%}
+          BUY FORM (ATC, no quantity)
 
-          <button
-            type="submit"
-            name="add"
-            class="ds-btn ds-btn--lg ds-btn--full ds-pdp__info-cta"
-            {% unless current_variant.available %}disabled{% endunless %}
-          >
-            {%- if current_variant.available -%}
-              Add to cart — {{ current_variant.price | money }}
-            {%- else -%}
-              Sold out
-            {%- endif -%}
-          </button>
-        {%- endform -%}
+          Wrapped in Horizon's <product-form-component> so the submit is
+          intercepted, posted to /cart/add.js via AJAX, and a CartAddEvent
+          is dispatched. The cart-drawer-component listens for that event
+          and (because it has `auto-open`) slides itself open with the new
+          item already inside — no full page reload.
+
+          Required wiring:
+            data-section-id          — for cart morphing
+            data-product-id          — for analytics + variant events
+            on:submit="/handleSubmit" — declarative intercept
+            ref="liveRegion"         — SR announcement target (required)
+            ref="variantId"          — current variant input (required)
+
+          Variant products: the user-facing <select> drives a hidden
+          <input name="id" ref="variantId"> that the component reads. A
+          tiny inline listener keeps the two in sync on change.
+        {%- endcomment -%}
+        <script src="{{ 'product-form.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+        <product-form-component
+          data-section-id="{{ section.id }}"
+          data-product-id="{{ product.id }}"
+          on:submit="/handleSubmit"
+          class="ds-pdp__info-form-component"
+        >
+          <div
+            class="visually-hidden"
+            aria-live="assertive"
+            role="status"
+            aria-atomic="true"
+            ref="liveRegion"
+          ></div>
+
+          {%- form 'product', product, class: 'ds-pdp__info-form', novalidate: 'novalidate' -%}
+            {%- comment -%}
+              Hidden input is always the one product-form-component reads.
+              For variant products the visible <select> writes into it.
+            {%- endcomment -%}
+            <input
+              type="hidden"
+              name="id"
+              ref="variantId"
+              value="{{ current_variant.id }}"
+              data-ds-variant-input
+            >
+            <input type="hidden" name="quantity" value="1">
+
+            {%- unless product.has_only_default_variant -%}
+              <div class="ds-pdp__info-variant">
+                <label class="ds-pdp__info-variant-label" for="ds-variant-{{ section.id }}">
+                  {{ product.options.first | default: 'Variant' }}
+                </label>
+                <select
+                  id="ds-variant-{{ section.id }}"
+                  class="ds-pdp__info-variant-select"
+                  data-ds-variant-select
+                >
+                  {%- for variant in product.variants -%}
+                    <option
+                      value="{{ variant.id }}"
+                      {% if variant.id == current_variant.id %}selected{% endif %}
+                      {% unless variant.available %}disabled{% endunless %}
+                    >
+                      {{ variant.title }} — {{ variant.price | money }}{% unless variant.available %} (sold out){% endunless %}
+                    </option>
+                  {%- endfor -%}
+                </select>
+              </div>
+            {%- endunless -%}
+
+            <button
+              type="submit"
+              name="add"
+              class="ds-btn ds-btn--lg ds-btn--full ds-pdp__info-cta"
+              {% unless current_variant.available %}disabled{% endunless %}
+            >
+              {%- if current_variant.available -%}
+                Add to cart — {{ current_variant.price | money }}
+              {%- else -%}
+                Sold out
+              {%- endif -%}
+            </button>
+          {%- endform -%}
+        </product-form-component>
+
+        {%- unless product.has_only_default_variant -%}
+          {%- comment -%}
+            Tiny per-section script: keep the hidden variantId input in sync
+            with the user-facing variant select so AJAX submits the right id.
+          {%- endcomment -%}
+          <script>
+            (function () {
+              var sec = document.getElementById('shopify-section-{{ section.id }}');
+              if (!sec) return;
+              var select = sec.querySelector('[data-ds-variant-select]');
+              var hidden = sec.querySelector('[data-ds-variant-input]');
+              if (!select || !hidden) return;
+              select.addEventListener('change', function () {
+                hidden.value = select.value;
+              });
+            })();
+          </script>
+        {%- endunless -%}
 
         {%- comment -%} SUB-CTA (metafield demo_url) {%- endcomment -%}
         {%- if demo_url != blank -%}
@@ -347,7 +413,7 @@
   /* Breadcrumb */
   .ds-pdp__crumb {
     padding-top: var(--space-5);
-    padding-bottom: var(--space-3);
+    padding-bottom: var(--space-6);
     font-size: var(--fs-caps);
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -454,11 +520,17 @@
     flex-wrap: wrap;
   }
   .ds-pdp__info-cat {
+    display: inline-block;
     font-size: var(--fs-caps);
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--color-fg-muted);
+    /* Brutalist outlined chip — thin grey border, no fill, sharp corners */
+    border: 1px solid var(--color-border-strong);
+    padding: 4px 8px;
+    border-radius: 0;
+    line-height: 1;
   }
   .ds-pdp__info-badge {
     font-family: var(--font-mono);
@@ -615,6 +687,38 @@
     margin: var(--space-3) 0;
   }
   .ds-pdp__info-description li { margin-bottom: var(--space-2); }
+
+  /* -------------------------------------------------------------------
+     Mobile (≤600px) — phone-specific tightening
+     ------------------------------------------------------------------- */
+  @media (max-width: 600px) {
+    /* Title can scale down a touch on tightest screens */
+    .ds-pdp__info-title { font-size: clamp(30px, 9vw, 48px); }
+
+    /* Price shrinks slightly so it doesn't dwarf everything */
+    .ds-pdp__info-price { font-size: 24px; }
+    .ds-pdp__info-price-strike { font-size: 16px; }
+
+    /* Tagline tightens its line length on narrow */
+    .ds-pdp__info-tagline { font-size: 16px; max-width: none; }
+
+    /* Gallery thumbs — keep 4 across, just tighten the gap so squares
+       breathe more on narrow screens */
+    .ds-pdp__gallery-thumbs { gap: var(--space-2); }
+
+    /* Specs — long values were colliding with labels in the flex layout.
+       Stack label above value with a small gap on mobile. */
+    .ds-pdp__info-spec {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      padding: 12px 14px;
+    }
+    .ds-pdp__info-spec-value { text-align: left; }
+
+    /* Sub-CTA gets a bigger tap target on touch */
+    .ds-pdp__info-sub-cta a { padding: 6px 0; display: inline-block; }
+  }
 {% endstyle %}
 
 {% schema %}
@@ -642,27 +746,65 @@
 {% endschema %}
 
 <script>
-  // Thumbnail swap — minimal vanilla JS, scoped via data-target-id.
+  // Thumbnail swap — scope by nearest .ds-pdp__gallery instead of ID lookup
+  // (the old ID-based version was silently failing on some templates because
+  // section.id strings in JSON templates produce IDs that getElementById
+  // wasn't matching reliably).
   (function () {
-    var containers = document.querySelectorAll('.ds-pdp__gallery-thumbs');
-    containers.forEach(function (container) {
-      var targetId = container.getAttribute('data-target-id');
-      var mainImg = document.getElementById(targetId);
-      if (!mainImg) return;
-      container.addEventListener('click', function (e) {
+    document.querySelectorAll('.ds-pdp__gallery').forEach(function (gallery) {
+      var mainImg = gallery.querySelector('.ds-pdp__gallery-main-img');
+      var thumbs  = gallery.querySelector('.ds-pdp__gallery-thumbs');
+      if (!mainImg || !thumbs) return;
+
+      thumbs.addEventListener('click', function (e) {
         var btn = e.target.closest('.ds-pdp__gallery-thumb');
         if (!btn) return;
-        container.querySelectorAll('.ds-pdp__gallery-thumb').forEach(function (b) {
+        e.preventDefault();
+
+        var src = btn.getAttribute('data-src');
+        if (!src) return;
+
+        thumbs.querySelectorAll('.ds-pdp__gallery-thumb').forEach(function (b) {
           b.classList.remove('is-active');
         });
         btn.classList.add('is-active');
-        var src = btn.getAttribute('data-src');
-        if (src) {
-          mainImg.removeAttribute('srcset');
-          mainImg.removeAttribute('sizes');
-          mainImg.src = src;
-        }
+
+        // Wipe responsive attrs so the browser actually loads our explicit src
+        // (otherwise srcset can win and you see the original featured image)
+        mainImg.removeAttribute('srcset');
+        mainImg.removeAttribute('sizes');
+        mainImg.src = src;
       });
+    });
+  })();
+
+  // Sub-CTA smooth-scroll — if the demo_url metafield is a #anchor
+  // (e.g. "#video", "#features"), intercept the click and smooth-scroll
+  // to that PDP section, offset by the sticky header height. Full URLs
+  // (https://…, /pages/…) fall through to normal navigation.
+  (function () {
+    var link = document.querySelector('.ds-pdp__info-sub-cta a');
+    if (!link) return;
+    var href = link.getAttribute('href') || '';
+    if (href.charAt(0) !== '#' || href.length < 2) return;
+
+    link.addEventListener('click', function (e) {
+      var target = document.querySelector(href);
+      if (!target) return;
+      e.preventDefault();
+
+      // For the type specimen specifically, auto-open the glyph dropdown
+      // before scrolling. Otherwise clicking "VIEW FULL SPECIMEN" lands
+      // the user on a collapsed accordion and they'd have to click again.
+      // FAQ details intentionally stay closed (different UX expectation).
+      target.querySelectorAll('details.ds-pdp-typespecimen__details:not([open])').forEach(function (d) {
+        d.open = true;
+      });
+
+      var header = document.querySelector('.ds-header');
+      var offset = (header ? header.offsetHeight : 64) + 16;
+      var y = target.getBoundingClientRect().top + window.pageYOffset - offset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
     });
   })();
 </script>

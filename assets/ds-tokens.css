@@ -5,12 +5,23 @@
    ============================================================ */
 
 /* ------------------------------------------------------------
-   Brand fonts: Inter Tight + JetBrains Mono via Google Fonts CDN.
-   The handoff spec claimed these are in Shopify's font library but
-   they aren't — only `inter_*` is. So we load them ourselves.
-   Documented in docs/changes.md.
+   Brand fonts: Inter + IBM Plex Mono, served via Shopify's font CDN
+   (not Google Fonts directly). They're loaded by Horizon's existing
+   font-loading pipeline in snippets/theme-styles-variables.liquid,
+   driven by settings_data.json:
+       type_body_font       → inter_n4            (sans-serif)
+       type_heading_font    → inter_n6
+       type_accent_font     → ibm_plex_mono_n4    (the mono)
+
+   We previously @import-ed Inter Tight + JetBrains Mono from Google
+   Fonts. Both swapped for the closest Shopify-native equivalents:
+     • Inter Tight  → Inter         (same family, slightly looser
+                                     default tracking — compensated
+                                     for via letter-spacing in CSS)
+     • JetBrains Mono → IBM Plex Mono (designer-friendly terminal
+                                       mono, very similar character
+                                       and weight to JetBrains Mono)
    ------------------------------------------------------------ */
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300..800;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
   /* Color — these are the brand's own tokens. The Horizon-alias
@@ -31,9 +42,9 @@
   --color-button-hover:     #FFFFFF;
   --color-sale:             #FF4444;
 
-  /* Type */
-  --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  /* Type — loaded via Shopify's font_face filter in theme-styles-variables.liquid */
+  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
 
   --fs-display: clamp(56px, 9vw, 112px);
   --fs-h1:      clamp(34px, 4.4vw, 52px);
@@ -65,7 +76,8 @@
   /* Layout */
   --container-max: 1280px;
   --pad-x:         clamp(16px, 5vw, 80px);
-  --header-h:      72px;
+  --header-h:      72px;        /* legacy alias — see --header-height */
+  --header-height: 64px;        /* matches .ds-header__inner min-height; used by sticky offsets + search dropdown */
   --announce-h:    44px;
 
   /* Section rhythm — keep these in sync with .section padding in the mockup */
@@ -274,10 +286,16 @@ body {
    page grid (when we restyle it in Phase 4).
    ============================================================ */
 .ds-product-card {
+  /* Article wrapper — was the <a> in v1. The card is now split into two
+     links (media-link, meta-link) so the quick-add button can live next
+     to (not inside) the link. Layout uses flex column. */
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  cursor: pointer;
+}
+.ds-product-card__media-link,
+.ds-product-card__meta-link {
+  display: block;
   text-decoration: none;
   color: inherit;
 }
@@ -299,9 +317,15 @@ body {
   will-change: opacity, transform;
 }
 .ds-product-card__media-layer--hover { opacity: 0; }
+/* Hover state now driven by the <article> wrapper so it triggers
+   regardless of whether the cursor is over the link or the quick-add. */
 .ds-product-card:hover .ds-product-card__media-layer--primary { opacity: 0; }
 .ds-product-card:hover .ds-product-card__media-layer--hover   { opacity: 1; }
 .ds-product-card:hover .ds-product-card__media-layer          { transform: scale(1.02); }
+@media (prefers-reduced-motion: reduce) {
+  /* Drop the zoom; opacity swap is fine since it's not motion */
+  .ds-product-card:hover .ds-product-card__media-layer        { transform: none; }
+}
 .ds-product-card__img {
   width: 100%;
   height: 100%;
@@ -368,227 +392,63 @@ body {
   margin-right: 6px;
 }
 
-/* ============================================================
-   PDP RESTYLE (Phase 3 Batch 1)
-   CSS-only overrides on Horizon's product-information section +
-   its nested theme blocks (_product-details, _product-media-gallery,
-   buy-buttons-block, price, quantity-selector). NO vendor file forks.
-
-   We let Horizon's color-scheme variables flow through (background,
-   foreground, button colors come from scheme-1). Overrides below add
-   brutalist-specific traits the scheme system doesn't cover: bigger
-   display typography, mono price, all-caps tracking on the ATC button,
-   squared quantity selector, subtle border on the gallery container.
-
-   Verified class names by curl + grep on a rendered product page.
-   ============================================================ */
-
-/* Grid layout — wider gap, brand horizontal padding */
-.product-information.section {
-  padding-top: clamp(24px, 3vw, 48px);
-  padding-bottom: clamp(24px, 3vw, 48px);
+/* ----- Quick-add overlay (collection page) ----------------------
+   Compact 36x36 square in the top-RIGHT corner of the image (badge sits
+   top-LEFT so no collision). Icon-only — accessible label is on aria.
+   Sibling of the media link, anchored to .ds-product-card__media which
+   already has position:relative. */
+.ds-product-card__quick-form {
+  /* Wrapper element only — provides AJAX hooks but has no layout */
+  display: contents;
 }
-.product-information__grid {
-  gap: clamp(24px, 4vw, 56px);
-}
-
-/* Media column — subtle border + elevated bg around the gallery */
-.product-information__media .product-media-container {
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-elev);
-}
-
-/* Product title — big, tight, brutalist display weight.
-   Horizon wraps the H1 in a .text-block with a type-preset class (e.g. .h3)
-   that controls size. We override at the H1 level so any preset is overridden. */
-.product-information h1,
-.product-information [class*="text-block"] h1 {
-  font-family: var(--font-sans);
-  font-size: clamp(40px, 4.8vw, 72px);
-  font-weight: 600;
-  letter-spacing: -0.025em;
+.ds-product-card__quick {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-fg);
+  color: var(--color-bg);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 500;
   line-height: 1;
-  margin: 0;
-  width: fit-content;
-  max-width: 100%;
-}
-
-/* Price — mono, large; compare-at struck through and muted */
-.product-information .price,
-.product-information [class^="price"] {
-  font-family: var(--font-mono);
-  font-size: var(--fs-h2);
-  font-weight: 500;
-  font-feature-settings: "tnum";
-}
-.product-information .compare-at-price {
-  font-family: var(--font-mono);
-  color: var(--color-fg-faint);
-  text-decoration: line-through;
-  font-weight: 500;
-}
-
-/* Buy button — brand-spec sizing/tracking. Colors stay from scheme. */
-.add-to-cart-button.button,
-.product-form-buttons .button {
-  font-family: var(--font-sans);
-  font-size: var(--fs-caps);
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding-block: 20px;
+  border: 0;
   border-radius: 0;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+  /* Hidden by default; fades in + slight scale on card hover */
+  opacity: 0;
+  transform: scale(0.85);
+  transform-origin: top right;
   transition:
-    background var(--t-fast) var(--ease),
-    color      var(--t-fast) var(--ease),
-    transform  var(--t-fast) var(--ease);
-}
-.add-to-cart-button.button:hover,
-.product-form-buttons .button:hover {
-  transform: translateY(-1px);
-}
-
-/* Quantity selector — squared brutalist control */
-.quantity-selector,
-.quantity-selector-wrapper {
-  border-radius: 0;
-}
-.quantity-selector {
-  border: 1px solid var(--color-border-strong);
-  background: transparent;
-}
-.quantity-minus,
-.quantity-plus {
-  background: transparent;
-  color: var(--color-fg);
-  width: 44px;
-  height: 44px;
-  font-size: 18px;
-  border-radius: 0;
-  transition:
+    opacity    var(--t-fast) var(--ease),
+    transform  var(--t-fast) var(--ease),
     background var(--t-fast) var(--ease),
     color      var(--t-fast) var(--ease);
 }
-.quantity-minus:hover,
-.quantity-plus:hover {
-  background: var(--color-fg);
-  color: var(--color-bg);
+.ds-product-card:hover .ds-product-card__quick,
+.ds-product-card:focus-within .ds-product-card__quick {
+  opacity: 1;
+  transform: scale(1);
 }
-
-/* Buy-buttons block group — remove any extra rounding the parent might apply */
-[class*="buy-buttons-block"] {
-  border-radius: 0;
-}
-
-/* Sticky ATC bar — match brutalist treatment if it appears on scroll */
-.sticky-add-to-cart__bar {
-  border-top: 1px solid var(--color-border);
-}
-.sticky-add-to-cart__button.button {
-  border-radius: 0;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-/* ============================================================
-   HEADER RESTYLE (Phase 4 Batch 1)
-   CSS-only overrides on Horizon's sections/header.liquid + nested
-   components. NO vendor file forks. Selectors chain Horizon's own
-   classes for higher specificity (per handoff doc — no !important).
-
-   To finish the brand chrome, you also need to configure in admin:
-     1. Online Store → Navigation → Main menu → add items in this order:
-          Shop / Plugins / Fonts / Graphics / About
-     2. Online Store → Themes → Customize → Header section:
-          - Set logo to TEXT (clear image upload), enter "DISRUPTED STUDIO"
-          - Or upload a brand logo SVG/PNG if you have one
-   ============================================================ */
-
-/* Header background: deep black, subtle hairline divider */
-.header.header__row,
-.header .header__row--top {
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* Logo — text-style brutalist treatment */
-.header .header-logo a,
-.header .header-logo__heading {
-  font-family: var(--font-sans);
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--color-fg);
-  text-decoration: none;
-  line-height: 1;
-}
-
-/* Main menu — all caps, tracked, orange underline on hover/active */
-.header .header-menu .menu-list__link {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-fg);
-  padding-block: 6px;
-  border-bottom: 2px solid transparent;
-  transition:
-    border-color var(--t-fast) var(--ease),
-    color        var(--t-fast) var(--ease);
-}
-.header .header-menu .menu-list__link:hover {
-  border-bottom-color: var(--color-accent);
-  color: var(--color-fg);
-}
-.header .header-menu .menu-list__link--active {
-  border-bottom-color: var(--color-accent);
-  color: var(--color-fg);
-}
-
-/* Action area icons (search / account / cart / menu) */
-.header .header-actions__action {
-  color: var(--color-fg);
-}
-.header .header-actions__action:hover {
-  color: var(--color-accent);
-}
-
-/* Cart bubble — orange square with mono count */
-.header .cart-bubble__background {
+.ds-product-card__quick:hover {
   background: var(--color-accent);
-  border-radius: 0;
-  border: 0;
-}
-.header .cart-bubble__text {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
   color: var(--color-accent-fg);
-  letter-spacing: 0;
 }
 
-/* Drawer (mobile) menu items */
-.menu-drawer .menu-drawer__menu-item-text {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-fg);
-}
-.menu-drawer .menu-drawer__menu-item:hover .menu-drawer__menu-item-text {
-  color: var(--color-accent);
-}
-
-/* "SEARCH" + "CART" text labels (if shown) */
-.header .header-actions__text-style {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+/* Touch devices: no hover state, so reveal the button at low opacity
+   permanently. First tap activates instead of needing a hover. */
+@media (hover: none) {
+  .ds-product-card__quick {
+    opacity: 0.9;
+    transform: scale(1);
+  }
 }
 
 /* ============================================================

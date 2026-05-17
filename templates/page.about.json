@@ -1,0 +1,53 @@
+/*
+ * ------------------------------------------------------------
+ * Disrupted Studio — ABOUT + CONTACT page template
+ *
+ * Used for the Page in admin with handle "about" (Shopify auto-matches
+ * page.<handle>.json to a page resource of that handle). Renders the
+ * brutalist terminal-style ds-about section as the entire page body.
+ *
+ * Merchant setup
+ *   1. Admin → Online Store → Pages → Add page
+ *   2. Title: "About" (or whatever you want shown in tabs/menu)
+ *   3. Visibility: Visible
+ *   4. Theme template: pick "page.about" from the right-sidebar dropdown
+ *   5. Save. URL becomes /pages/about — link from main menu / footer.
+ *
+ * Content is edited through the theme editor (Customize → About page),
+ * not through the page body field in admin. The page body itself is
+ * ignored by this template.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "ds-about",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "studio_name": "DISRUPTED STUDIO",
+        "tagline": "Solo design studio shipping tools since 2026.",
+        "founder_role": "Designer & Builder"
+      },
+      "blocks": {
+        "stat_1": { "type": "stat", "settings": { "label": "Products shipped", "value": "03" } },
+        "stat_2": { "type": "stat", "settings": { "label": "Customers served", "value": "247" } },
+        "stat_3": { "type": "stat", "settings": { "label": "Coffees consumed", "value": "∞" } },
+
+        "manifest_1": { "type": "manifest_line", "settings": { "text": "no AI. ever." } },
+        "manifest_2": { "type": "manifest_line", "settings": { "text": "hand-built, slow & deliberate." } },
+        "manifest_3": { "type": "manifest_line", "settings": { "text": "real assets, not generated." } },
+        "manifest_4": { "type": "manifest_line", "settings": { "text": "you buy once, you own forever." } },
+
+        "log_1": { "type": "changelog_entry", "settings": { "date": "2026-05", "text": "Disrupted Studio launches" } },
+        "log_2": { "type": "changelog_entry", "settings": { "date": "2026-05", "text": "BACKLIT v1.0 ships" } },
+        "log_3": { "type": "changelog_entry", "settings": { "date": "2026-06", "text": "Next drop — TBA" } }
+      },
+      "block_order": [
+        "stat_1", "stat_2", "stat_3",
+        "manifest_1", "manifest_2", "manifest_3", "manifest_4",
+        "log_1", "log_2", "log_3"
+      ]
+    }
+  },
+  "order": ["main"]
+}

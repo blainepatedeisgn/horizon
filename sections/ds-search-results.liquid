@@ -1,0 +1,397 @@
+{%- comment -%}
+  sections/ds-search-results.liquid — Disrupted Studio search results page
+
+  Renders at /search?q=… when a shopper:
+    • clicks "View all results →" in the header search dropdown
+    • presses Enter in the search input
+    • visits /search directly
+
+  Reuses the collection page's layout primitives (.ds-collection__*) for
+  the head, sort, filter sidebar, grid, pagination — so the search page
+  and collection page share one visual system. Search-specific markup
+  (empty/no-results state, "results for X" title) lives under .ds-search__*.
+
+  The header search form already includes `type=product`, so search.results
+  contain only product objects. If a shopper hits /search?q=foo directly
+  without that param, we still render — just check object_type as we go.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs                 = section.settings.color_scheme | default: 'scheme-1'
+  assign products_per_page  = section.settings.products_per_page | default: 24
+  assign terms              = search.terms
+  assign performed          = search.performed
+  assign results            = search.results
+  assign results_count      = search.results_count
+  assign has_filters        = false
+  if search.filters.size > 0
+    assign has_filters = true
+  endif
+-%}
+
+{%- paginate results by products_per_page -%}
+<section class="ds-search ds-collection color-{{ cs }}{% unless has_filters %} ds-collection--no-filters{% endunless %}">
+  <div class="ds-collection__inner">
+
+    {%- comment -%} ----- BREADCRUMB ----- {%- endcomment -%}
+    <nav class="ds-collection__crumb" aria-label="Breadcrumb">
+      <a href="{{ routes.root_url }}" class="ds-collection__crumb-link">Home</a>
+      <span class="ds-collection__crumb-sep" aria-hidden="true">/</span>
+      <span class="ds-collection__crumb-current">Search</span>
+    </nav>
+
+    {%- comment -%} ----- IDLE STATE (visiting /search directly) ----- {%- endcomment -%}
+    {%- unless performed -%}
+      <div class="ds-search__idle">
+        <h1 class="ds-search__idle-title">Search</h1>
+        <p class="ds-search__idle-hint">
+          Use the search icon in the top bar to find products, fonts, plugins &amp; more.
+        </p>
+        <form action="{{ routes.search_url }}" method="get" class="ds-search__idle-form" role="search">
+          <input type="hidden" name="type" value="product">
+          <input type="hidden" name="options[prefix]" value="last">
+          <label for="ds-search-inline" class="visually-hidden">Search products</label>
+          <input
+            id="ds-search-inline"
+            type="search"
+            name="q"
+            class="ds-search__idle-input"
+            placeholder="Search products, fonts, plugins…"
+            autocomplete="off"
+            spellcheck="false"
+            autofocus
+          >
+          <button type="submit" class="ds-btn ds-btn--lg ds-search__idle-submit">Search →</button>
+        </form>
+      </div>
+
+    {%- else -%}
+
+      {%- comment -%} ----- HAS SEARCHED ----- {%- endcomment -%}
+      <div class="ds-collection__layout">
+
+        {%- comment -%} HEAD: title + sort {%- endcomment -%}
+        <div class="ds-collection__head">
+          <h1 class="ds-collection__title ds-search__title">
+            Results for &ldquo;{{ terms | escape }}&rdquo;
+            {%- if results_count > 0 -%}
+              <span class="ds-collection__count">
+                — {%- if results_count < 10 %}0{% endif -%}{{ results_count }}
+                {%- if results_count == 1 %} item{% else %} items{% endif -%}
+              </span>
+            {%- endif -%}
+          </h1>
+
+          {%- if search.sort_options.size > 0 and results.size > 0 -%}
+            <div class="ds-collection__sort">
+              <label for="ds-search-sort-{{ section.id }}" class="ds-collection__sort-label">Sort</label>
+              <select
+                id="ds-search-sort-{{ section.id }}"
+                class="ds-collection__sort-select"
+                data-ds-sort-select
+                aria-label="Sort search results"
+              >
+                {%- for option in search.sort_options -%}
+                  <option
+                    value="{{ option.value }}"
+                    {% if option.value == search.sort_by or option.value == search.default_sort_by %}selected{% endif %}
+                  >{{ option.name }}</option>
+                {%- endfor -%}
+              </select>
+            </div>
+          {%- endif -%}
+        </div>
+
+        {%- comment -%} FILTER SIDEBAR — same Liquid + CSS as collection {%- endcomment -%}
+        {%- if has_filters -%}
+          <aside class="ds-collection__filters" aria-label="Filters">
+            {%- for filter in search.filters -%}
+              <div class="ds-filter-group" data-filter-type="{{ filter.type }}">
+                <div class="ds-filter-group__head">{{ filter.label }}</div>
+
+                {%- case filter.type -%}
+                  {%- when 'list', 'boolean' -%}
+                    <div class="ds-filter-group__list">
+                      {%- for value in filter.values -%}
+                        <a
+                          href="{% if value.active %}{{ value.url_to_remove }}{% else %}{{ value.url_to_add }}{% endif %}"
+                          class="ds-filter-chip{% if value.active %} is-active{% endif %}{% if value.count == 0 and value.active == false %} is-disabled{% endif %}"
+                          {% if value.count == 0 and value.active == false %}aria-disabled="true" tabindex="-1"{% endif %}
+                        >
+                          <span class="ds-filter-chip__label">{{ value.label | escape }}</span>
+                          <span class="ds-filter-chip__count">
+                            {%- if value.count < 10 %}0{% endif -%}{{ value.count }}
+                          </span>
+                        </a>
+                      {%- endfor -%}
+                    </div>
+
+                  {%- when 'price_range' -%}
+                    <form method="get" class="ds-filter-price" action="{{ routes.search_url }}">
+                      <input type="hidden" name="q" value="{{ terms | escape }}">
+                      <input type="hidden" name="type" value="product">
+                      {%- for f in search.filters -%}
+                        {%- if f.type != 'price_range' -%}
+                          {%- for v in f.active_values -%}
+                            <input type="hidden" name="{{ v.param_name }}" value="{{ v.value | escape }}">
+                          {%- endfor -%}
+                        {%- endif -%}
+                      {%- endfor -%}
+                      {%- if search.sort_by != blank and search.sort_by != search.default_sort_by -%}
+                        <input type="hidden" name="sort_by" value="{{ search.sort_by }}">
+                      {%- endif -%}
+
+                      <div class="ds-filter-price__inputs">
+                        <input
+                          type="number"
+                          name="{{ filter.min_value.param_name }}"
+                          placeholder="Min"
+                          value="{% if filter.min_value.value %}{{ filter.min_value.value | divided_by: 100 }}{% endif %}"
+                          min="0"
+                          max="{{ filter.range_max | divided_by: 100 }}"
+                          class="ds-filter-price__input"
+                          aria-label="Minimum price"
+                        >
+                        <span class="ds-filter-price__sep" aria-hidden="true">–</span>
+                        <input
+                          type="number"
+                          name="{{ filter.max_value.param_name }}"
+                          placeholder="Max"
+                          value="{% if filter.max_value.value %}{{ filter.max_value.value | divided_by: 100 }}{% endif %}"
+                          min="0"
+                          max="{{ filter.range_max | divided_by: 100 }}"
+                          class="ds-filter-price__input"
+                          aria-label="Maximum price"
+                        >
+                      </div>
+                      <button type="submit" class="ds-filter-price__btn">Apply</button>
+                    </form>
+                {%- endcase -%}
+              </div>
+            {%- endfor -%}
+
+            {%- assign has_active = false -%}
+            {%- for f in search.filters -%}
+              {%- if f.active_values.size > 0 or f.min_value.value or f.max_value.value -%}
+                {%- assign has_active = true -%}
+                {%- break -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if has_active -%}
+              <a href="{{ routes.search_url }}?q={{ terms | url_encode }}&type=product" class="ds-collection__clear">
+                Clear all filters
+                <span aria-hidden="true">×</span>
+              </a>
+            {%- endif -%}
+          </aside>
+        {%- endif -%}
+
+        {%- comment -%} GRID + PAGINATION {%- endcomment -%}
+        <div class="ds-collection__grid-wrap">
+          {%- if results.size > 0 -%}
+            <div class="ds-collection__grid">
+              {%- for item in results -%}
+                {%- if item.object_type == 'product' -%}
+                  {% render 'ds-product-card', product: item, quick_add: true %}
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+
+            {%- if paginate.pages > 1 -%}
+              <nav class="ds-collection__pagination" aria-label="Pagination">
+                {%- if paginate.previous -%}
+                  <a href="{{ paginate.previous.url }}" class="ds-collection__page-link" rel="prev">← Prev</a>
+                {%- else -%}
+                  <span class="ds-collection__page-link is-disabled" aria-hidden="true">← Prev</span>
+                {%- endif -%}
+                <span class="ds-collection__page-num">
+                  Page {{ paginate.current_page }} / {{ paginate.pages }}
+                </span>
+                {%- if paginate.next -%}
+                  <a href="{{ paginate.next.url }}" class="ds-collection__page-link" rel="next">Next →</a>
+                {%- else -%}
+                  <span class="ds-collection__page-link is-disabled" aria-hidden="true">Next →</span>
+                {%- endif -%}
+              </nav>
+            {%- endif -%}
+
+          {%- else -%}
+            {%- comment -%} 0 results — terminal-style empty state {%- endcomment -%}
+            <div class="ds-search__no-results">
+              <div class="ds-search__no-results-cmd">&gt; search:  &ldquo;{{ terms | escape }}&rdquo;</div>
+              <div class="ds-search__no-results-msg">0 matches found.</div>
+              <a href="{{ routes.all_products_collection_url }}" class="ds-search__no-results-link">
+                Browse all products
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          {%- endif -%}
+        </div>
+
+      </div>
+
+    {%- endunless -%}
+
+  </div>
+</section>
+{%- endpaginate -%}
+
+<script>
+  // Sort dropdown auto-submit — same pattern as the collection page.
+  // Rewrites the URL in place so search query + filter params are preserved.
+  (function () {
+    document.querySelectorAll('[data-ds-sort-select]').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        var url = new URL(window.location.href);
+        url.searchParams.set('sort_by', sel.value);
+        url.searchParams.delete('page');
+        window.location.href = url.toString();
+      });
+    });
+  })();
+</script>
+
+{% style %}
+  /* ds-search-results — search-specific bits only.
+     Layout, head, sort, filter sidebar, grid, pagination all reuse
+     .ds-collection__* classes already styled in ds-collection-main.liquid. */
+
+  /* Idle state: when /search is hit with no query */
+  .ds-search__idle {
+    padding: clamp(48px, 8vw, 120px) 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-5);
+  }
+  .ds-search__idle-title {
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin: 0;
+  }
+  .ds-search__idle-hint {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin: 0;
+  }
+  .ds-search__idle-form {
+    display: flex;
+    gap: var(--space-3);
+    align-items: stretch;
+    width: 100%;
+    max-width: 540px;
+    margin: 0;
+  }
+  .ds-search__idle-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    padding: 14px 16px;
+    border-radius: 0;
+    outline: none;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-search__idle-input:focus { border-color: var(--color-fg); }
+  .ds-search__idle-input::placeholder { color: var(--color-fg-faint); }
+  .ds-search__idle-submit { flex-shrink: 0; }
+
+  /* "Results for X" title — slight tweak from default ds-collection__title
+     to handle the long-quoted-string case more gracefully */
+  .ds-search__title {
+    /* Wrap nicely if the query is long */
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+  }
+
+  /* 0-results empty state — terminal-style consistent with ds-about */
+  .ds-search__no-results {
+    padding: clamp(48px, 8vw, 96px) clamp(24px, 4vw, 56px);
+    border: 1px dashed var(--color-border);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    background: var(--color-bg-elev);
+  }
+  .ds-search__no-results-cmd {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-accent);
+    letter-spacing: 0.04em;
+    word-break: break-word;
+  }
+  .ds-search__no-results-msg {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--color-fg);
+    letter-spacing: 0.04em;
+  }
+  .ds-search__no-results-link {
+    margin-top: var(--space-3);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-fg);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-strong);
+    padding-bottom: 3px;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-search__no-results-link:hover { border-bottom-color: var(--color-fg); }
+
+  /* Mobile — idle form stacks */
+  @media (max-width: 600px) {
+    .ds-search__idle-form {
+      flex-direction: column;
+    }
+    .ds-search__idle-submit { width: 100%; }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted search",
+  "tag": "section",
+  "class": "ds-section ds-section--search",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Products per page",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "default": 24
+    },
+    {
+      "type": "paragraph",
+      "content": "Search results page — reuses the collection page's filter sidebar, sort dropdown and product grid. Search filters are managed via Search & Discovery in admin."
+    }
+  ],
+  "enabled_on": {
+    "templates": ["search"]
+  }
+}
+{% endschema %}

@@ -1,0 +1,137 @@
+{%- comment -%}
+  sections/ds-predictive-search.liquid — Disrupted Studio search results
+
+  Rendered server-side via the Section Rendering API when the user types
+  in the search modal. Horizon's <predictive-search-component> fetches
+  this section at `/?section_id=ds-predictive-search&q=<term>` and morphs
+  the returned HTML into the modal's results container.
+
+  Required hooks (so the JS can do keyboard arrow nav + view-all):
+    [data-search-results]                    — outer container the component scrolls
+    .predictive-search-results__card         — items keyboard nav targets
+    ref="resultsItems[]"                     — array of focusable result items
+    data-search-result-index="search-results-N" — focus index marker per item
+
+  All other classes are ours — styled brutalist in ds-header.liquid CSS.
+{%- endcomment -%}
+
+{%- if predictive_search.performed -%}
+  {%- assign products    = predictive_search.resources.products -%}
+  {%- assign queries     = predictive_search.resources.queries -%}
+  {%- assign collections = predictive_search.resources.collections -%}
+  {%- assign total       = products.size | plus: queries.size | plus: collections.size -%}
+
+  <div class="ds-search-results" data-search-results>
+
+    {%- if total == 0 -%}
+      <div class="ds-search-results__empty">
+        <p class="ds-search-results__empty-text">
+          No results for &ldquo;<strong>{{ predictive_search.terms | escape }}</strong>&rdquo;
+        </p>
+      </div>
+
+    {%- else -%}
+      {%- assign idx = 0 -%}
+
+      {%- if queries.size > 0 -%}
+        <div class="ds-search-results__group">
+          <div class="ds-search-results__group-head">Suggestions</div>
+          <ul class="ds-search-results__list predictive-search-results__list predictive-search-results__wrapper-queries">
+            {%- for q in queries -%}
+              {%- assign idx = idx | plus: 1 -%}
+              <li
+                class="ds-search-results__suggestion predictive-search-results__card"
+                ref="resultsItems[]"
+                data-search-result-index="search-results-{{ idx }}"
+              >
+                <a href="{{ q.url }}" class="ds-search-results__suggestion-link">
+                  <span aria-hidden="true">↗</span>
+                  <span>{{ q.styled_text }}</span>
+                </a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+
+      {%- if products.size > 0 -%}
+        <div class="ds-search-results__group">
+          <div class="ds-search-results__group-head">
+            Products
+            <span class="ds-search-results__group-count">{{ products.size }}</span>
+          </div>
+          <ul class="ds-search-results__list predictive-search-results__list predictive-search-results__wrapper-products">
+            {%- for product in products -%}
+              {%- assign idx = idx | plus: 1 -%}
+              <li
+                class="ds-search-results__product predictive-search-results__card"
+                ref="resultsItems[]"
+                data-search-result-index="search-results-{{ idx }}"
+              >
+                <a href="{{ product.url }}" class="ds-search-results__product-link">
+                  <div class="ds-search-results__product-media">
+                    {%- if product.featured_image -%}
+                      {{
+                        product.featured_image
+                        | image_url: width: 120
+                        | image_tag:
+                            loading: 'lazy',
+                            alt: product.title,
+                            widths: '60,120,180',
+                            sizes: '60px',
+                            class: 'ds-search-results__product-img'
+                      }}
+                    {%- endif -%}
+                  </div>
+                  <div class="ds-search-results__product-info">
+                    <div class="ds-search-results__product-title">{{ product.title }}</div>
+                    {%- if product.type != blank -%}
+                      <div class="ds-search-results__product-cat">{{ product.type }}</div>
+                    {%- endif -%}
+                  </div>
+                  <div class="ds-search-results__product-price">{{ product.price | money }}</div>
+                </a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+
+      {%- if collections.size > 0 -%}
+        <div class="ds-search-results__group">
+          <div class="ds-search-results__group-head">Collections</div>
+          <ul class="ds-search-results__list predictive-search-results__list">
+            {%- for c in collections -%}
+              {%- assign idx = idx | plus: 1 -%}
+              <li
+                class="ds-search-results__collection predictive-search-results__card"
+                ref="resultsItems[]"
+                data-search-result-index="search-results-{{ idx }}"
+              >
+                <a href="{{ c.url }}" class="ds-search-results__collection-link">
+                  <span>{{ c.title }}</span>
+                  <span class="ds-search-results__collection-count">{{ c.all_products_count }} items</span>
+                </a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+    {%- endif -%}
+  </div>
+
+{%- else -%}
+  <div class="ds-search-results ds-search-results--idle">
+    <p class="ds-search-results__hint">
+      Start typing to search products, collections &amp; more.
+    </p>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Disrupted search",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}

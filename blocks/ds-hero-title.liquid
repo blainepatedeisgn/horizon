@@ -1,13 +1,25 @@
 {%- comment -%}
   blocks/ds-hero-title.liquid
 
-  Display H1 for the hero, with a blurred white duplicate behind to create
-  a subtle glow halo. Newlines in the merchant's source become <br>.
+  Display H1 for the hero. Two visual layers behind the text:
+    1. Static white blurred duplicate (the halo)
+    2. Animated orange spotlight pseudo-element that orbits behind the
+       glyphs in a slow figure-eight (on-brand demo of BACKLIT itself).
+       Toggleable via the block's `spotlight` setting.
+
+  Newlines in the merchant's source become <br>.
 {%- endcomment -%}
 
-{%- assign safe_text = block.settings.text | escape | newline_to_br -%}
+{%- liquid
+  assign safe_text = block.settings.text | escape | newline_to_br
+  assign spotlight = block.settings.spotlight
+  assign cls = 'ds-hero-title'
+  if spotlight
+    assign cls = 'ds-hero-title ds-hero-title--spotlight'
+  endif
+-%}
 
-<h1 class="ds-hero-title" {{ block.shopify_attributes }}>
+<h1 class="{{ cls }}" {{ block.shopify_attributes }}>
   {{ safe_text }}
   <span class="ds-hero-title__glow" aria-hidden="true">{{ safe_text }}</span>
 </h1>
@@ -22,6 +34,13 @@
       "default": "Real light.\nOne click.",
       "label": "Headline",
       "info": "Each line break renders as a <br>. A blurred white duplicate sits behind to form a glow halo."
+    },
+    {
+      "type": "checkbox",
+      "id": "spotlight",
+      "default": true,
+      "label": "Animated backlight",
+      "info": "Adds a warm spotlight that orbits behind the text — like a live BACKLIT demo. Respects prefers-reduced-motion."
     }
   ]
 }

@@ -1,0 +1,665 @@
+{%- comment -%}
+  sections/ds-collection-main.liquid — Disrupted Studio collection page
+
+  Full custom replacement for Horizon's default collection section.
+  Port of the mockup's .shop layout (mockup lines 2575-2628).
+
+  Layout
+    Desktop:
+      [ breadcrumb                                                    ]
+      [ TITLE — XX items                                  Sort [▾]   ]   ← spans full width, border-bottom
+      [─── filters sidebar ───][──────── product grid ────────────────]
+      [ pagination                                                   ]
+    Mobile (≤900px):
+      Single column. Filter sidebar collapses to horizontal chips above the grid.
+
+  Filters
+    Driven by `collection.filters` — Shopify's native storefront filters
+    (Price, Product type, Tags). Merchant must enable these in admin:
+    Online Store → Navigation → Collection filters.
+
+    Filter chip URLs come from `value.url_to_add` / `value.url_to_remove`
+    which preserve all other active filters. Pure server-side, no JS.
+
+    Price filter is type="price_range" — rendered as two number inputs
+    with an Apply button (form submission).
+
+  Sort
+    Driven by `collection.sort_options` — values like 'manual',
+    'best-selling', 'price-ascending', 'created-descending'. Auto-submit
+    via tiny JS on change; preserves filter params via URL surgery.
+
+  Pagination
+    Standard Horizon paginate by N. Configurable per section.
+
+  No filters available?
+    If the merchant hasn't enabled any filters yet, the sidebar hides
+    entirely and the grid takes the full width. Same for sort if there's
+    nothing to sort.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+  assign products_per_page = section.settings.products_per_page | default: 24
+  assign has_filters = false
+  if collection.filters.size > 0
+    assign has_filters = true
+  endif
+-%}
+
+{%- paginate collection.products by products_per_page -%}
+<section class="ds-collection color-{{ cs }}{% unless has_filters %} ds-collection--no-filters{% endunless %}">
+  <div class="ds-collection__inner">
+
+    {%- comment -%} ----- BREADCRUMB ----- {%- endcomment -%}
+    <nav class="ds-collection__crumb" aria-label="Breadcrumb">
+      <a href="{{ routes.root_url }}" class="ds-collection__crumb-link">Home</a>
+      <span class="ds-collection__crumb-sep" aria-hidden="true">/</span>
+      <span class="ds-collection__crumb-current">{{ collection.title }}</span>
+    </nav>
+
+    <div class="ds-collection__layout">
+
+      {%- comment -%} ----- HEAD: title + sort ----- {%- endcomment -%}
+      <div class="ds-collection__head">
+        <h1 class="ds-collection__title">
+          {{ collection.title }}
+          {%- if collection.products_count > 0 -%}
+            <span class="ds-collection__count">
+              — {% if collection.products_count < 10 %}0{% endif %}{{ collection.products_count }}
+              {%- if collection.products_count == 1 %} item{% else %} items{% endif -%}
+            </span>
+          {%- endif -%}
+        </h1>
+
+        {%- if collection.sort_options.size > 0 -%}
+          <div class="ds-collection__sort">
+            <label for="ds-sort-{{ section.id }}" class="ds-collection__sort-label">Sort</label>
+            <select
+              id="ds-sort-{{ section.id }}"
+              class="ds-collection__sort-select"
+              data-ds-sort-select
+              aria-label="Sort products"
+            >
+              {%- for option in collection.sort_options -%}
+                <option
+                  value="{{ option.value }}"
+                  {% if option.value == collection.sort_by or option.value == collection.default_sort_by %}selected{% endif %}
+                >{{ option.name }}</option>
+              {%- endfor -%}
+            </select>
+          </div>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ----- FILTER SIDEBAR ----- {%- endcomment -%}
+      {%- if has_filters -%}
+        <aside class="ds-collection__filters" aria-label="Filters">
+          {%- for filter in collection.filters -%}
+            <div class="ds-filter-group" data-filter-type="{{ filter.type }}">
+              <div class="ds-filter-group__head">{{ filter.label }}</div>
+
+              {%- case filter.type -%}
+                {%- when 'list', 'boolean' -%}
+                  <div class="ds-filter-group__list">
+                    {%- for value in filter.values -%}
+                      <a
+                        href="{% if value.active %}{{ value.url_to_remove }}{% else %}{{ value.url_to_add }}{% endif %}"
+                        class="ds-filter-chip{% if value.active %} is-active{% endif %}{% if value.count == 0 and value.active == false %} is-disabled{% endif %}"
+                        {% if value.count == 0 and value.active == false %}aria-disabled="true" tabindex="-1"{% endif %}
+                      >
+                        <span class="ds-filter-chip__label">{{ value.label | escape }}</span>
+                        <span class="ds-filter-chip__count">
+                          {%- if value.count < 10 %}0{% endif -%}{{ value.count }}
+                        </span>
+                      </a>
+                    {%- endfor -%}
+                  </div>
+
+                {%- when 'price_range' -%}
+                  {%- comment -%}
+                    Price range: render two number inputs in a tiny form.
+                    Hidden inputs carry all OTHER active filters + current
+                    sort so submitting the price doesn't blow them away.
+                  {%- endcomment -%}
+                  <form method="get" class="ds-filter-price" action="{{ collection.url }}">
+                    {%- for f in collection.filters -%}
+                      {%- if f.type != 'price_range' -%}
+                        {%- for v in f.active_values -%}
+                          <input type="hidden" name="{{ v.param_name }}" value="{{ v.value | escape }}">
+                        {%- endfor -%}
+                      {%- endif -%}
+                    {%- endfor -%}
+                    {%- if collection.sort_by != blank and collection.sort_by != collection.default_sort_by -%}
+                      <input type="hidden" name="sort_by" value="{{ collection.sort_by }}">
+                    {%- endif -%}
+
+                    <div class="ds-filter-price__inputs">
+                      <input
+                        type="number"
+                        name="{{ filter.min_value.param_name }}"
+                        placeholder="Min"
+                        value="{% if filter.min_value.value %}{{ filter.min_value.value | divided_by: 100 }}{% endif %}"
+                        min="0"
+                        max="{{ filter.range_max | divided_by: 100 }}"
+                        class="ds-filter-price__input"
+                        aria-label="Minimum price"
+                      >
+                      <span class="ds-filter-price__sep" aria-hidden="true">–</span>
+                      <input
+                        type="number"
+                        name="{{ filter.max_value.param_name }}"
+                        placeholder="Max"
+                        value="{% if filter.max_value.value %}{{ filter.max_value.value | divided_by: 100 }}{% endif %}"
+                        min="0"
+                        max="{{ filter.range_max | divided_by: 100 }}"
+                        class="ds-filter-price__input"
+                        aria-label="Maximum price"
+                      >
+                    </div>
+                    <button type="submit" class="ds-filter-price__btn">Apply</button>
+                  </form>
+              {%- endcase -%}
+            </div>
+          {%- endfor -%}
+
+          {%- comment -%} Clear all (only if there are active filters) {%- endcomment -%}
+          {%- assign has_active = false -%}
+          {%- for f in collection.filters -%}
+            {%- if f.active_values.size > 0 or f.min_value.value or f.max_value.value -%}
+              {%- assign has_active = true -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if has_active -%}
+            <a href="{{ collection.url }}" class="ds-collection__clear">
+              Clear all filters
+              <span aria-hidden="true">×</span>
+            </a>
+          {%- endif -%}
+        </aside>
+      {%- endif -%}
+
+      {%- comment -%} ----- GRID + PAGINATION ----- {%- endcomment -%}
+      <div class="ds-collection__grid-wrap">
+        {%- if collection.products.size > 0 -%}
+          <div class="ds-collection__grid">
+            {%- for product in collection.products -%}
+              {% render 'ds-product-card', product: product, quick_add: true %}
+            {%- endfor -%}
+          </div>
+
+          {%- if paginate.pages > 1 -%}
+            <nav class="ds-collection__pagination" aria-label="Pagination">
+              {%- if paginate.previous -%}
+                <a href="{{ paginate.previous.url }}" class="ds-collection__page-link" rel="prev">← Prev</a>
+              {%- else -%}
+                <span class="ds-collection__page-link is-disabled" aria-hidden="true">← Prev</span>
+              {%- endif -%}
+              <span class="ds-collection__page-num">
+                Page {{ paginate.current_page }} / {{ paginate.pages }}
+              </span>
+              {%- if paginate.next -%}
+                <a href="{{ paginate.next.url }}" class="ds-collection__page-link" rel="next">Next →</a>
+              {%- else -%}
+                <span class="ds-collection__page-link is-disabled" aria-hidden="true">Next →</span>
+              {%- endif -%}
+            </nav>
+          {%- endif -%}
+        {%- else -%}
+          <div class="ds-collection__empty">
+            <p class="ds-collection__empty-text">
+              {%- if has_active -%}
+                No products match the current filters.
+              {%- else -%}
+                This collection is empty.
+              {%- endif -%}
+            </p>
+            {%- if has_active -%}
+              <a href="{{ collection.url }}" class="ds-collection__empty-link">Clear filters →</a>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+    </div>
+  </div>
+</section>
+{%- endpaginate -%}
+
+<script>
+  // Sort dropdown: rewrite the URL in place so existing filter params are
+  // preserved. Using URLSearchParams beats hidden form inputs because it
+  // handles repeat keys (like ?filter.v.option.color=red&color=blue) cleanly.
+  (function () {
+    document.querySelectorAll('[data-ds-sort-select]').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        var url = new URL(window.location.href);
+        url.searchParams.set('sort_by', sel.value);
+        url.searchParams.delete('page');     // drop pagination on sort change
+        window.location.href = url.toString();
+      });
+    });
+  })();
+</script>
+
+{% style %}
+  /* ds-collection-main — port of mockup .shop (lines 1412-1524) */
+  .ds-collection {
+    background: var(--color-background);
+    color: var(--color-foreground);
+  }
+  .ds-collection__inner {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+
+  /* Breadcrumb (same pattern as PDP) */
+  .ds-collection__crumb {
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-3);
+    font-size: var(--fs-caps);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .ds-collection__crumb-link {
+    color: var(--color-fg-muted);
+    text-decoration: none;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-collection__crumb-link:hover { color: var(--color-fg); }
+  .ds-collection__crumb-sep { opacity: 0.4; }
+  .ds-collection__crumb-current { color: var(--color-fg); }
+
+  /* Main two-column layout */
+  .ds-collection__layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: var(--space-7);
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-9);
+  }
+  .ds-collection--no-filters .ds-collection__layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Head: spans the full grid row */
+  .ds-collection__head {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding-bottom: var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .ds-collection__title {
+    font-size: clamp(40px, 5vw, 64px);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin: 0;
+  }
+  .ds-collection__count {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-fg-muted);
+    margin-left: 12px;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  /* Sort cluster */
+  .ds-collection__sort {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-fg-muted);
+  }
+  .ds-collection__sort-label {
+    font-size: var(--fs-caps);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-collection__sort-select {
+    background: transparent;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-fg);
+    padding: 8px 32px 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23F2F0EC' stroke-width='1'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+    border-radius: 0;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  /* Single accent ring on focus instead of a double-outline. Border tone
+     shifts; the native focus ring is suppressed for the dropdown itself. */
+  .ds-collection__sort-select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  .ds-collection__sort-select:focus-visible {
+    /* Restore a visible ring for keyboard-only nav, but use box-shadow so
+       it sits flush against the border with no offset gap. */
+    box-shadow: 0 0 0 1px var(--color-accent);
+  }
+
+  /* Filter sidebar */
+  .ds-collection__filters {
+    position: sticky;
+    top: calc(var(--header-height, 64px) + var(--space-4));
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+  .ds-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-filter-group__head {
+    font-size: var(--fs-caps);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-filter-group__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ds-filter-chip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--fs-small);
+    color: var(--color-fg);
+    opacity: 0.7;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    padding: 0;
+    transition:
+      opacity var(--t-fast) var(--ease),
+      color   var(--t-fast) var(--ease);
+  }
+  .ds-filter-chip:hover { opacity: 1; }
+  .ds-filter-chip.is-active {
+    opacity: 1;
+    color: var(--color-fg);
+    font-weight: 500;
+  }
+  .ds-filter-chip.is-disabled {
+    opacity: 0.3;
+    pointer-events: none;
+    cursor: default;
+  }
+  .ds-filter-chip__count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg-faint);
+    letter-spacing: 0;
+    margin-left: var(--space-3);
+  }
+  .ds-filter-chip.is-active .ds-filter-chip__count { color: var(--color-fg-muted); }
+
+  /* Price range form */
+  .ds-filter-price {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin: 0;
+  }
+  .ds-filter-price__inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ds-filter-price__input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-fg);
+    padding: 8px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    border-radius: 0;
+    -moz-appearance: textfield;
+  }
+  .ds-filter-price__input::-webkit-outer-spin-button,
+  .ds-filter-price__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .ds-filter-price__input::placeholder {
+    color: var(--color-fg-faint);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+  .ds-filter-price__input:focus {
+    outline: none;
+    border-color: var(--color-fg);
+  }
+  .ds-filter-price__sep {
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .ds-filter-price__btn {
+    align-self: flex-start;
+    background: transparent;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    cursor: pointer;
+    border-radius: 0;
+    transition:
+      background var(--t-fast) var(--ease),
+      color      var(--t-fast) var(--ease),
+      border-color var(--t-fast) var(--ease);
+  }
+  .ds-filter-price__btn:hover {
+    background: var(--color-fg);
+    color: var(--color-bg);
+    border-color: var(--color-fg);
+  }
+
+  /* Clear-all link */
+  .ds-collection__clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: var(--space-3);
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity var(--t-fast) var(--ease);
+  }
+  .ds-collection__clear:hover { opacity: 0.7; }
+
+  /* Product grid (same breakpoints as homepage product grid) */
+  .ds-collection__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+  @media (max-width: 1100px) {
+    .ds-collection__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    .ds-collection__grid { grid-template-columns: 1fr; }
+  }
+
+  /* Pagination */
+  .ds-collection__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin-top: var(--space-7);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .ds-collection__page-link {
+    color: var(--color-fg);
+    text-decoration: none;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-collection__page-link:hover { color: var(--color-accent); }
+  .ds-collection__page-link.is-disabled { color: var(--color-fg-faint); }
+  .ds-collection__page-num { color: var(--color-fg-muted); }
+
+  /* Empty state */
+  .ds-collection__empty {
+    padding: var(--space-9) var(--space-5);
+    text-align: center;
+    border: 1px dashed var(--color-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  .ds-collection__empty-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin: 0;
+  }
+  .ds-collection__empty-link {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-strong);
+    padding-bottom: 2px;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-collection__empty-link:hover { border-bottom-color: var(--color-fg); }
+
+  /* ---------- Mobile (≤900px) ---------- */
+  @media (max-width: 900px) {
+    .ds-collection__layout {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+      padding-top: var(--space-4);
+      padding-bottom: var(--space-7);
+    }
+    .ds-collection__head {
+      padding-bottom: var(--space-4);
+    }
+    .ds-collection__title {
+      /* allow more aggressive scaling on narrow phones */
+      font-size: clamp(32px, 9vw, 56px);
+    }
+    /* Filter sidebar becomes a horizontal chip row */
+    .ds-collection__filters {
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: var(--space-4);
+    }
+    .ds-filter-group { gap: var(--space-2); }
+    .ds-filter-group__head {
+      /* hide group labels on mobile (chips are inline) */
+      display: none;
+    }
+    .ds-filter-group__list {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .ds-filter-chip {
+      padding: 8px 14px;
+      border: 1px solid var(--color-border-strong);
+      opacity: 1;
+    }
+    .ds-filter-chip.is-active {
+      background: var(--color-fg);
+      color: var(--color-bg);
+      border-color: var(--color-fg);
+    }
+    .ds-filter-chip.is-active .ds-filter-chip__count { color: var(--color-bg); opacity: 0.6; }
+    .ds-filter-chip__count { margin-left: 6px; }
+    .ds-filter-price { flex-direction: row; align-items: center; flex-wrap: wrap; }
+    .ds-filter-price__inputs { flex: 1; max-width: 240px; }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted collection",
+  "tag": "section",
+  "class": "ds-section ds-section--collection",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Products per page",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "default": 24
+    },
+    {
+      "type": "paragraph",
+      "content": "Filters and sort options come from Shopify's native storefront filtering. To enable filters: Online Store → Navigation → Collection filters. Filters auto-appear based on product types, tags, and price."
+    }
+  ],
+  "presets": [
+    { "name": "Disrupted collection" }
+  ],
+  "enabled_on": {
+    "templates": ["collection"]
+  }
+}
+{% endschema %}

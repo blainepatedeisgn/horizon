@@ -1,0 +1,741 @@
+{%- comment -%}
+  sections/ds-about.liquid — Disrupted Studio About + Contact page
+
+  "The Terminal" direction (per the deep-research synthesis):
+  the entire page renders as a JetBrains Mono terminal readout.
+
+  Layout (top to bottom):
+    > whois <studio>     name + tagline
+    > stats              key metrics (orange values)
+    > manifest           // creed lines in code-comment style
+    > founder            key:value identity card
+    > changelog          public ship log
+    > contact            mailto + social (CLI prompt with blinking cursor)
+
+  Content model
+    Section settings:
+      studio_name        e.g. "DISRUPTED STUDIO"
+      tagline            short one-liner under name
+      founder_name / role / location / since
+      email              contact mailto destination
+      instagram, twitter, website  optional social URLs
+
+    Blocks (drag-orderable in editor):
+      stat              { label, value }  — value renders in accent orange
+      manifest_line     { text }          — rendered as `// {text}`
+      changelog_entry   { date, text }    — rendered as `<date>  <text>`
+
+    Empty blocks of a kind → that command/section silently hides.
+{%- endcomment -%}
+
+{%- liquid
+  assign studio_name      = section.settings.studio_name      | default: 'DISRUPTED STUDIO'
+  assign tagline          = section.settings.tagline          | default: 'Solo design studio shipping tools since 2026.'
+  assign founder_name     = section.settings.founder_name
+  assign founder_role     = section.settings.founder_role
+  assign founder_location = section.settings.founder_location
+  assign founder_since    = section.settings.founder_since
+  assign email            = section.settings.email
+  assign instagram        = section.settings.instagram
+  assign twitter          = section.settings.twitter
+  assign website          = section.settings.website
+  assign cs               = section.settings.color_scheme     | default: 'scheme-1'
+
+  assign stat_blocks      = section.blocks | where: 'type', 'stat'
+  assign manifest_blocks  = section.blocks | where: 'type', 'manifest_line'
+  assign changelog_blocks = section.blocks | where: 'type', 'changelog_entry'
+
+  comment
+    Founder block is shown only if at least one founder field is set
+  endcomment
+  assign has_founder = false
+  if founder_name != blank or founder_role != blank or founder_location != blank or founder_since != blank
+    assign has_founder = true
+  endif
+
+-%}
+
+<section class="ds-about color-{{ cs }}">
+  <div class="ds-about__inner">
+
+    {%- comment -%}
+      2-column layout: terminal content on the LEFT, a real contact form
+      on the RIGHT (sticky on desktop so it stays visible as you scroll
+      through the terminal sections). Collapses to single column on
+      tablet/mobile — terminal first, then form below.
+    {%- endcomment -%}
+
+    {%- comment -%} ============ LEFT: terminal sections ============ {%- endcomment -%}
+    <div class="ds-about__terminal">
+
+      {%- comment -%} ----- WHOIS ----- {%- endcomment -%}
+      <div class="ds-about__block">
+        <div class="ds-about__cmd">&gt; whois {{ studio_name | downcase | replace: ' ', '-' }}</div>
+        <h1 class="ds-about__name">{{ studio_name }}</h1>
+        {%- if tagline != blank -%}
+          <p class="ds-about__tagline">{{ tagline }}</p>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ----- STATS ----- {%- endcomment -%}
+      {%- if stat_blocks.size > 0 -%}
+        <hr class="ds-about__rule" aria-hidden="true">
+        <div class="ds-about__block">
+          <div class="ds-about__cmd">&gt; stats</div>
+          <dl class="ds-about__stats">
+            {%- for block in stat_blocks -%}
+              <div class="ds-about__stat" {{ block.shopify_attributes }}>
+                <dt class="ds-about__stat-label">{{ block.settings.label }}</dt>
+                <dd class="ds-about__stat-leader" aria-hidden="true"></dd>
+                <dd class="ds-about__stat-value">{{ block.settings.value }}</dd>
+              </div>
+            {%- endfor -%}
+          </dl>
+        </div>
+      {%- endif -%}
+
+      {%- comment -%} ----- MANIFEST ----- {%- endcomment -%}
+      {%- if manifest_blocks.size > 0 -%}
+        <hr class="ds-about__rule" aria-hidden="true">
+        <div class="ds-about__block">
+          <div class="ds-about__cmd">&gt; manifest</div>
+          <ul class="ds-about__manifest" role="list">
+            {%- for block in manifest_blocks -%}
+              <li class="ds-about__manifest-line" {{ block.shopify_attributes }}>
+                <span class="ds-about__manifest-slashes" aria-hidden="true">//</span>
+                {{ block.settings.text }}
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+
+      {%- comment -%} ----- FOUNDER ----- {%- endcomment -%}
+      {%- if has_founder -%}
+        <hr class="ds-about__rule" aria-hidden="true">
+        <div class="ds-about__block">
+          <div class="ds-about__cmd">&gt; founder</div>
+          <dl class="ds-about__kv">
+            {%- if founder_name != blank -%}
+              <div class="ds-about__kv-row"><dt>name:</dt><dd>{{ founder_name }}</dd></div>
+            {%- endif -%}
+            {%- if founder_role != blank -%}
+              <div class="ds-about__kv-row"><dt>role:</dt><dd>{{ founder_role }}</dd></div>
+            {%- endif -%}
+            {%- if founder_location != blank -%}
+              <div class="ds-about__kv-row"><dt>location:</dt><dd>{{ founder_location }}</dd></div>
+            {%- endif -%}
+            {%- if founder_since != blank -%}
+              <div class="ds-about__kv-row"><dt>since:</dt><dd>{{ founder_since }}</dd></div>
+            {%- endif -%}
+          </dl>
+        </div>
+      {%- endif -%}
+
+      {%- comment -%} ----- CHANGELOG ----- {%- endcomment -%}
+      {%- if changelog_blocks.size > 0 -%}
+        <hr class="ds-about__rule" aria-hidden="true">
+        <div class="ds-about__block">
+          <div class="ds-about__cmd">&gt; changelog</div>
+          <ul class="ds-about__changelog" role="list">
+            {%- for block in changelog_blocks -%}
+              <li {{ block.shopify_attributes }}>
+                <span class="ds-about__changelog-date">{{ block.settings.date }}</span>
+                <span class="ds-about__changelog-text">{{ block.settings.text }}</span>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+
+    </div>
+
+    {%- comment -%} ============ RIGHT: contact form ============ {%- endcomment -%}
+    <aside class="ds-about__panel" aria-label="Send a message">
+      <div class="ds-about__block">
+        <div class="ds-about__cmd">&gt; send a message</div>
+
+        {%- form 'contact', class: 'ds-about__form', id: 'ds-about-contact' -%}
+          {%- if form.posted_successfully? -%}
+            <div class="ds-about__form-success" role="status">
+              <p><strong>Message received.</strong></p>
+              <p>Usually replies within 24h.</p>
+            </div>
+          {%- elsif form.errors -%}
+            <div class="ds-about__form-errors" role="alert">
+              <p><strong>Could not send:</strong></p>
+              <ul>
+                {%- for field in form.errors -%}
+                  <li>{{ form.errors.translated_fields[field] | capitalize }} {{ form.errors.messages[field] }}</li>
+                {%- endfor -%}
+              </ul>
+            </div>
+          {%- endif -%}
+
+          <div class="ds-about__field">
+            <label for="ds-contact-name" class="ds-about__field-label">Name</label>
+            <input
+              type="text"
+              name="contact[name]"
+              id="ds-contact-name"
+              class="ds-about__field-input"
+              value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}"
+              autocomplete="name"
+            >
+          </div>
+
+          <div class="ds-about__field">
+            <label for="ds-contact-email" class="ds-about__field-label">Email *</label>
+            <input
+              type="email"
+              name="contact[email]"
+              id="ds-contact-email"
+              class="ds-about__field-input"
+              value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"
+              required
+              aria-required="true"
+              autocomplete="email"
+              spellcheck="false"
+            >
+          </div>
+
+          <div class="ds-about__field">
+            <label for="ds-contact-subject" class="ds-about__field-label">Subject</label>
+            <input
+              type="text"
+              name="contact[subject]"
+              id="ds-contact-subject"
+              class="ds-about__field-input"
+              value="{% if form.subject %}{{ form.subject }}{% endif %}"
+            >
+          </div>
+
+          <div class="ds-about__field">
+            <label for="ds-contact-body" class="ds-about__field-label">Message *</label>
+            <textarea
+              name="contact[body]"
+              id="ds-contact-body"
+              class="ds-about__field-input ds-about__field-input--textarea"
+              rows="5"
+              required
+              aria-required="true"
+            >{% if form.body %}{{ form.body }}{% endif %}</textarea>
+          </div>
+
+          <button type="submit" class="ds-btn ds-btn--lg ds-about__form-submit">
+            Send message
+          </button>
+        {%- endform -%}
+      </div>
+
+      {%- comment -%} ----- SOCIAL / SECONDARY CONTACT ----- {%- endcomment -%}
+      {%- if email != blank or instagram != blank or twitter != blank or website != blank -%}
+        <div class="ds-about__panel-meta">
+          {%- if email != blank -%}
+            <p class="ds-about__panel-meta-item">
+              <span class="ds-about__panel-meta-label">or email:</span>
+              <a href="mailto:{{ email }}">{{ email }}</a>
+            </p>
+          {%- endif -%}
+          {%- if instagram != blank or twitter != blank or website != blank -%}
+            <ul class="ds-about__contact-meta-list" role="list">
+              {%- if instagram != blank -%}
+                <li><a href="{{ instagram }}" class="ds-about__contact-meta" target="_blank" rel="noopener">→ instagram</a></li>
+              {%- endif -%}
+              {%- if twitter != blank -%}
+                <li><a href="{{ twitter }}" class="ds-about__contact-meta" target="_blank" rel="noopener">→ twitter</a></li>
+              {%- endif -%}
+              {%- if website != blank -%}
+                <li><a href="{{ website }}" class="ds-about__contact-meta" target="_blank" rel="noopener">→ website</a></li>
+              {%- endif -%}
+            </ul>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </aside>
+
+  </div>
+</section>
+
+{% style %}
+  /* ds-about — terminal-style About + Contact page */
+  .ds-about {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding-top: clamp(48px, 8vw, 120px);
+    padding-bottom: clamp(64px, 10vw, 160px);
+    font-family: var(--font-mono);
+  }
+  .ds-about__inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+    display: grid;
+    /* Left = terminal (flex), right = contact form (sticky 380px) */
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: clamp(48px, 6vw, 96px);
+    align-items: start;
+  }
+  .ds-about__terminal { min-width: 0; }
+  .ds-about__panel {
+    position: sticky;
+    top: calc(var(--header-height, 64px) + var(--space-5));
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  /* Stack on tablet + below */
+  @media (max-width: 900px) {
+    .ds-about__inner {
+      grid-template-columns: 1fr;
+      gap: clamp(48px, 8vw, 80px);
+    }
+    .ds-about__panel { position: static; }
+  }
+
+  /* Command prompt heading for every block */
+  .ds-about__cmd {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-accent);
+    letter-spacing: 0.06em;
+    margin: 0 0 var(--space-4);
+    /* Subtle bottom border for command-line feel */
+    line-height: 1;
+  }
+
+  /* ASCII-style dashed rules between blocks */
+  .ds-about__rule {
+    border: 0;
+    border-top: 1px dashed var(--color-border-strong);
+    margin: clamp(40px, 6vw, 64px) 0;
+  }
+  .ds-about__block {
+    /* Vertical rhythm within a block */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  /* WHOIS — studio name + tagline */
+  .ds-about__name {
+    font-family: var(--font-sans);
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin: 0;
+    color: var(--color-fg);
+  }
+  .ds-about__tagline {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-fg-muted);
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  /* STATS — label · · · value, value in orange */
+  .ds-about__stats {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ds-about__stat {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-size: 14px;
+  }
+  .ds-about__stat-label {
+    color: var(--color-fg-muted);
+    margin: 0;
+  }
+  /* Dotted leader between label and value (the "……" effect) */
+  .ds-about__stat-leader {
+    margin: 0;
+    border-bottom: 1px dotted var(--color-fg-faint);
+    transform: translateY(-3px);
+  }
+  .ds-about__stat-value {
+    color: var(--color-accent);
+    font-weight: 500;
+    margin: 0;
+    font-feature-settings: "tnum";
+  }
+
+  /* MANIFEST — code-comment style */
+  .ds-about__manifest {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .ds-about__manifest-line {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-fg);
+    display: flex;
+    gap: 10px;
+  }
+  .ds-about__manifest-slashes {
+    color: var(--color-fg-faint);
+    flex-shrink: 0;
+  }
+
+  /* FOUNDER — key:value identity card */
+  .ds-about__kv {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ds-about__kv-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: var(--space-3);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .ds-about__kv-row dt {
+    color: var(--color-fg-muted);
+    margin: 0;
+  }
+  .ds-about__kv-row dd {
+    color: var(--color-fg);
+    margin: 0;
+  }
+
+  /* CHANGELOG — date + text */
+  .ds-about__changelog {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ds-about__changelog li {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: var(--space-3);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .ds-about__changelog-date {
+    color: var(--color-fg-muted);
+    font-feature-settings: "tnum";
+  }
+  .ds-about__changelog-text {
+    color: var(--color-fg);
+  }
+
+  /* CONTACT — CLI prompt with blinking cursor */
+  .ds-about__block--contact { gap: var(--space-3); }
+  .ds-about__contact-prompt {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: clamp(22px, 3.6vw, 36px);
+    font-weight: 500;
+    color: var(--color-fg);
+    text-decoration: none;
+    line-height: 1.1;
+    padding: var(--space-2) 0;
+    transition: color var(--t-fast) var(--ease);
+    align-self: flex-start;
+  }
+  .ds-about__contact-prompt-prefix {
+    color: var(--color-accent);
+  }
+  .ds-about__contact-prompt:hover { color: var(--color-accent); }
+  .ds-about__contact-prompt:hover .ds-about__contact-prompt-prefix { color: var(--color-fg); }
+
+  .ds-about__cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1em;
+    background: currentColor;
+    margin-left: 2px;
+    animation: ds-about-blink 1.05s steps(1, end) infinite;
+    transform: translateY(2px);
+  }
+  @keyframes ds-about-blink {
+    50% { opacity: 0; }
+  }
+
+  .ds-about__contact-hint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg-muted);
+    letter-spacing: 0.04em;
+    margin: 0;
+  }
+
+  .ds-about__contact-meta-list {
+    list-style: none;
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+  }
+  .ds-about__contact-meta {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-fg-muted);
+    text-decoration: none;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-about__contact-meta:hover { color: var(--color-fg); }
+
+  /* Reduced motion: stop the cursor blink */
+  @media (prefers-reduced-motion: reduce) {
+    .ds-about__cursor { animation: none; opacity: 1; }
+  }
+
+  /* ----- CONTACT FORM (right panel) ----- */
+  .ds-about__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin: 0;
+  }
+  .ds-about__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ds-about__field-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-about__field-input {
+    background: transparent;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 12px 14px;
+    border-radius: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-about__field-input::placeholder { color: var(--color-fg-faint); }
+  .ds-about__field-input:focus {
+    outline: none;
+    border-color: var(--color-fg);
+  }
+  .ds-about__field-input--textarea {
+    resize: vertical;
+    min-height: 120px;
+    font-family: var(--font-sans);
+  }
+  .ds-about__form-submit {
+    margin-top: var(--space-2);
+    align-self: stretch;
+  }
+
+  /* Form success / error messages — terminal feel */
+  .ds-about__form-success,
+  .ds-about__form-errors {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.6;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border-strong);
+    margin-bottom: var(--space-2);
+  }
+  .ds-about__form-success {
+    border-color: var(--color-accent);
+    color: var(--color-fg);
+  }
+  .ds-about__form-success strong { color: var(--color-accent); }
+  .ds-about__form-success p { margin: 0; }
+  .ds-about__form-success p + p { margin-top: 4px; color: var(--color-fg-muted); }
+  .ds-about__form-errors {
+    color: var(--color-fg);
+    border-color: var(--color-sale, var(--color-accent));
+  }
+  .ds-about__form-errors strong { color: var(--color-sale, var(--color-accent)); }
+  .ds-about__form-errors p { margin: 0 0 4px; }
+  .ds-about__form-errors ul { margin: 0; padding-left: 16px; color: var(--color-fg-muted); }
+
+  /* Panel meta (email + socials under the form) */
+  .ds-about__panel-meta {
+    padding-top: var(--space-5);
+    border-top: 1px dashed var(--color-border-strong);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-about__panel-meta-item {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-fg-muted);
+    margin: 0;
+  }
+  .ds-about__panel-meta-label { margin-right: 6px; }
+  .ds-about__panel-meta-item a {
+    color: var(--color-fg);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-strong);
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-about__panel-meta-item a:hover { border-bottom-color: var(--color-fg); }
+
+  /* Mobile — tighten the key-column widths so values don't get squashed */
+  @media (max-width: 600px) {
+    .ds-about__kv-row,
+    .ds-about__changelog li {
+      grid-template-columns: 90px 1fr;
+      font-size: 13px;
+    }
+    .ds-about__stat { font-size: 13px; }
+    .ds-about__name { font-size: clamp(32px, 9vw, 48px); }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted about",
+  "tag": "section",
+  "class": "ds-section ds-section--about",
+  "enabled_on": {
+    "templates": ["page"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    { "type": "header", "content": "Identity" },
+    {
+      "type": "text",
+      "id": "studio_name",
+      "default": "DISRUPTED STUDIO",
+      "label": "Studio name"
+    },
+    {
+      "type": "text",
+      "id": "tagline",
+      "default": "Solo design studio shipping tools since 2026.",
+      "label": "Tagline (under the name)"
+    },
+    { "type": "header", "content": "Founder" },
+    {
+      "type": "text",
+      "id": "founder_name",
+      "label": "Founder name",
+      "info": "Renders as `name:` under the > founder command. Leave blank to hide the whole founder block."
+    },
+    {
+      "type": "text",
+      "id": "founder_role",
+      "label": "Role",
+      "default": "Designer & Builder"
+    },
+    {
+      "type": "text",
+      "id": "founder_location",
+      "label": "Location"
+    },
+    {
+      "type": "text",
+      "id": "founder_since",
+      "label": "Since (year)"
+    },
+    { "type": "header", "content": "Contact" },
+    {
+      "type": "text",
+      "id": "email",
+      "label": "Contact email",
+      "info": "The `> mail --to founder` prompt opens a mailto: to this address."
+    },
+    {
+      "type": "url",
+      "id": "instagram",
+      "label": "Instagram URL"
+    },
+    {
+      "type": "url",
+      "id": "twitter",
+      "label": "Twitter / X URL"
+    },
+    {
+      "type": "url",
+      "id": "website",
+      "label": "Personal site / portfolio URL"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "stat",
+      "name": "Stat",
+      "limit": 12,
+      "settings": [
+        { "type": "text", "id": "label", "label": "Label", "default": "Products shipped" },
+        { "type": "text", "id": "value", "label": "Value", "info": "Renders in accent orange. Use ∞ for poetic ones (e.g. coffees consumed)." }
+      ]
+    },
+    {
+      "type": "manifest_line",
+      "name": "Manifest line",
+      "limit": 8,
+      "settings": [
+        { "type": "text", "id": "text", "label": "Line", "default": "no AI. ever.", "info": "Rendered as `// {text}`" }
+      ]
+    },
+    {
+      "type": "changelog_entry",
+      "name": "Changelog entry",
+      "limit": 20,
+      "settings": [
+        { "type": "text", "id": "date", "label": "Date",  "default": "2026-05", "info": "Short date string. Renders in muted." },
+        { "type": "text", "id": "text", "label": "Entry", "default": "Disrupted Studio launches" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Disrupted about",
+      "settings": {
+        "studio_name": "DISRUPTED STUDIO",
+        "tagline": "Solo design studio shipping tools since 2026.",
+        "founder_role": "Designer & Builder"
+      },
+      "blocks": [
+        { "type": "stat", "settings": { "label": "Products shipped",  "value": "03"  } },
+        { "type": "stat", "settings": { "label": "Customers served",  "value": "247" } },
+        { "type": "stat", "settings": { "label": "Coffees consumed",  "value": "∞"   } },
+
+        { "type": "manifest_line", "settings": { "text": "no AI. ever." } },
+        { "type": "manifest_line", "settings": { "text": "hand-built, slow & deliberate." } },
+        { "type": "manifest_line", "settings": { "text": "real assets, not generated." } },
+        { "type": "manifest_line", "settings": { "text": "you buy once, you own forever." } },
+
+        { "type": "changelog_entry", "settings": { "date": "2026-05", "text": "Disrupted Studio launches" } },
+        { "type": "changelog_entry", "settings": { "date": "2026-05", "text": "BACKLIT v1.0 ships" } },
+        { "type": "changelog_entry", "settings": { "date": "2026-06", "text": "Next drop — TBA" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

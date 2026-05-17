@@ -38,7 +38,7 @@
     }
   </style>
 
-  <section class="ds-pdp-typespecimen ds-pdp-typespecimen--{{ section.id }} color-{{ cs }}">
+  <section id="specimen" class="ds-pdp-typespecimen ds-pdp-typespecimen--{{ section.id }} color-{{ cs }}">
     <div class="ds-pdp-typespecimen__inner">
 
       {%- if section.settings.heading != blank or section.settings.subhead != blank -%}
@@ -106,36 +106,39 @@
         aria-label="Editable specimen text — type to preview"
       >{{ specimen_quote }}</div>
 
-      {%- if section.settings.show_alphabet -%}
-        <div class="ds-pdp-typespecimen__row">
-          <div class="ds-pdp-typespecimen__row-label">Uppercase</div>
-          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
-        </div>
-        <div class="ds-pdp-typespecimen__row">
-          <div class="ds-pdp-typespecimen__row-label">Lowercase</div>
-          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">abcdefghijklmnopqrstuvwxyz</div>
-        </div>
-      {%- endif -%}
+      {%- if section.settings.show_alphabet or section.settings.show_numbers or section.settings.show_glyphs -%}
+        <details class="ds-pdp-typespecimen__details">
+          <summary class="ds-pdp-typespecimen__details-summary">
+            <span class="ds-pdp-typespecimen__details-label">{{ section.settings.link_label | default: 'See the full specimen' }}</span>
+            <span class="ds-pdp-typespecimen__details-arrow" aria-hidden="true">→</span>
+          </summary>
+          <div class="ds-pdp-typespecimen__details-content">
+            {%- if section.settings.show_alphabet -%}
+              <div class="ds-pdp-typespecimen__row" data-row-kind="uppercase">
+                <div class="ds-pdp-typespecimen__row-label">Uppercase</div>
+                <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+              </div>
+              <div class="ds-pdp-typespecimen__row" data-row-kind="lowercase">
+                <div class="ds-pdp-typespecimen__row-label">Lowercase</div>
+                <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">abcdefghijklmnopqrstuvwxyz</div>
+              </div>
+            {%- endif -%}
 
-      {%- if section.settings.show_numbers -%}
-        <div class="ds-pdp-typespecimen__row">
-          <div class="ds-pdp-typespecimen__row-label">Numerals</div>
-          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">0123456789</div>
-        </div>
-      {%- endif -%}
+            {%- if section.settings.show_numbers -%}
+              <div class="ds-pdp-typespecimen__row" data-row-kind="numerals">
+                <div class="ds-pdp-typespecimen__row-label">Numerals</div>
+                <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">0123456789</div>
+              </div>
+            {%- endif -%}
 
-      {%- if section.settings.show_glyphs -%}
-        <div class="ds-pdp-typespecimen__row">
-          <div class="ds-pdp-typespecimen__row-label">Symbols</div>
-          <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">! @ # $ % &amp; * ? . , ; : - + = / \ ( ) [ ] { } &lt; &gt; &quot; &apos;</div>
-        </div>
-      {%- endif -%}
-
-      {%- if section.settings.link_label != blank -%}
-        <a href="{{ section.settings.link_url | default: '#' }}" class="ds-pdp-typespecimen__link">
-          {{ section.settings.link_label }}
-          <span class="ds-pdp-typespecimen__link-arrow" aria-hidden="true">→</span>
-        </a>
+            {%- if section.settings.show_glyphs -%}
+              <div class="ds-pdp-typespecimen__row" data-row-kind="symbols">
+                <div class="ds-pdp-typespecimen__row-label">Symbols</div>
+                <div class="ds-pdp-typespecimen__row-text ds-pdp-typespecimen__live">! @ # $ % &amp; * ? . , ; : - + = / \ ( ) [ ] { } &lt; &gt; &quot; &apos;</div>
+              </div>
+            {%- endif -%}
+          </div>
+        </details>
       {%- endif -%}
 
     </div>
@@ -143,8 +146,60 @@
 
   <script>
     (function () {
+      var FONT_FAMILY = '{{ font_family }}';
       var sections = document.querySelectorAll('.ds-pdp-typespecimen--{{ section.id }}');
+
+      // --- Glyph detection ------------------------------------------------
+      // Compare the width of a character rendered with [our font, monospace]
+      // vs [our font, serif]. If our font has the glyph, both stacks use it
+      // and widths match. If our font is missing the glyph, the two fallback
+      // fonts kick in — and monospace vs serif almost always have different
+      // widths, so a mismatch ⇒ glyph missing.
+      var detectCanvas = document.createElement('canvas');
+      var detectCtx = detectCanvas.getContext('2d');
+      function fontHasGlyph(family, ch) {
+        detectCtx.font = '32px "' + family + '", monospace';
+        var w1 = detectCtx.measureText(ch).width;
+        detectCtx.font = '32px "' + family + '", serif';
+        var w2 = detectCtx.measureText(ch).width;
+        return w1 === w2;
+      }
+      function filterRows(section) {
+        var rows = section.querySelectorAll('.ds-pdp-typespecimen__row');
+        var visibleCount = 0;
+        rows.forEach(function (row) {
+          var textEl = row.querySelector('.ds-pdp-typespecimen__row-text');
+          if (!textEl) return;
+          var original = textEl.textContent;
+          var hasSpaces = original.indexOf(' ') !== -1;
+          var glyphs = hasSpaces ? original.trim().split(/\s+/) : original.split('');
+          var supported = glyphs.filter(function (g) {
+            return fontHasGlyph(FONT_FAMILY, g);
+          });
+          if (supported.length === 0) {
+            row.style.display = 'none';
+          } else {
+            visibleCount++;
+            if (supported.length !== glyphs.length) {
+              textEl.textContent = supported.join(hasSpaces ? ' ' : '');
+            }
+          }
+        });
+        // If every row was filtered out, hide the dropdown wrapper too —
+        // there's nothing for the toggle to reveal.
+        if (visibleCount === 0) {
+          var details = section.querySelector('.ds-pdp-typespecimen__details');
+          if (details) details.style.display = 'none';
+        }
+      }
+
       sections.forEach(function (section) {
+        // Wait for the @font-face to actually load before measuring, or we'll
+        // see the system-fallback widths and incorrectly drop every glyph.
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(function () { filterRows(section); });
+        }
+
         var quote = section.querySelector('.ds-pdp-typespecimen__quote');
         var inputs = section.querySelectorAll('[data-ds-specimen-target]');
         var resetBtn = section.querySelector('[data-ds-specimen-reset]');
@@ -227,7 +282,11 @@
     line-height: 0.95;
     margin: clamp(32px, 5vw, 56px) 0;
     color: var(--color-fg);
-    overflow-wrap: break-word;
+    /* Break inside long words too, so the user dragging the size slider
+       to its max on a narrow screen can't push the section into horizontal
+       scroll. `anywhere` is the modern, more aggressive break-word. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
     transition: font-size var(--t-fast) var(--ease), letter-spacing var(--t-fast) var(--ease);
     outline: none;
     cursor: text;
@@ -265,8 +324,14 @@
     font-size: clamp(20px, 2.5vw, 32px);
     line-height: 1.2;
     color: var(--color-fg);
-    word-spacing: 0.15em;
+    letter-spacing: 0.06em;
+    word-spacing: 0.4em;
     overflow-wrap: break-word;
+  }
+  /* Symbols row gets even more breathing room */
+  .ds-pdp-typespecimen__row[data-row-kind="symbols"] .ds-pdp-typespecimen__row-text {
+    letter-spacing: 0.12em;
+    word-spacing: 0.55em;
   }
   @media (max-width: 700px) {
     .ds-pdp-typespecimen__row {
@@ -289,32 +354,49 @@
     flex-wrap: wrap;
   }
 
-  /* "See the full specimen →" link, at the bottom of the section */
-  .ds-pdp-typespecimen__link {
-    display: inline-flex;
+  /* "See the full specimen →" dropdown — full-width accordion row,
+     label flush left, arrow flush right, separators span the whole
+     section width (same pattern as the FAQ accordion). */
+  .ds-pdp-typespecimen__details {
+    margin-top: clamp(32px, 5vw, 56px);
+    border-top: 1px solid var(--color-border);
+  }
+  /* When the dropdown is collapsed, close it off with a bottom rule too,
+     so the summary reads as a complete row. When open, the last row
+     inside the content already provides the closing line, so we omit it
+     to avoid a doubled border. */
+  .ds-pdp-typespecimen__details:not([open]) {
+    border-bottom: 1px solid var(--color-border);
+  }
+  .ds-pdp-typespecimen__details-summary {
+    list-style: none;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: var(--space-5);
+    justify-content: space-between;     /* text left, arrow right */
+    gap: var(--space-4);
+    padding: var(--space-5) 0;
+    cursor: pointer;
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-fg);
-    text-decoration: none;
-    border-bottom: 1px solid var(--color-border-strong);
-    padding-bottom: 4px;
-    transition: border-color var(--t-fast) var(--ease);
+    user-select: none;
+    transition: color var(--t-fast) var(--ease);
   }
-  .ds-pdp-typespecimen__link:hover {
-    border-bottom-color: var(--color-fg);
+  /* Hide the native disclosure triangle in both engine families */
+  .ds-pdp-typespecimen__details-summary::-webkit-details-marker { display: none; }
+  .ds-pdp-typespecimen__details-summary::marker { content: ''; }
+  .ds-pdp-typespecimen__details-summary:hover {
+    color: var(--color-accent);
   }
-  .ds-pdp-typespecimen__link-arrow {
+  .ds-pdp-typespecimen__details-arrow {
     display: inline-block;
-    transition: transform var(--t-fast) var(--ease);
+    transition: transform var(--t-med) var(--ease);
   }
-  .ds-pdp-typespecimen__link:hover .ds-pdp-typespecimen__link-arrow {
-    transform: translateX(3px);
+  .ds-pdp-typespecimen__details[open] .ds-pdp-typespecimen__details-arrow {
+    transform: rotate(90deg);
   }
 
   /* Sliders — Pangram Pangram-inspired pro layout */
@@ -356,22 +438,35 @@
     margin-left: 4px;
     font-size: 10px;
   }
+  /* Native range input — browsers draw their own track in the
+     ::-webkit-slider-runnable-track / ::-moz-range-track pseudos, so
+     setting `background` on the input itself doesn't show a bar.
+     Reset the input chrome, then style track + thumb explicitly. */
   .ds-pdp-typespecimen__range {
     -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     width: 100%;
-    height: 2px;
-    background: var(--color-fg-faint);
+    background: transparent;     /* track is drawn by pseudo-element below */
     outline: none;
     cursor: pointer;
     padding: 0;
     margin: 0;
+    height: 16px;                /* total slider height = thumb height */
+  }
+  /* WebKit / Blink */
+  .ds-pdp-typespecimen__range::-webkit-slider-runnable-track {
+    height: 2px;
+    background: var(--color-fg-faint);
+    border: 0;
+    border-radius: 0;
   }
   .ds-pdp-typespecimen__range::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 16px;
     height: 16px;
+    margin-top: -7px;            /* center 16px thumb on 2px track */
     background: var(--color-fg);
     border-radius: 0;
     border: 0;
@@ -381,6 +476,13 @@
   .ds-pdp-typespecimen__range::-webkit-slider-thumb:active {
     cursor: grabbing;
     background: var(--color-accent);
+  }
+  /* Firefox */
+  .ds-pdp-typespecimen__range::-moz-range-track {
+    height: 2px;
+    background: var(--color-fg-faint);
+    border: 0;
+    border-radius: 0;
   }
   .ds-pdp-typespecimen__range::-moz-range-thumb {
     width: 16px;
@@ -424,9 +526,14 @@
   }
 
   @media (max-width: 700px) {
+    .ds-pdp-typespecimen {
+      padding: clamp(40px, 9vw, 64px) 0;
+    }
     .ds-pdp-typespecimen__controls {
       flex-direction: column;
       align-items: stretch;
+      padding: var(--space-4) 0;
+      gap: var(--space-4);
     }
     .ds-pdp-typespecimen__sliders {
       flex-direction: column;
@@ -435,6 +542,11 @@
     }
     .ds-pdp-typespecimen__control { min-width: 0; }
     .ds-pdp-typespecimen__reset { align-self: flex-start; }
+    /* Quote min size pulls in so it actually fits a phone screen */
+    .ds-pdp-typespecimen__quote {
+      font-size: var(--ds-specimen-size, clamp(36px, 11vw, 72px));
+      margin: var(--space-4) 0;
+    }
   }
 {% endstyle %}
 
@@ -500,19 +612,13 @@
       "type": "paragraph",
       "content": "Requires the product's `disrupted.font_file` metafield to be set with a .woff2 / .ttf / .otf file. Section hides if no font is uploaded."
     },
-    { "type": "header", "content": "Full specimen link" },
+    { "type": "header", "content": "Full specimen toggle" },
     {
       "type": "text",
       "id": "link_label",
       "default": "See the full specimen",
-      "label": "Link label",
-      "info": "Small mono link below the specimen. Leave blank to hide."
-    },
-    {
-      "type": "url",
-      "id": "link_url",
-      "label": "Link URL",
-      "info": "Where the link points (e.g. a downloadable PDF specimen, or a /pages/X specimen page)."
+      "label": "Toggle label",
+      "info": "Label for the dropdown that opens/closes the uppercase, lowercase, numerals and symbols rows."
     }
   ],
   "presets": [

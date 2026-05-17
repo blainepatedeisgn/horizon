@@ -1,0 +1,68 @@
+/*
+ * ------------------------------------------------------------
+ * Disrupted Studio — BUNDLE product template
+ *
+ * Used for bundle products (e.g. "BACKLIT + Neue Portal Pack").
+ * Assigned per-product in admin via "Theme template" dropdown.
+ *
+ * Section order
+ *   main → bundle-contents → faq → related
+ *
+ * Differences from product.plugin.json
+ *   • Inserts ds-pdp-bundle-contents right under the hero, so the
+ *     itemized breakdown + savings math is the first thing below
+ *     the fold
+ *   • Skips feature strips + CTA insets (those belong to individual
+ *     products, not bundles — the bundle's "features" ARE the items)
+ *   • Skips video block (each included product has its own demo)
+ *
+ * Merchant setup for a bundle product
+ *   1. Create a regular product. Set:
+ *        Title:           e.g. "Plugin Starter Bundle"
+ *        Product type:    "Bundle"     ← drives the BUNDLE card badge
+ *        Price:           the bundle price (what they pay)
+ *        Compare-at price: sum of included items' prices ← drives
+ *                          the native strike-through on the PDP price
+ *        Theme template:  "product.bundle"
+ *   2. In the Metafields panel, set:
+ *        Bundle contents: pick the included products
+ *   3. Upload the deliverable (single ZIP with all files inside)
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "ds-product-main",
+      "settings": {
+        "color_scheme": "scheme-1"
+      }
+    },
+    "bundle_contents": {
+      "type": "ds-pdp-bundle-contents",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "What's included",
+        "show_individual_prices": true,
+        "show_savings_math": true
+      }
+    },
+    "faq": {
+      "type": "ds-pdp-faq",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Bundle FAQ",
+        "num_label": "03"
+      }
+    },
+    "related": {
+      "type": "ds-pdp-related",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "More bundles",
+        "num_label": "04",
+        "products_to_show": 3
+      }
+    }
+  },
+  "order": ["main", "bundle_contents", "faq", "related"]
+}
