@@ -970,6 +970,14 @@
     font-size: 12px;
     letter-spacing: 0.02em;
     white-space: nowrap;
+    /* Drop the border-bottom that .ds-text-link applies by default —
+       this link sits paired with the variant label, not in a section
+       footer, so the underline reads too heavy in context. */
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .ds-pdp__info-variant-link:hover {
+    color: var(--color-accent);
   }
   /* On narrow viewports the link wraps under the label rather than
      squeezing into the same row — keeps it readable on phones. */
