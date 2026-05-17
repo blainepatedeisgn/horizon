@@ -331,9 +331,33 @@
             <input type="hidden" name="quantity" value="1">
 
             {%- unless product.has_only_default_variant -%}
+              {%- comment -%}
+                Tier-aware variant select. If ANY variant has the
+                `disrupted.tier_name` metafield set (Phase 2 license
+                tier rollout), the picker renders rich tier labels
+                ("Standard — $19 / 1 seat" vs "Studio — $39 / Up to 5
+                seats") and the field label switches to "License tier".
+
+                Without those metafields, falls back to the prior
+                generic behavior — option name + price — so this
+                change is safe to ship before any products are tiered.
+              {%- endcomment -%}
+              {%- liquid
+                assign has_tier_metadata = false
+                for v in product.variants
+                  if v.metafields.disrupted.tier_name.value != blank
+                    assign has_tier_metadata = true
+                    break
+                  endif
+                endfor
+              -%}
               <div class="ds-pdp__info-variant">
                 <label class="ds-pdp__info-variant-label" for="ds-variant-{{ section.id }}">
-                  {{ product.options.first | default: 'Variant' }}
+                  {%- if has_tier_metadata -%}
+                    License tier
+                  {%- else -%}
+                    {{ product.options.first | default: 'Variant' }}
+                  {%- endif -%}
                 </label>
                 <select
                   id="ds-variant-{{ section.id }}"
@@ -341,15 +365,30 @@
                   data-ds-variant-select
                 >
                   {%- for variant in product.variants -%}
+                    {%- assign v_tier_name = variant.metafields.disrupted.tier_name.value -%}
+                    {%- assign v_tier_summary = variant.metafields.disrupted.tier_summary.value -%}
                     <option
                       value="{{ variant.id }}"
                       {% if variant.id == current_variant.id %}selected{% endif %}
                       {% unless variant.available %}disabled{% endunless %}
                     >
-                      {{ variant.title }} — {{ variant.price | money }}{% unless variant.available %} (sold out){% endunless %}
+                      {%- if v_tier_name != blank -%}
+                        {{ v_tier_name }} — {{ variant.price | money }}{% if v_tier_summary != blank %} / {{ v_tier_summary }}{% endif %}
+                      {%- else -%}
+                        {{ variant.title }} — {{ variant.price | money }}
+                      {%- endif -%}
+                      {%- unless variant.available %} (sold out){%- endunless -%}
                     </option>
                   {%- endfor -%}
                 </select>
+                {%- if has_tier_metadata -%}
+                  <p class="ds-pdp__info-tier-compare">
+                    <a href="/pages/license" target="_blank" rel="noopener" class="ds-text-link">
+                      Compare tiers + read full license
+                      <span class="ds-text-link__arrow" aria-hidden="true">→</span>
+                    </a>
+                  </p>
+                {%- endif -%}
               </div>
             {%- endunless -%}
 
@@ -834,6 +873,13 @@
   .ds-pdp__info-variant-select:focus {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
+  }
+  /* Tier compare link — shows below the variant select on PDPs whose
+     variants have license-tier metadata. Subtle, no visual weight. */
+  .ds-pdp__info-tier-compare {
+    margin: 8px 0 0;
+    font-size: 12px;
+    letter-spacing: 0.02em;
   }
   .ds-pdp__info-cta {
     margin-top: var(--space-3);

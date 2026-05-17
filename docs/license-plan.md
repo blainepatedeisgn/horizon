@@ -140,35 +140,86 @@ linked to `/pages/license`.
 
 ## Shopify implementation phases
 
-### Phase 1 — Terms infrastructure (NOW, before launch)
+### Phase 1 — Terms infrastructure (DONE)
 
 Pure groundwork. No pricing changes. Every product still reads as
-commercial-by-default. Code-only, ~1–2 hour build.
+commercial-by-default.
 
 - [x] Create `templates/page.license.json`
 - [x] Create `sections/ds-license-terms.liquid` (brutalist tier comparison
       + numbered terms body + version badge + changelog)
 - [x] Link the existing PDP `License: …` row to `/pages/license`
+- [x] Custom cart consent gate — checkbox above Checkout button on both
+      drawer and cart page (replaces the missing Shopify Plus / Checkout
+      Extensibility checkbox). See `snippets/ds-cart-agreement.liquid`.
 - [ ] (Admin task — Shopify dashboard) Create a Page "License" assigned
       to `page.license` template; populate the section settings
-- [ ] (Admin task) Enable "I agree to terms of service" checkbox on cart
-      (Settings → Checkout)
+- [ ] (Admin task) Settings → Policies → Terms of service: paste link to
+      `/pages/license` (provides browse-wrap fallback for dynamic checkout
+      buttons — Apple Pay, Shop Pay, etc. — which bypass the custom gate)
 - [ ] (Admin task) Edit order confirmation email to mention license + URL
       (Settings → Notifications → Order confirmation)
 
 ### Phase 2 — Tier-as-variant rollout (per product, opt-in)
 
 Done one product at a time. Existing variant select infrastructure on PDP
-(`sections/ds-product-main.liquid:333–354`) takes the upgrade with minor
-cosmetic tweaks.
+takes the upgrade with metafield-driven labels.
 
-- Add Shopify variant for the upper tier (Studio / Extended) per the
-  multiplier table
-- Add a `disrupted.license_tier` variant metafield → tier metaobject ref
-- Update PDP variant select to show descriptive labels ("Standard — $48
-  / 1 seat" vs "Studio — $96 / 5 seats") with optional tier description
-  inline
-- Optional: small "Compare tiers" expandable below variant select
+**Theme code — DONE for all products at once (graceful fallback):**
+
+- [x] PDP variant select now detects `disrupted.tier_name` variant
+      metafield. When present on any variant, label switches to "License
+      tier" and option text becomes "[Tier] — $XX / [tier_summary]"
+- [x] "Compare tiers + read full license" link below variant select on
+      tiered products, opens `/pages/license` in new tab
+- [x] Graceful fallback: PDPs without tier metadata render exactly like
+      before — no visual change until merchant adds the metafields
+
+**Admin checklist — Pixel Perfect (first product to tier):**
+
+Variants:
+- [ ] Admin → Products → Pixel Perfect Plugin
+- [ ] Edit the product. Under "Variants," add an option named "License"
+      with two values: "Standard" and "Studio"
+- [ ] Set prices: Standard = $19.00, Studio = $39.00 (×2 multiplier per
+      pricing table above)
+- [ ] Both variants should share the same SKU prefix and the same
+      inventory tracking settings (digital → unlimited)
+- [ ] Save
+
+Metafield definitions (one-time setup, applies to all products):
+- [ ] Settings → Custom data → Variants → Add definition
+- [ ] Name: "Tier name" · Namespace and key: `disrupted.tier_name` ·
+      Type: Single line text
+- [ ] Add another definition. Name: "Tier summary" · Namespace and key:
+      `disrupted.tier_summary` · Type: Single line text
+- [ ] Save the definitions
+
+Per-variant metafield values (back on the Pixel Perfect product):
+- [ ] Click the Standard variant. Scroll to "Metafields" section. Set:
+      - `tier_name` = `Standard`
+      - `tier_summary` = `1 seat`
+- [ ] Click the Studio variant. Set:
+      - `tier_name` = `Studio`
+      - `tier_summary` = `Up to 5 seats`
+- [ ] Save
+
+Verify on the live PDP:
+- [ ] Refresh `/products/pixel-perfect-plugin`
+- [ ] Picker label should now read "License tier" (not "License")
+- [ ] Options should read "Standard — $19.00 / 1 seat" and
+      "Studio — $39.00 / Up to 5 seats"
+- [ ] Switching variants in the dropdown should update the Add-to-cart
+      button price (Horizon's existing variant-sync JS handles this)
+- [ ] "Compare tiers + read full license" link appears below the dropdown
+- [ ] Add to cart → drawer shows the selected variant + tier in the
+      line item title
+
+**Repeating for BACKLIT / fonts / graphics later:**
+
+Same flow. Variants + per-variant metafields. The theme code already
+handles every product type — no per-product code changes needed.
+Reference the multiplier table at the top of this doc for prices.
 
 ### Phase 3 — Cart upsell
 
