@@ -56,11 +56,11 @@ Field handles must match exactly (these are what the Liquid sections read).
 | | `license` | Single line text | "Personal & commercial" |
 | | `updates` | Single line text | "Lifetime" |
 | | `support` | Single line text | "Email" |
-| **Font specs** | `family` | Single line text | "6 weights · 1 italic" |
-| | `glyphs` | Single line text | "412 per weight" |
-| | `formats` | Single line text | "OTF / TTF / WOFF2" |
-| | `language` | Single line text | "Latin Extended" |
-| | `license` | Single line text | "Personal · Print · Web" |
+| **Font specs** | `family` | Single line text | "1 weight · 0 italic" |
+| | `glyphs` | Single line text | "Uppercase · 0–9 · punctuation" |
+| | `formats` | Single line text | "OTF · TTF" |
+| | `language` | Single line text | "English (uppercase only)" |
+| | `license` | Single line text | "Personal · Commercial" |
 | **Graphics specs** | `items` | Single line text | "40 graphics" |
 | | `formats` | Single line text | "SVG / PNG" |
 | | `resolution` | Single line text | "Vector + 4096px" |
@@ -125,8 +125,8 @@ Right sidebar of each product → "Theme template":
 
 ### C4 — Files
 
-- [ ] Upload each product's deliverable file (ZIP, .woff2, .ccx, etc.) via the digital download app or as Files
-- [ ] For fonts: also upload the .woff2 to the product's `disrupted.font_file` metafield so the type specimen section renders
+- [ ] Upload each product's deliverable file (ZIP, .otf, .ttf, .ccx, etc.) via the digital download app or as Files. For fonts the deliverable is OTF + TTF — buyers convert to WOFF/WOFF2 themselves for web use (per the License page, §3.6)
+- [ ] For fonts: convert your OTF to WOFF2 (free via Transfonter or fontsquirrel) and upload THAT to the product's `disrupted.font_file` metafield so the type specimen section renders in browsers. The WOFF2 is for the PDP preview only — buyers receive OTF + TTF in the order
 
 ### C5 — About page
 

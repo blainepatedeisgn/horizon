@@ -33,7 +33,7 @@
 
 {%- liquid
   assign cs = section.settings.color_scheme
-  assign version = section.settings.version | default: 'v1.1'
+  assign version = section.settings.version | default: 'v1.2'
   assign version_date = section.settings.version_date | default: 'May 2026'
   assign eyebrow = section.settings.eyebrow | default: 'ASSET LICENSE'
   assign title = section.settings.title | default: 'License terms'
@@ -219,10 +219,11 @@
         <p>Upgrading from Personal to Commercial (or expanding a Commercial license to cover more seats / a larger team) is available at any time by emailing blainepatedesign@gmail.com. Licensee pays the difference between the original purchase and the upgraded tier (the Grilli Type / Foundry Types pay-the-difference model).</p>
 
         <h3 id="formats" class="ds-license__term-heading">3.6 Permitted embedding and formats</h3>
+        <p>Font orders ship OTF and TTF files. Conversion to web (WOFF/WOFF2) and app formats is the licensee's responsibility — the formats are not delivered, but the conversion is permitted under the Commercial license (see below).</p>
         <p>For fonts:</p>
         <ul>
           <li><strong>Personal:</strong> desktop installation only. Embed in personal PDFs as subset (security-locked or print-only) for your own non-sale documents.</li>
-          <li><strong>Commercial:</strong> includes Personal usage plus self-hosted webfont (WOFF/WOFF2), iOS / Android app embedding, ePub embedding, broadcast, and paid advertising.</li>
+          <li><strong>Commercial:</strong> includes Personal usage plus the right to convert the supplied OTF/TTF to webfont formats (WOFF/WOFF2) and self-host on your site, embed in iOS / Android apps you distribute, embed in ePub, use in broadcast, and use in paid advertising. No pageview cap.</li>
         </ul>
         <p>For plugins: the plugin itself is installed and run on the Licensee's machine. The Personal vs Commercial distinction governs the use of the <em>output</em> created with the plugin, not the plugin's installation. See Section 3.3.</p>
         <p>For graphics: no specific embedding restrictions beyond Section 3.4 apply. Commercial tier allows inclusion in end products for sale up to the volume cap stated in Section 02.</p>
@@ -258,6 +259,10 @@
       </h2>
       <p class="ds-license__block-intro">The version in effect when you placed your order is the one that applies to your purchase. Older versions are kept here for reference.</p>
       <ul class="ds-license__changelog">
+        <li>
+          <span class="ds-license__changelog-version ds-mono">v1.2 — May 2026</span>
+          <span class="ds-license__changelog-note">Section 3.6 clarification: font orders ship OTF and TTF only — the Commercial license permits the licensee to convert to WOFF/WOFF2 for self-hosted web use. The right to web-embed isn't new; this clarifies that the format conversion is the licensee's responsibility since webfont formats aren't delivered.</span>
+        </li>
         <li>
           <span class="ds-license__changelog-version ds-mono">v1.1 — May 2026</span>
           <span class="ds-license__changelog-note">Restructured to a Personal vs Commercial split across all product types. Personal tier covers non-monetized personal projects only; Commercial covers everything paid (client work, products for sale, paid ads, agencies). Replaces the previous Standard / Studio / Extended naming.</span>
@@ -540,7 +545,7 @@
     {
       "type": "text",
       "id": "version",
-      "default": "v1.1",
+      "default": "v1.2",
       "label": "Version",
       "info": "Bump on each amendment. Old versions stay in the changelog at the bottom of the page."
     },

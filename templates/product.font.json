@@ -74,7 +74,7 @@
           "type": "faq_item",
           "settings": {
             "question": "Can I use this on my website?",
-            "answer": "Yes, with a Commercial license — self-hosted WOFF/WOFF2 webfont, no pageview cap. Personal license is desktop-only (your own non-sale design work). See the License page for the full breakdown."
+            "answer": "Yes, with a Commercial license. We ship OTF + TTF — convert to WOFF / WOFF2 yourself using a free tool like Transfonter, then self-host. No pageview cap. Personal license is desktop-only (your own non-sale design work). See the License page for the full breakdown."
           }
         },
         "faq_client": {
