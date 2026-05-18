@@ -422,9 +422,6 @@ body {
   cursor: pointer;
   text-decoration: none;
   padding: 0;
-  /* Hidden by default; fades in + slight scale on card hover */
-  opacity: 0;
-  transform: scale(0.85);
   transform-origin: top right;
   transition:
     opacity    var(--t-fast) var(--ease),
@@ -432,21 +429,37 @@ body {
     background var(--t-fast) var(--ease),
     color      var(--t-fast) var(--ease);
 }
-.ds-product-card:hover .ds-product-card__quick,
-.ds-product-card:focus-within .ds-product-card__quick {
-  opacity: 1;
-  transform: scale(1);
-}
 .ds-product-card__quick:hover {
   background: var(--color-accent);
   color: var(--color-accent-fg);
 }
 
-/* Touch devices: no hover state, so reveal the button at low opacity
-   permanently. First tap activates instead of needing a hover. */
+/* Hover-capable devices (desktop with mouse): hide the quick-add
+   until the card is hovered or focused. Wrapping this in
+   `@media (hover: hover)` is the critical bit — without it, iOS
+   Safari gives elements a "sticky" hover state on first tap, which
+   reveals the button but doesn't activate it. The user then has to
+   tap a SECOND time to actually add. By scoping the hover-reveal
+   to real-hover devices only, touch devices never enter that
+   broken two-tap path. */
+@media (hover: hover) {
+  .ds-product-card__quick {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  .ds-product-card:hover .ds-product-card__quick,
+  .ds-product-card:focus-within .ds-product-card__quick {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Touch devices and any device without proper hover (phones,
+   tablets, hybrid laptops in tablet mode): button is always fully
+   visible. One tap → adds to cart, no hover-fallback dance. */
 @media (hover: none) {
   .ds-product-card__quick {
-    opacity: 0.9;
+    opacity: 1;
     transform: scale(1);
   }
 }
