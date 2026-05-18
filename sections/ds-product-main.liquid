@@ -449,7 +449,7 @@
                           data-price="{{ variant.price }}"
                           data-compare-at="{{ variant.compare_at_price | default: 0 }}"
                           data-price-formatted="{{ variant.price | money | escape }}"
-                          data-compare-formatted="{{ variant.compare_at_price | money | escape }}"
+                          data-compare-formatted="{% if variant.compare_at_price and variant.compare_at_price > 0 %}{{ variant.compare_at_price | money | escape }}{% endif %}"
                           {% if variant.id == current_variant.id %}checked{% endif %}
                           {% unless variant.available %}disabled{% endunless %}
                         >
@@ -695,11 +695,13 @@
     {%- comment -%} name + price stack {%- endcomment -%}
     <div class="ds-pdp-sticky-cta__info">
       <div class="ds-pdp-sticky-cta__name">{{ product.title }}</div>
-      <div class="ds-pdp-sticky-cta__price" data-ds-sticky-price>
-        {%- if current_variant.compare_at_price > current_variant.price -%}
-          <span class="ds-pdp-sticky-cta__price-strike">{{ current_variant.compare_at_price | money }}</span>
-        {%- endif -%}
-        {{ current_variant.price | money }}
+      <div class="ds-pdp-sticky-cta__price">
+        <span
+          class="ds-pdp-sticky-cta__price-strike"
+          data-ds-sticky-compare
+          {% unless cv_on_sale %}hidden{% endunless %}
+        >{%- if cv_on_sale -%}{{ current_variant.compare_at_price | money }}{%- endif -%}</span>
+        <span data-ds-sticky-price>{{ current_variant.price | money }}</span>
       </div>
     </div>
 
@@ -1676,27 +1678,45 @@
     var mainRadios    = document.querySelector('[data-ds-variant-radio-group]');
     var stickyVariant = bar.querySelector('[data-ds-sticky-variant]');
     var stickyPrice   = bar.querySelector('[data-ds-sticky-price]');
+    var stickyCompare = bar.querySelector('[data-ds-sticky-compare]');
 
-    function applyToSticky(newValue, newPriceText) {
+    function applyToSticky(control) {
+      if (!control) return;
+      var newValue         = control.getAttribute('value') || control.value;
+      var priceCents       = parseInt(control.getAttribute('data-price'), 10);
+      var compareCents     = parseInt(control.getAttribute('data-compare-at'), 10) || 0;
+      var priceFormatted   = control.getAttribute('data-price-formatted') || '';
+      var compareFormatted = control.getAttribute('data-compare-formatted') || '';
+
       if (stickyVariant) stickyVariant.value = newValue;
-      if (stickyPrice && newPriceText) stickyPrice.textContent = newPriceText;
+      if (stickyPrice && priceFormatted) stickyPrice.textContent = priceFormatted;
+
+      // Strike-through compare — show only when the variant is
+      // actually on sale (compare > price > 0). Previously the
+      // sticky bar's whole .price element was overwritten on each
+      // change, which clobbered the strike; now strike + price are
+      // separate spans we toggle independently.
+      if (stickyCompare) {
+        var onSale = compareCents > priceCents && compareCents > 0;
+        if (onSale) {
+          stickyCompare.textContent = compareFormatted;
+          stickyCompare.removeAttribute('hidden');
+        } else {
+          stickyCompare.setAttribute('hidden', '');
+        }
+      }
     }
 
     if (mainSelect && stickyVariant) {
       mainSelect.addEventListener('change', function () {
-        // Each <option> has data-price-formatted (the rendered "$X.YY")
-        // — clean read, no regex needed.
-        var opt = mainSelect.options[mainSelect.selectedIndex];
-        var priceText = opt ? opt.getAttribute('data-price-formatted') || '' : '';
-        applyToSticky(mainSelect.value, priceText);
+        applyToSticky(mainSelect.options[mainSelect.selectedIndex]);
       });
     }
 
     if (mainRadios && stickyVariant) {
       mainRadios.addEventListener('change', function (e) {
         if (!e.target || !e.target.matches('input[type="radio"]')) return;
-        var priceText = e.target.getAttribute('data-price-formatted') || '';
-        applyToSticky(e.target.value, priceText);
+        applyToSticky(e.target);
       });
     }
   })();

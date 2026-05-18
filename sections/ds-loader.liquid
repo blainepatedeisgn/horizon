@@ -284,8 +284,15 @@
         }, fadeMs + 50);
       }
 
-      // Auto-hide after the minimum duration.
-      setTimeout(hide, minDuration);
+      // Auto-hide after the minimum duration. Reduced-motion users
+      // get a shorter dwell (max 600ms) since they see a static frame
+      // — no strobe to wait through, so the moment lands faster.
+      // Previously this ran as TWO setTimeouts (one general, one
+      // shorter for reduced-motion) — they raced; the shorter one
+      // won but the longer one was dead code. Collapsed to a single
+      // ternary so the intent is unambiguous.
+      var autoHideMs = prefersReducedMotion ? Math.min(minDuration, 600) : minDuration;
+      setTimeout(hide, autoHideMs);
 
       // Click-to-skip.  Anywhere on the overlay dismisses.
       loader.addEventListener('click', hide);
@@ -298,13 +305,6 @@
         }
       }
       document.addEventListener('keydown', onKey);
-
-      // Reduced-motion users: cut the minDuration in half — they
-      // get a static frame (handled above in the strobe setup) so
-      // the dwell time can be shorter without missing the "moment."
-      if (prefersReducedMotion) {
-        setTimeout(hide, Math.min(minDuration, 600));
-      }
     })();
   </script>
 {%- endif -%}
