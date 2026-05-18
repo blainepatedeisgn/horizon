@@ -53,48 +53,57 @@
       Customize → Theme settings → (Cart section).
     {%- endcomment -%}
     <div class="ds-cart__empty">
-      <p class="ds-cart__empty-text">Empty.</p>
+      <div class="ds-cart__empty-content">
+        <div class="ds-cart__empty-anchor" aria-hidden="true">EMPTY.</div>
 
-      <a
-        href="{{ settings.empty_cart_button_link | default: routes.all_products_collection_url }}"
-        class="ds-btn ds-btn--lg ds-btn--accent ds-cart__empty-cta"
-      >
-        Continue shopping
-        <span aria-hidden="true">→</span>
-      </a>
-
-      {%- if settings.empty_cart_categories.size > 0 -%}
-        <div class="ds-cart__empty-cats">
-          {%- for cat in settings.empty_cart_categories -%}
-            <a href="{{ cat.url }}" class="ds-cart__empty-cat">
-              <span class="ds-cart__empty-cat-name">{{ cat.title }}</span>
+        {%- if settings.empty_cart_categories.size > 0 -%}
+          <div class="ds-cart__empty-cats">
+            {%- for cat in settings.empty_cart_categories -%}
+              <a href="{{ cat.url }}" class="ds-cart__empty-cat">
+                <span class="ds-cart__empty-cat-name">{{ cat.title }}</span>
+                <span class="ds-cart__empty-cat-arrow" aria-hidden="true">→</span>
+              </a>
+            {%- endfor -%}
+          </div>
+        {%- else -%}
+          {%- comment -%}
+            Fallback set — renders only when the merchant hasn't picked
+            collections via Theme Settings → empty_cart_categories yet.
+            Lets the empty state look populated on a fresh deploy and
+            on the dev theme without admin access. Configured collections
+            override these immediately once set.
+          {%- endcomment -%}
+          <div class="ds-cart__empty-cats">
+            <a href="/collections/plugins" class="ds-cart__empty-cat">
+              <span class="ds-cart__empty-cat-name">Plugins</span>
               <span class="ds-cart__empty-cat-arrow" aria-hidden="true">→</span>
             </a>
-          {%- endfor -%}
-        </div>
-      {%- else -%}
-        {%- comment -%}
-          Fallback set — renders only when the merchant hasn't picked
-          collections via Theme Settings → empty_cart_categories yet.
-          Lets the empty state look populated on a fresh deploy and
-          on the dev theme without admin access. Configured collections
-          override these immediately once set.
-        {%- endcomment -%}
-        <div class="ds-cart__empty-cats">
-          <a href="/collections/plugins" class="ds-cart__empty-cat">
-            <span class="ds-cart__empty-cat-name">Plugins</span>
-            <span class="ds-cart__empty-cat-arrow" aria-hidden="true">→</span>
-          </a>
-          <a href="/collections/fonts" class="ds-cart__empty-cat">
-            <span class="ds-cart__empty-cat-name">Fonts</span>
-            <span class="ds-cart__empty-cat-arrow" aria-hidden="true">→</span>
-          </a>
-          <a href="/collections/graphics" class="ds-cart__empty-cat">
-            <span class="ds-cart__empty-cat-name">Graphics</span>
-            <span class="ds-cart__empty-cat-arrow" aria-hidden="true">→</span>
-          </a>
-        </div>
-      {%- endif -%}
+            <a href="/collections/fonts" class="ds-cart__empty-cat">
+              <span class="ds-cart__empty-cat-name">Fonts</span>
+              <span class="ds-cart__empty-cat-arrow" aria-hidden="true">→</span>
+            </a>
+            <a href="/collections/graphics" class="ds-cart__empty-cat">
+              <span class="ds-cart__empty-cat-name">Graphics</span>
+              <span class="ds-cart__empty-cat-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        {%- endif -%}
+
+        <a
+          href="{{ settings.empty_cart_button_link | default: routes.all_products_collection_url }}"
+          class="ds-btn ds-btn--lg ds-btn--accent ds-cart__empty-cta"
+        >
+          Continue shopping
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      {%- comment -%}
+        Brand wordmark anchored to the bottom of the empty state.
+        Pure text — no SVG asset dependency. Mono uppercase at low
+        opacity reads as a watermark / sign-off rather than a header.
+      {%- endcomment -%}
+      <div class="ds-cart__empty-mark" aria-hidden="true">Disrupted Studio</div>
     </div>
   {%- else -%}
     <span class="visually-hidden" ref="cartItemCount" aria-hidden="true">{{- cart.item_count -}}</span>
