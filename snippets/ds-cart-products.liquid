@@ -35,7 +35,7 @@
   fetchpriority="low"
 ></script>
 
-<div class="cart-items__wrapper ds-cart__items-wrap">
+<div class="cart-items__wrapper ds-cart__items-wrap{% if cart.empty? or force_empty %} ds-cart__items-wrap--empty{% endif %}">
   {%- if cart.empty? or force_empty -%}
     {%- comment -%}
       Empty state v5 — research-driven rebuild after 4 iterations
