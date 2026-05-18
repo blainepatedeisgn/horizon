@@ -67,7 +67,7 @@
           "type": "faq_item",
           "settings": {
             "question": "What file formats are included?",
-            "answer": "Check the Formats row in the spec table above. Most typefaces ship as OTF, TTF, and WOFF2. WOFF2 is the modern web format; OTF/TTF cover desktop installation across Mac, Windows, and Adobe apps."
+            "answer": "OTF and TTF, in every order. Covers desktop installation across Mac, Windows, and Adobe apps. If you need a web format (WOFF / WOFF2), you can convert the OTF yourself in 30 seconds using a free tool like Transfonter — the license permits this under Commercial use."
           }
         },
         "faq_web": {
