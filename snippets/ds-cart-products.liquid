@@ -246,29 +246,57 @@
               {%- endif -%}
 
               <div class="ds-cart__item-actions">
-                <button
-                  type="button"
-                  class="ds-cart__item-remove"
-                  on:click="/onLineItemRemove/{{ item.index | plus: 1 }}"
-                  aria-label="Remove {{ item.product.title | escape }}"
-                >
-                  Remove
-                </button>
+                {%- if item.quantity > 1 -%}
+                  {%- comment -%}
+                    Quantity > 1: render the brutalist −/+ stepper. The
+                    cart-quantity-selector-component handles AJAX updates
+                    to /cart/change.js, morphdom integration, and clamps
+                    the minus button at qty 1 (user must hit Remove to
+                    fully clear once the line is down to one). When the
+                    user steps from 2 → 1 the morph re-renders this row
+                    and the {% if %} below falls into the Remove branch.
+                    The visible selector itself carries ref="quantitySelectors[]"
+                    so cart-items-component's error handler still finds it
+                    by line index.
+                  {%- endcomment -%}
+                  {%- render 'quantity-selector',
+                    product: item.product,
+                    variant: item.variant,
+                    in_cart_quantity: item.quantity,
+                    line_index: item.index,
+                    can_update_quantity: true,
+                    class: 'ds-cart__qty'
+                  -%}
+                {%- else -%}
+                  <button
+                    type="button"
+                    class="ds-cart__item-remove"
+                    on:click="/onLineItemRemove/{{ item.index | plus: 1 }}"
+                    aria-label="Remove {{ item.product.title | escape }}"
+                  >
+                    Remove
+                  </button>
+                {%- endif -%}
               </div>
 
-              {%- comment -%}
-                Hidden quantity selector — required for cart-items-component
-                AJAX hooks. For digital products quantity is always 1.
-              {%- endcomment -%}
-              <div class="visually-hidden">
-                {%- render 'quantity-selector',
-                  product: item.product,
-                  variant: item.variant,
-                  in_cart_quantity: item.quantity,
-                  line_index: item.index,
-                  can_update_quantity: false
-                -%}
-              </div>
+              {%- if item.quantity == 1 -%}
+                {%- comment -%}
+                  Hidden quantity-selector at qty 1 to preserve the
+                  refs.quantitySelectors[] array that cart-items-component
+                  uses for per-line error handling (line 231 in
+                  component-cart-items.js). At qty > 1 the visible
+                  selector above already provides the ref.
+                {%- endcomment -%}
+                <div class="visually-hidden">
+                  {%- render 'quantity-selector',
+                    product: item.product,
+                    variant: item.variant,
+                    in_cart_quantity: item.quantity,
+                    line_index: item.index,
+                    can_update_quantity: false
+                  -%}
+                </div>
+              {%- endif -%}
             </div>
 
             {%- comment -%} ----- PRICE ----- {%- endcomment -%}

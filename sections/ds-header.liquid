@@ -1557,6 +1557,88 @@
     transition: color var(--t-fast) var(--ease);
   }
   .ds-cart__item-remove:hover { color: var(--color-accent); }
+
+  /* Quantity stepper — shown when a line item's qty > 1.
+     Brutalist treatment: square outline, mono numeric, transparent
+     bg, no rounded corners. Overrides Horizon's default
+     .quantity-selector styling (which expects light/rounded
+     theme defaults). The wrapper from quantity-selector.liquid
+     adds its own `.quantity-selector-wrapper` div; we collapse
+     its layout so it sits inline cleanly in our actions row. */
+  .ds-cart__item-actions .quantity-selector-wrapper {
+    margin: 0;
+    padding: 0;
+    display: inline-flex;
+  }
+  .ds-cart__qty {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    border-radius: 0;
+  }
+  .ds-cart__qty button {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    color: var(--color-fg-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      color      var(--t-fast) var(--ease),
+      background var(--t-fast) var(--ease);
+  }
+  .ds-cart__qty button:hover:not(:disabled) {
+    color: var(--color-fg);
+    background: var(--color-bg);
+  }
+  .ds-cart__qty button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .ds-cart__qty input[type="number"] {
+    width: 28px;
+    height: 26px;
+    border: 0;
+    border-left: 1px solid var(--color-border);
+    border-right: 1px solid var(--color-border);
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-fg);
+    text-align: center;
+    padding: 0;
+    -moz-appearance: textfield;
+  }
+  /* Hide native number-input spin controls so users only interact
+     via our −/+ buttons (or by typing in a value). */
+  .ds-cart__qty input[type="number"]::-webkit-outer-spin-button,
+  .ds-cart__qty input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .ds-cart__qty input[type="number"]:focus {
+    outline: 0;
+    background: var(--color-bg);
+  }
+  /* Constrain the −/+ glyph SVGs so they sit centered + small. */
+  .ds-cart__qty .svg-wrapper {
+    width: 10px;
+    height: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ds-cart__qty .svg-wrapper svg {
+    width: 100%;
+    height: 100%;
+  }
   .ds-cart__item-price {
     font-family: var(--font-mono);
     font-size: 14px;
