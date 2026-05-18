@@ -87,8 +87,8 @@
         "faq_language": {
           "type": "faq_item",
           "settings": {
-            "question": "What languages does it support?",
-            "answer": "Check the Language row in the spec table. Most typefaces support Latin Extended (English, most Western European languages, some Eastern European). Extended language coverage (Cyrillic, Greek, Vietnamese) varies per font."
+            "question": "What languages and characters are included?",
+            "answer": "English only, uppercase. Every typeface ships Basic Latin uppercase glyphs (A–Z), numerals (0–9), and basic punctuation — no lowercase, no extended Latin, no other scripts. If you need lowercase or another language, email blainepatedesign@gmail.com — useful demand drives the roadmap."
           }
         },
         "faq_modify": {
