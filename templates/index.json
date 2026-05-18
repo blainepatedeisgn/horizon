@@ -241,6 +241,17 @@
         "signup_tag": "newsletter",
         "success_message": "Thanks. See you in your inbox."
       }
+    },
+    "custom_liquid_FiLqxj": {
+      "type": "custom-liquid",
+      "name": "t:names.custom_liquid",
+      "settings": {
+        "custom_liquid": "google-site-verification: googlec3ffbaff1d96610c.html",
+        "color_scheme": "",
+        "section_width": "page-width",
+        "padding-block-start": 0,
+        "padding-block-end": 0
+      }
     }
   },
   "order": [
@@ -249,6 +260,7 @@
     "ds_product_scroller_QHJ8rQ",
     "product_grid",
     "category_teasers",
-    "newsletter"
+    "newsletter",
+    "custom_liquid_FiLqxj"
   ]
 }
