@@ -2633,6 +2633,99 @@
     });
   })();
 
+  // BELT-AND-SUSPENDERS: prevent the cart drawer from closing
+  // during a cart update.
+  //
+  // Structurally the hydration-mode morph + animation-class gate
+  // should already keep the dialog open across cart changes. But
+  // some path (CDN cache lag on JS, a Horizon update, an edge case
+  // in the morph) was still triggering a visible close+reopen on
+  // REMOVE. This is a defensive belt: we watch the dialog's
+  // [open] attribute via MutationObserver, and if it gets removed
+  // during a cart-event window (between the user's cart action
+  // and the resulting cart:update), we immediately put it back.
+  // Stops any close trigger we haven't been able to trace from
+  // visibly affecting the user.
+  (function () {
+    var cartActive = false;
+    var clearTimer = null;
+
+    function markActive() {
+      cartActive = true;
+      if (clearTimer) window.clearTimeout(clearTimer);
+      clearTimer = window.setTimeout(function () { cartActive = false; }, 2000);
+    }
+
+    // Any submit on a /cart/* endpoint marks us in an active window.
+    document.addEventListener('submit', function (e) {
+      var action = e.target && e.target.action ? e.target.action : '';
+      if (action.indexOf('/cart') !== -1) markActive();
+    }, true);
+
+    // Clicks on declarative cart action buttons (Horizon's on:click
+    // dispatchers for remove + quantity-change). Catches in-drawer
+    // edits before the AJAX even fires.
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      var btn = t.closest('button, a');
+      if (!btn) return;
+      var onclickAttr = btn.getAttribute('on:click') || '';
+      if (
+        onclickAttr.indexOf('/onLineItemRemove') !== -1 ||
+        onclickAttr.indexOf('/onLineItemQuantity') !== -1
+      ) {
+        markActive();
+      }
+    }, true);
+
+    // After cart:update settles, give the morph a moment then drop
+    // the flag.
+    document.addEventListener('cart:update', function () {
+      if (clearTimer) window.clearTimeout(clearTimer);
+      clearTimer = window.setTimeout(function () { cartActive = false; }, 200);
+    });
+
+    // Find the drawer dialog and watch its [open] attribute.
+    // Re-open via showDialog() (the component method) if it gets
+    // removed during the active window — that path preserves
+    // scroll-lock + dispatches DialogOpenEvent so other code stays
+    // consistent.
+    function installGuard() {
+      var dialog = document.querySelector('.ds-cart-drawer');
+      var component = document.querySelector('cart-drawer-component');
+      if (!dialog || !component) return false;
+
+      var observer = new MutationObserver(function (mutations) {
+        if (!cartActive) return;
+        for (var i = 0; i < mutations.length; i++) {
+          if (mutations[i].attributeName !== 'open') continue;
+          if (!dialog.hasAttribute('open')) {
+            // Re-open via the component so listeners + scroll-lock
+            // stay in sync. The animation gate (.is-opening class)
+            // will run, but for a same-tick re-open it's
+            // imperceptible — and far less jarring than a full
+            // close+reopen cycle.
+            try { component.open(); } catch (_) {}
+            break;
+          }
+        }
+      });
+      observer.observe(dialog, { attributes: true, attributeFilter: ['open'] });
+      return true;
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', installGuard);
+    } else {
+      // If the elements aren't there yet (custom elements still
+      // upgrading), retry on the next tick.
+      if (!installGuard()) {
+        window.requestAnimationFrame(installGuard);
+      }
+    }
+  })();
+
   // Drawer slide-in animation gate — adds .is-opening to the
   // <dialog.ds-cart-drawer> the moment the dialog actually opens
   // (DialogOpenEvent), removes it on animationend. The CSS bound
