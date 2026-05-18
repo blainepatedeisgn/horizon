@@ -487,13 +487,32 @@
 
      Scoped to PP via .ds-hero--pp, and only above mobile (>900px)
      so the single-column mobile layout keeps its own gap rules.
+
+     Also: stretch both grid cells AND the inner .ds-hero__visual
+     wrapper so the slider's top + bottom match the left column's
+     content extents (eyebrow top → BUY button bottom). The base
+     .ds-hero uses align-items: center which centered the slider
+     in the grid row, leaving equal padding above and below.
+     Stretching makes the slider exactly as tall as the text
+     column; images use object-fit: cover so they crop to fit the
+     resulting rectangle. Overrides the 4/3 / 3/2 aspect-ratio
+     breakpoints below — they become inactive once height is
+     explicit. aspect-ratio: auto resets the cascade cleanly.
   */
   @media (min-width: 901px) {
     .ds-hero--pp {
       gap: var(--space-5);                      /* 48 → 24 */
+      align-items: stretch;                     /* was center */
     }
     .ds-hero--pp .ds-hero__content {
       padding-right: clamp(16px, 2vw, 32px);    /* up to 56 → up to 32 */
+    }
+    .ds-hero--pp .ds-hero__visual {
+      align-items: stretch;                     /* was center */
+    }
+    .ds-hero--pp .ds-before-after {
+      height: 100%;                             /* fill the stretched visual */
+      aspect-ratio: auto;                       /* defer to explicit height */
     }
   }
 
