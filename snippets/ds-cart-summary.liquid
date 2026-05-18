@@ -89,12 +89,18 @@
     {%- endif -%}
   </form>
 
+  {%- comment -%}
+    Tight single-line (wraps to two on narrow viewports) of footer
+    info — tax, delivery, license link. Each item is a span so the
+    flex container can space + wrap them cleanly. The license link
+    is the consent surface; purchase-as-acceptance is documented on
+    /pages/license itself.
+  {%- endcomment -%}
   <p class="ds-cart__note">
-    Taxes calculated at checkout
-    <br>
-    Instant download after purchase
-    <br>
-    By purchasing, you agree to the
+    <span>Tax at checkout</span>
+    <span class="ds-cart__note-sep" aria-hidden="true">·</span>
+    <span>Instant download</span>
+    <span class="ds-cart__note-sep" aria-hidden="true">·</span>
     <a href="/pages/license" class="ds-cart__note-link" target="_blank" rel="noopener">License terms</a>
   </p>
 </div>

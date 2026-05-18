@@ -1282,8 +1282,15 @@
   .ds-cart__sub-label { color: var(--color-fg-muted); }
   .ds-cart__sub-value { color: var(--color-fg); }
   .ds-cart__sub-row--discount .ds-cart__sub-value { color: var(--color-accent); }
+  /* Border + spacing only when Total sits below subtotal/discount
+     rows — when Total is the only row (no cart-level discount),
+     the divider would be a floating line above the very first
+     line of content. :not(:first-child) keeps the visual
+     separation when needed and drops it cleanly when not. */
   .ds-cart__sub-row--total {
     font-size: 16px;
+  }
+  .ds-cart__sub-row--total:not(:first-child) {
     padding-top: var(--space-3);
     border-top: 1px solid var(--color-border);
     margin-top: var(--space-2);
@@ -1347,21 +1354,27 @@
     color: var(--color-fg);
   }
 
+  /* Cart-footer trust line — tax / delivery / license link as a
+     wrapping single-line flex row. Switched from three <br>-
+     separated lines (~60px tall) to one wrapping line (~14px on
+     desktop, ~28px on narrow mobile) to free up vertical space
+     above the checkout buttons. */
   .ds-cart__note {
     font-family: var(--font-mono);
     font-size: 10px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-fg-muted);
-    text-align: center;
     margin: 0;
     line-height: 1.5;
-    /* text-wrap: pretty asks the browser to avoid orphan words on the
-       last line (one-word widows). Paired with the &nbsp; between
-       "after" and "purchase" in the markup as belt-and-suspenders —
-       if pretty isn't supported (older Safari), the non-breaking space
-       still keeps those two words together on the wrap. */
-    text-wrap: pretty;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+  }
+  .ds-cart__note-sep {
+    opacity: 0.6;
   }
 
   /* ---- Cart upsell — "Pairs well with" ----
