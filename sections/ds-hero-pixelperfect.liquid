@@ -23,8 +23,31 @@
 {%- endcomment -%}
 
 {%- liquid
-  assign before_image = section.settings.before_image
-  assign after_image  = section.settings.after_image
+  # Pair 1 — primary (uses the original `before_image` / `after_image`
+  # setting IDs so existing setups keep working without re-pointing).
+  assign before_1 = section.settings.before_image
+  assign after_1  = section.settings.after_image
+  # Pair 2 + 3 — optional. When set, the section renders prev/next
+  # arrows + a counter inside the slider frame so the visitor can
+  # cycle through scenes.
+  assign before_2 = section.settings.before_2
+  assign after_2  = section.settings.after_2
+  assign before_3 = section.settings.before_3
+  assign after_3  = section.settings.after_3
+
+  # Tally how many fully-populated pairs we have. Only pairs with
+  # BOTH images set count — half-set pairs are skipped silently.
+  assign pair_count = 0
+  if before_1 != blank and after_1 != blank
+    assign pair_count = pair_count | plus: 1
+  endif
+  if before_2 != blank and after_2 != blank
+    assign pair_count = pair_count | plus: 1
+  endif
+  if before_3 != blank and after_3 != blank
+    assign pair_count = pair_count | plus: 1
+  endif
+
   assign before_label = section.settings.before_label
   assign after_label  = section.settings.after_label
   assign start_pos    = section.settings.starting_position | default: 50
@@ -40,12 +63,18 @@
 
   <div class="ds-hero__visual">
     <div class="ds-hero__visual-inner">
-      {%- if before_image != blank and after_image != blank -%}
+      {%- if pair_count > 0 -%}
         {%- comment -%}
           Before/after comparison slider — the on-brand demo of the
-          Pixel Perfect plugin (drag to compare original vs pixel-art
-          output). Built as a role="slider" element with full keyboard
-          + pointer + touch support. See script + CSS below.
+          Pixel Perfect plugin. Built as role="slider" with full
+          keyboard + pointer + touch support for the divider drag.
+
+          Multi-pair support: when 2 or 3 pairs are set in section
+          settings, prev/next arrow buttons + a "N / total" counter
+          render inside the frame. JS swaps the <img> src on click,
+          resets the divider to the configured start_pos for a fresh
+          comparison. All pair URLs are written as data-* attributes
+          so the JS has access to them without a separate JSON blob.
         {%- endcomment -%}
         <div
           class="ds-before-after"
@@ -57,9 +86,23 @@
           aria-valuenow="{{ start_pos }}"
           aria-label="Compare before and after — {{ start_pos }}% after visible. Drag, click, or use arrow keys."
           style="--position: {{ start_pos }}%;"
+          data-start-pos="{{ start_pos }}"
+          data-pair-count="{{ pair_count }}"
+          {%- if before_1 != blank and after_1 != blank -%}
+            data-before-1="{{ before_1 | image_url: width: 1200 }}"
+            data-after-1="{{ after_1 | image_url: width: 1200 }}"
+          {%- endif -%}
+          {%- if before_2 != blank and after_2 != blank -%}
+            data-before-2="{{ before_2 | image_url: width: 1200 }}"
+            data-after-2="{{ after_2 | image_url: width: 1200 }}"
+          {%- endif -%}
+          {%- if before_3 != blank and after_3 != blank -%}
+            data-before-3="{{ before_3 | image_url: width: 1200 }}"
+            data-after-3="{{ after_3 | image_url: width: 1200 }}"
+          {%- endif -%}
         >
           {{
-            before_image
+            before_1
             | image_url: width: 1200
             | image_tag:
                 class: 'ds-before-after__img ds-before-after__img--before',
@@ -69,7 +112,7 @@
                 widths: '480, 720, 960, 1200'
           }}
           {{
-            after_image
+            after_1
             | image_url: width: 1200
             | image_tag:
                 class: 'ds-before-after__img ds-before-after__img--after',
@@ -87,6 +130,32 @@
 
           <span class="ds-before-after__divider" aria-hidden="true"></span>
           <span class="ds-before-after__handle" aria-hidden="true"></span>
+
+          {%- if pair_count > 1 -%}
+            <button
+              type="button"
+              class="ds-before-after__nav ds-before-after__nav--prev"
+              data-ds-before-after-prev
+              aria-label="Previous before/after pair"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M15 6l-6 6 6 6"/>
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="ds-before-after__nav ds-before-after__nav--next"
+              data-ds-before-after-next
+              aria-label="Next before/after pair"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 6l6 6-6 6"/>
+              </svg>
+            </button>
+            <span class="ds-before-after__counter ds-mono" data-ds-before-after-counter aria-hidden="true">
+              1 / {{ pair_count }}
+            </span>
+          {%- endif -%}
         </div>
       {%- elsif hero_video != blank -%}
         {%- comment -%}
@@ -323,6 +392,64 @@
     transform: translate(-50%, -50%) scale(1.15);
   }
 
+  /* Prev / next arrow buttons — only render when 2+ pairs are set.
+     Positioned just inside the left and right edges of the frame,
+     vertically centered. Same white-circle treatment as the divider
+     handle but with a chevron icon. Hover scales them slightly so
+     the affordance is obvious. */
+  .ds-before-after__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: #000;
+    border: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: transform 0.15s ease, background 0.15s ease;
+    /* Keep the buttons out of the divider's drag flow — clicks on
+       the arrows shouldn't also count as a pointerdown for the
+       drag-the-divider behavior. */
+  }
+  .ds-before-after__nav--prev { left: 10px; }
+  .ds-before-after__nav--next { right: 10px; }
+  .ds-before-after__nav:hover {
+    transform: translateY(-50%) scale(1.08);
+    background: #ffffff;
+  }
+  .ds-before-after__nav:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+  /* Pair counter — bottom-right corner of the frame. Mono caps,
+     same backdrop-blur dark pill as the before/after labels for
+     visual consistency. */
+  .ds-before-after__counter {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    padding: 4px 8px;
+    background: rgba(10, 10, 10, 0.72);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    pointer-events: none;
+    z-index: 2;
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Corner labels — "BEFORE" / "AFTER" pills. Backdrop-blur dark
      background so they read on both light and dark image content.
      Brand-consistent with the cart PLUGIN tag treatment. */
@@ -390,6 +517,18 @@
       font-size: 9px;
       padding: 3px 6px;
     }
+    .ds-before-after__nav {
+      width: 30px;
+      height: 30px;
+    }
+    .ds-before-after__nav--prev { left: 8px; }
+    .ds-before-after__nav--next { right: 8px; }
+    .ds-before-after__counter {
+      bottom: 10px;
+      right: 10px;
+      font-size: 9px;
+      padding: 3px 6px;
+    }
   }
   @media (max-width: 480px) {
     .ds-hero__visual { padding: 0 var(--space-3); }
@@ -447,6 +586,9 @@
       el.addEventListener('pointerdown', function (e) {
         // Ignore non-primary mouse buttons
         if (e.button !== undefined && e.button !== 0) return;
+        // Ignore pointerdown on the prev/next nav buttons — they're
+        // separate click targets, shouldn't trigger the divider drag.
+        if (e.target && e.target.closest('.ds-before-after__nav')) return;
         e.preventDefault();
         el.setAttribute('data-dragging', '');
         try { el.setPointerCapture(e.pointerId); } catch (_) {}
@@ -469,6 +611,67 @@
         el.addEventListener('pointerup', onEnd);
         el.addEventListener('pointercancel', onEnd);
       });
+
+      // ----- MULTI-PAIR NAVIGATION -----
+      // When the merchant sets 2 or 3 before/after pairs in section
+      // settings, this block wires up the prev/next arrows to swap
+      // the visible images. Pairs are stored as data-before-N /
+      // data-after-N attributes on the wrapper (rendered by Liquid).
+      // The divider position resets to the configured start_pos on
+      // each switch so the new comparison starts fresh.
+      var pairCount = parseInt(el.getAttribute('data-pair-count'), 10) || 0;
+      if (pairCount > 1) {
+        var pairs = [];
+        for (var p = 1; p <= pairCount; p++) {
+          var b = el.getAttribute('data-before-' + p);
+          var a = el.getAttribute('data-after-' + p);
+          if (b && a) pairs.push({ before: b, after: a });
+        }
+        var pairIndex = 0;
+        var beforeImg  = el.querySelector('.ds-before-after__img--before');
+        var afterImg   = el.querySelector('.ds-before-after__img--after');
+        var counterEl  = el.querySelector('[data-ds-before-after-counter]');
+        var prevBtn    = el.querySelector('[data-ds-before-after-prev]');
+        var nextBtn    = el.querySelector('[data-ds-before-after-next]');
+        var startPos   = parseFloat(el.getAttribute('data-start-pos')) || 50;
+
+        function applyPair(idx) {
+          if (!pairs[idx]) return;
+          pairIndex = idx;
+          if (beforeImg) {
+            // Clear srcset so the explicit src wins (otherwise the
+            // browser may keep showing the responsive variant of the
+            // previous pair).
+            beforeImg.removeAttribute('srcset');
+            beforeImg.removeAttribute('sizes');
+            beforeImg.src = pairs[idx].before;
+          }
+          if (afterImg) {
+            afterImg.removeAttribute('srcset');
+            afterImg.removeAttribute('sizes');
+            afterImg.src = pairs[idx].after;
+          }
+          if (counterEl) {
+            counterEl.textContent = (idx + 1) + ' / ' + pairs.length;
+          }
+          setPosition(startPos);
+        }
+
+        if (prevBtn) {
+          prevBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            applyPair((pairIndex - 1 + pairs.length) % pairs.length);
+          });
+        }
+        if (nextBtn) {
+          nextBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            applyPair((pairIndex + 1) % pairs.length);
+          });
+        }
+      }
 
       el.addEventListener('keydown', function (e) {
         var current = getCurrent();
@@ -529,6 +732,30 @@
       "id": "after_image",
       "label": "After image",
       "info": "The top layer — visible on the RIGHT side of the slider when dragged. e.g. the Pixel Perfect output of the same source. Same dimensions as the before image for clean comparison."
+    },
+    {
+      "type": "paragraph",
+      "content": "Optional — set pair 2 and pair 3 to enable prev/next arrows inside the slider so visitors can cycle through multiple before/after examples. Single pair = no arrows; 2+ pairs = arrows + counter appear automatically."
+    },
+    {
+      "type": "image_picker",
+      "id": "before_2",
+      "label": "Pair 2 — Before image"
+    },
+    {
+      "type": "image_picker",
+      "id": "after_2",
+      "label": "Pair 2 — After image"
+    },
+    {
+      "type": "image_picker",
+      "id": "before_3",
+      "label": "Pair 3 — Before image"
+    },
+    {
+      "type": "image_picker",
+      "id": "after_3",
+      "label": "Pair 3 — After image"
     },
     {
       "type": "text",
