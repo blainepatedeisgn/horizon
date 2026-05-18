@@ -282,21 +282,25 @@
 
   /* ============================================================
      BEFORE/AFTER SLIDER
-     Drag-to-compare visual for the Pixel Perfect hero. Fills the
-     full right column on desktop (no max-width cap, no 1:1 aspect
-     constraint — wider rectangle that scales with the column),
-     collapses to a square on mobile. White border + white divider
-     + white circular handle. The plugin's on-brand demo: drag to
-     see the original vs the pixel-art output.
+     Drag-to-compare visual for the Pixel Perfect hero. White
+     border + white divider + white circular handle.
+
+     Responsive sizing (see actual rules below):
+       • Mobile (≤900px): 1/1 square, width = min(94%, 480px)
+       • Laptop (901-1279px): 1/1 square, max-width 560px (default)
+       • Mid desktop (1280-1699px): 4/3 rectangle, max-width 720px
+       • Wide desktop (≥1700px): 3/2 rectangle, max-width 880px
+     Images use object-fit:cover so the crop zooms vertically as
+     the container flattens — tops/bottoms get clipped, the centered
+     subject of typical Pixel Perfect demo panels survives fine.
 
      Layout
-       • Container takes 100% of column width
-       • aspect-ratio: 4/3 on desktop → wider rectangle that fills
-         the column nicely. aspect-ratio: 1/1 on mobile.
        • Before image: absolute, full size, base layer
        • After image: absolute, full size, clip-path inset cuts
          away the left portion based on --position CSS variable
        • Divider + handle: positioned via --position
+       • Labels, nav, counter: corner-anchored absolute positions
+         that scale with the container at any aspect ratio.
 
      Interaction model
        • Pointer drag (mouse, pen, touch — Pointer Events API
@@ -471,6 +475,37 @@
   }
   .ds-before-after__label--before { left: 12px; }
   .ds-before-after__label--after  { right: 12px; }
+
+  /* Wide-desktop responsive scaling.
+     On regular laptops (up to ~1280px viewport) the slider stays a
+     560px-wide square — that's the original behavior. Beyond that,
+     as the right column grows past ~640-720px wide, the slider
+     gracefully expands AND flattens to a rectangle so it fills the
+     column instead of leaving big empty gutters at very wide viewports.
+
+     Images use object-fit: cover (set on .ds-before-after__img) so
+     the crop behavior is automatic — as the container gets wider-
+     than-tall, the top and bottom of the source image are clipped
+     and the image zooms in slightly. Centered subject matter
+     (typical for Pixel Perfect demo panels) survives the crop fine.
+
+     Everything inside the slider — divider, handle, labels, arrow
+     nav, counter — uses percentage-based or absolute-positioned
+     layout that scales relative to the container, so no
+     repositioning is needed at the wider aspect ratios.
+  */
+  @media (min-width: 1280px) {
+    .ds-before-after {
+      max-width: 720px;
+      aspect-ratio: 4 / 3;
+    }
+  }
+  @media (min-width: 1700px) {
+    .ds-before-after {
+      max-width: 880px;
+      aspect-ratio: 3 / 2;
+    }
+  }
 
   @media (max-width: 900px) {
     .ds-hero {
