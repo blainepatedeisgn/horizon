@@ -1063,23 +1063,30 @@
     padding: var(--space-5);
   }
 
-  /* When the wrapper contains the empty state, kill its standard
-     items-padding — the empty state's internal layout handles all
-     spacing itself, no stacked-padding double-gap above the lede. */
+  /* When the wrapper contains the empty state, zero its vertical
+     padding (no gap above the headline) but KEEP the horizontal
+     24px so the empty content's left + right edges align with the
+     cart header's "CART" label and "X" close button (both of which
+     sit inside the drawer head's var(--space-5) = 24px padding).
+     The empty state's own padding handles only vertical spacing
+     below — that way there's no chance of double-padding making
+     the content more inset than the header. */
   .ds-cart__items-wrap--empty {
-    padding: 0;
+    padding: 0 var(--space-5);
   }
 
   /* Empty state v5 — Drake's / ALD pattern. Every vertical band
      holds real content: editorial lede → featured product card
      (visual anchor) → category nav → trust+wordmark dock. No band
-     is decoration alone. */
+     is decoration alone. Horizontal alignment is governed entirely
+     by the .ds-cart__items-wrap--empty parent above — this rule
+     only deals with vertical breathing room and stacking. */
   .ds-cart__empty {
     height: 100%;
     display: flex;
     flex-direction: column;
     text-align: left;
-    padding: var(--space-4) var(--space-5) var(--space-5);
+    padding: var(--space-4) 0 var(--space-5);
     gap: var(--space-4);
   }
 
@@ -1273,7 +1280,10 @@
      rectangle that reads like a beefier cart line item. */
   @media (max-width: 640px) {
     .ds-cart__empty {
-      padding: var(--space-3) var(--space-4) var(--space-4);
+      /* Horizontal alignment delegated to .ds-cart__items-wrap--empty
+         (uses var(--space-5) to match the header's padding). This
+         rule only sets vertical breathing — tighter on mobile. */
+      padding: var(--space-3) 0 var(--space-4);
       gap: var(--space-3);
     }
     .ds-cart__empty-headline {
