@@ -1069,6 +1069,72 @@
     }
   }
 
+  /* Optimistic line-item skeleton — injected by the ATC submit
+     handler with real title + thumbnail from the source form's
+     data-skeleton-* attrs, then auto-removed when Horizon morphs
+     the fresh cart HTML in (the new HTML doesn't contain
+     [data-cart-skeleton], so it gets diffed out). Matches the
+     visual structure of a real .ds-cart__item so the transition
+     reads as "this exact item filled in" rather than "fake
+     placeholder swapped for a real thing". */
+  .ds-cart__skeleton {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+    align-items: start;
+    animation: ds-cart-skeleton-in 200ms ease-out;
+  }
+  .ds-cart__skeleton-media {
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    overflow: hidden;
+    width: 96px;
+  }
+  .ds-cart__skeleton-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Faintly desaturated so the eye reads it as "in progress" even
+       though it's the real image. */
+    opacity: 0.7;
+  }
+  .ds-cart__skeleton-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-height: 96px;
+  }
+  .ds-cart__skeleton-title {
+    font-size: 14px;
+    color: var(--color-fg);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .ds-cart__skeleton-status {
+    margin-top: auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent, #ff4d1f);
+    animation: ds-cart-skeleton-pulse 1s ease-in-out infinite;
+  }
+  @keyframes ds-cart-skeleton-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ds-cart-skeleton-pulse {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-cart__skeleton { animation: none; }
+    .ds-cart__skeleton-status { animation: none; opacity: 0.85; }
+  }
+
   /* Body: scrollable area (items + upsell) + pinned summary footer */
   .ds-cart-drawer__body {
     display: flex;
@@ -2409,13 +2475,109 @@
       setLoading(false);
     }
 
+    // Optimistic skeleton: when the source form carries
+    // data-skeleton-title + data-skeleton-image (set by all our ATC
+    // forms via Liquid), render a placeholder line item at the top
+    // of <cart-items-component> the instant we know an add is
+    // happening. Horizon's morph removes it when fresh cart HTML
+    // lands (the morphed-in HTML doesn't contain [data-cart-skeleton]
+    // so it gets diffed out). Belt-and-suspenders clearSkeleton()
+    // on cart:update / cart:error / safety timer too.
+    function getSkeletonSource(form) {
+      // Walk up to the <product-form-component> that wraps the form;
+      // that's where Liquid emits data-skeleton-* (so the attrs are
+      // available even if the user is mid-variant-change).
+      var component = form.closest && form.closest('product-form-component');
+      return component || null;
+    }
+    function buildSkeleton(source) {
+      if (!source) return null;
+      var title = source.getAttribute('data-skeleton-title');
+      var image = source.getAttribute('data-skeleton-image');
+      if (!title) return null;
+
+      var skel = document.createElement('div');
+      skel.setAttribute('data-cart-skeleton', '');
+      skel.className = 'ds-cart__skeleton';
+      skel.setAttribute('aria-hidden', 'true'); // visual-only; SR users get cart:update announcement
+
+      var media = document.createElement('div');
+      media.className = 'ds-cart__skeleton-media';
+      if (image) {
+        var img = document.createElement('img');
+        img.src = image;
+        img.alt = '';
+        img.className = 'ds-cart__skeleton-img';
+        media.appendChild(img);
+      }
+      skel.appendChild(media);
+
+      var info = document.createElement('div');
+      info.className = 'ds-cart__skeleton-info';
+      var titleEl = document.createElement('div');
+      titleEl.className = 'ds-cart__skeleton-title';
+      titleEl.textContent = title;
+      info.appendChild(titleEl);
+      var status = document.createElement('div');
+      status.className = 'ds-cart__skeleton-status';
+      status.textContent = 'Adding…';
+      info.appendChild(status);
+      skel.appendChild(info);
+
+      return skel;
+    }
+    function injectSkeleton(form) {
+      var source = getSkeletonSource(form);
+      var skel = buildSkeleton(source);
+      if (!skel) return;
+
+      var cartBody = document.querySelector('cart-items-component');
+      if (!cartBody) return;
+
+      // Wipe any prior skeleton (rapid clicks); also hide the empty
+      // state so we don't render "your cart is empty" + the skeleton
+      // side by side. The empty state restores naturally on the next
+      // morph if the cart somehow stays empty.
+      var existing = cartBody.querySelector('[data-cart-skeleton]');
+      if (existing) existing.remove();
+      var empty = cartBody.querySelector('.ds-cart__empty');
+      if (empty) empty.style.display = 'none';
+
+      // Prefer top of existing items list — matches Shopify's
+      // "new items go to top of cart" default. Falls back to
+      // top of the scrollable or top of cart-items-component.
+      var itemsList = cartBody.querySelector('.ds-cart__items');
+      var scrollable = cartBody.querySelector('.ds-cart__scrollable');
+      if (itemsList) {
+        // Wrap skeleton in an <li> so it lives inside the existing list
+        var li = document.createElement('li');
+        li.setAttribute('data-cart-skeleton', '');
+        li.className = 'ds-cart__skeleton-li';
+        li.appendChild(skel);
+        itemsList.prepend(li);
+      } else if (scrollable) {
+        scrollable.prepend(skel);
+      } else {
+        cartBody.prepend(skel);
+      }
+    }
+    function clearSkeleton() {
+      document.querySelectorAll('[data-cart-skeleton]').forEach(function (el) {
+        el.remove();
+      });
+    }
+
     document.addEventListener('submit', function (e) {
       if (!isAddToCartForm(e.target)) return;
 
       // Reset any stale safety timer from a prior in-flight add.
       if (safetyTimer) window.clearTimeout(safetyTimer);
       setLoading(true);
-      safetyTimer = window.setTimeout(clearLoading, SAFETY_TIMEOUT_MS);
+      injectSkeleton(e.target);
+      safetyTimer = window.setTimeout(function () {
+        clearLoading();
+        clearSkeleton();
+      }, SAFETY_TIMEOUT_MS);
 
       window.setTimeout(function () {
         var drawer = getDrawer();
@@ -2428,11 +2590,20 @@
     // Horizon dispatches `cart:update` after each successful morph
     // (assets/events.js → ThemeEvents.cartUpdate). That's our cue
     // that the items are now in the DOM and the bar can disappear.
-    document.addEventListener('cart:update', clearLoading);
+    // Morph itself usually wipes the skeleton (it's not in the new
+    // HTML), but explicit cleanup catches the edge case where
+    // morphdom preserves an unmatched element by accident.
+    document.addEventListener('cart:update', function () {
+      clearLoading();
+      clearSkeleton();
+    });
 
     // Belt-and-suspenders for failed adds — sold-out variant, gift
     // card limits, network drop. Horizon dispatches `cart:error`
     // from cart-items-component on these paths.
-    document.addEventListener('cart:error', clearLoading);
+    document.addEventListener('cart:error', function () {
+      clearLoading();
+      clearSkeleton();
+    });
   })();
 </script>

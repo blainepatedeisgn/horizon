@@ -351,6 +351,8 @@
           data-product-id="{{ product.id }}"
           on:submit="/handleSubmit"
           class="ds-pdp__info-form-component"
+          data-skeleton-title="{{ product.title | escape }}"
+          data-skeleton-image="{%- if product.featured_image -%}{{ product.featured_image | image_url: width: 192 }}{%- endif -%}"
         >
           <div
             class="visually-hidden"
@@ -672,6 +674,8 @@
   data-product-id="{{ product.id }}"
   on:submit="/handleSubmit"
   aria-hidden="true"
+  data-skeleton-title="{{ product.title | escape }}"
+  data-skeleton-image="{%- if product.featured_image -%}{{ product.featured_image | image_url: width: 192 }}{%- endif -%}"
 >
   <div class="visually-hidden" aria-live="assertive" role="status" aria-atomic="true" ref="liveRegion"></div>
   <div class="ds-pdp-sticky-cta__inner">

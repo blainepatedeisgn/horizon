@@ -90,6 +90,8 @@
                 class="ds-cart-upsell__add-form"
                 data-product-id="{{ product.id }}"
                 on:submit="/handleSubmit"
+                data-skeleton-title="{{ product.title | escape }}"
+                data-skeleton-image="{%- if product.featured_image -%}{{ product.featured_image | image_url: width: 192 }}{%- endif -%}"
               >
                 <div class="visually-hidden" aria-live="assertive" role="status" aria-atomic="true" ref="liveRegion"></div>
                 {%- form 'product', product, novalidate: 'novalidate' -%}
