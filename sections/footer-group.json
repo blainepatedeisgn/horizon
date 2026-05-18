@@ -17,7 +17,7 @@
         "shop_links": {
           "type": "link_column",
           "settings": {
-            "heading": "Shop",
+            "heading": "Account",
             "menu": "footer"
           }
         },
