@@ -1,0 +1,448 @@
+{%- comment -%}
+  sections/ds-terms-of-service.liquid - Disrupted Studio terms of service.
+
+  Rendered on /pages/terms-of-service via templates/page.terms-of-service.json.
+  Visual structure mirrors sections/ds-license-terms.liquid and
+  sections/ds-refund-policy.liquid so all three legal pages feel like
+  one set.
+
+  --------------------------------------------------------------------
+  CONTENT POLICY
+
+  The body text is hardcoded in Liquid so amendments are version-
+  controlled in git. The merchant-editable surface is just the header
+  copy (eyebrow, title, version pill, intro). On every amendment:
+    1. Bump the version setting
+    2. Update version_date
+    3. Add a row to the Changelog block at the bottom
+
+  This page covers the general site terms. Two related documents
+  carry their own terms and are linked from here:
+    - License page covers what you may do with the assets you buy
+      (Personal vs Commercial, prohibited uses, AI training, etc.).
+      Section 7 of this page points there.
+    - Refund policy page covers when refunds are and are not issued.
+      Section 8 of this page points there.
+
+  --------------------------------------------------------------------
+  DRAFT - REVIEW BEFORE LAUNCH
+
+  Reasonable boilerplate for an indie digital-asset shop in the US,
+  based on the patterns used by Klim, Pangram Pangram, Mass-Driver,
+  and Shopify's stock TOS template. Before going live, have an
+  attorney in your jurisdiction review it, especially the limitation
+  of liability, indemnification, and governing law clauses.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme
+  assign version = section.settings.version | default: 'v1.0'
+  assign version_date = section.settings.version_date | default: 'May 2026'
+  assign eyebrow = section.settings.eyebrow | default: 'TERMS OF SERVICE'
+  assign title = section.settings.title | default: 'Terms of service'
+  assign intro = section.settings.intro | default: 'These are the rules for using this site and buying from it. By browsing or placing an order, you agree to them. The version on this page when you placed your order is the one that applies to that order.'
+-%}
+
+<section class="ds-legal color-{{ cs }}">
+  <div class="ds-legal__container">
+
+    {%- comment -%} ============ HEADER ============ {%- endcomment -%}
+    <header class="ds-legal__header">
+      <p class="ds-legal__eyebrow ds-mono">[ {{ eyebrow }} ]</p>
+      <h1 class="ds-legal__title">{{ title }}</h1>
+      <div class="ds-legal__version">
+        <span class="ds-legal__version-pill ds-mono">{{ version }}</span>
+        <span class="ds-legal__version-date ds-mono">Effective {{ version_date }}</span>
+      </div>
+      <p class="ds-legal__intro">{{ intro }}</p>
+    </header>
+
+    {%- comment -%} ============ TL;DR ============ {%- endcomment -%}
+    <section class="ds-legal__block" aria-labelledby="terms-tldr">
+      <h2 class="ds-legal__block-title" id="terms-tldr">
+        <span class="ds-legal__block-num ds-mono">01</span>
+        TL;DR
+      </h2>
+      <div class="ds-legal__tldr-grid">
+        <div class="ds-legal__tldr-card">
+          <p class="ds-legal__tldr-card-eyebrow ds-mono">[ THE BASICS ]</p>
+          <ul class="ds-legal__tldr-card-list">
+            <li>This store sells digital files. You buy once, you keep the files.</li>
+            <li>Run by Disrupted Studio, based in Atlanta, Georgia.</li>
+            <li>Prices are in US dollars. Sales tax is added where required.</li>
+          </ul>
+        </div>
+        <div class="ds-legal__tldr-card">
+          <p class="ds-legal__tldr-card-eyebrow ds-mono">[ WHAT YOU CAN DO ]</p>
+          <ul class="ds-legal__tldr-card-list">
+            <li>Buy any product on the site.</li>
+            <li>Use what you buy under the license you purchased (see the license page).</li>
+            <li>Reach out by email with any question, fast support either way.</li>
+          </ul>
+        </div>
+        <div class="ds-legal__tldr-card">
+          <p class="ds-legal__tldr-card-eyebrow ds-mono">[ WHAT YOU CANNOT DO ]</p>
+          <ul class="ds-legal__tldr-card-list">
+            <li>Resell or share the source files.</li>
+            <li>Train AI or ML models on what you buy.</li>
+            <li>Misuse the site (scraping, attacking, infringing on rights).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    {%- comment -%} ============ FULL TERMS ============ {%- endcomment -%}
+    <section class="ds-legal__block" aria-labelledby="terms-full">
+      <h2 class="ds-legal__block-title" id="terms-full">
+        <span class="ds-legal__block-num ds-mono">02</span>
+        Full terms
+      </h2>
+
+      <article class="ds-legal__body">
+
+        <h3 id="acceptance" class="ds-legal__term-heading">2.1 Acceptance of these terms</h3>
+        <p>By using this site or placing an order, you agree to these terms, the license page, the refund policy, and the privacy policy. If you do not agree, please do not use the site or place an order.</p>
+        <p>If you are placing an order on behalf of a company or client, you confirm that you have the authority to bind that entity to these terms. The license you buy is granted to the buyer named on the receipt.</p>
+
+        <h3 id="about" class="ds-legal__term-heading">2.2 About the store</h3>
+        <p>This site is operated by Disrupted Studio, a sole proprietorship based in Atlanta, Georgia, United States. Disrupted Studio designs and sells digital tools for designers, including Photoshop plugins, typefaces, and graphics packs. The studio can be reached at <a href="mailto:blainepatedesign@gmail.com">blainepatedesign@gmail.com</a>.</p>
+        <p>The site is hosted on Shopify, and Shopify processes payments. Shopify has its own terms and privacy policy that apply to its services.</p>
+
+        <h3 id="eligibility" class="ds-legal__term-heading">2.3 Eligibility</h3>
+        <p>You may place an order on this site if you are at least 18 years old, or if you are a minor with the consent of a parent or legal guardian who agrees to these terms on your behalf. By placing an order, you confirm that this is true.</p>
+
+        <h3 id="account" class="ds-legal__term-heading">2.4 Account information</h3>
+        <p>Some features rely on a Shopify customer account (order history, redownload links). You are responsible for keeping your account credentials secure and for the activity that happens under your account. If you suspect that your account has been used without your permission, email the studio so the affected files can be deactivated.</p>
+        <p>The information you provide at checkout (name, email, billing and shipping addresses) must be accurate. The studio relies on it to deliver the order and to issue receipts for tax purposes.</p>
+
+        <h3 id="orders" class="ds-legal__term-heading">2.5 Orders, pricing, and payment</h3>
+        <p>Prices on the site are listed in US dollars. Sales tax, VAT, or GST is added at checkout where required by law (Shopify handles the tax calculation based on your billing address).</p>
+        <p>Payment is taken at the time you place the order. Shopify supports the major card networks plus PayPal, Apple Pay, Shop Pay, and Google Pay. The studio does not see or store your card details.</p>
+        <p>The studio reserves the right to cancel an order if a price is listed in error, if the order looks fraudulent, or if the order violates these terms. In any of those cases, the full purchase amount is refunded.</p>
+
+        <h3 id="delivery" class="ds-legal__term-heading">2.6 Digital delivery</h3>
+        <p>All products in this store are digital files. There are no physical shipments and no shipping fees. After payment, a download link is sent to the email address on the order and (if you used a Shopify customer account) the order is also available in your account.</p>
+        <p>Download links remain valid for at least 90 days after purchase. If a link has expired or you have lost it, email the studio and a new link will be sent at no charge.</p>
+        <p>Most products are delivered as a ZIP archive. You need software that can open ZIP files (built into macOS and Windows) and software that can use the file type (Photoshop for plugins, a font manager for fonts, etc.). The product page lists supported software for each product.</p>
+
+        <h3 id="license" class="ds-legal__term-heading">2.7 License to use the assets you buy</h3>
+        <p>What you may do with the files after you buy them is governed by the license terms on the <a href="/pages/license">license page</a>. The license page distinguishes between Personal use (your own non-monetized projects) and Commercial use (client work, products you sell, paid advertising, agency work). The tier you bought is shown on your order receipt.</p>
+        <p>Two rules apply regardless of the tier: you may not redistribute the source files, and you may not use the files to train AI or machine learning models. The license page lists the full set of prohibited uses.</p>
+
+        <h3 id="refunds" class="ds-legal__term-heading">2.8 Refunds</h3>
+        <p>The refund policy is on the <a href="/pages/refund-policy">refund policy page</a>. In short: digital downloads are final once you have downloaded the file, except where required by law (notably the EU 14-day right of withdrawal before download). Defective files are replaced or refunded at no charge.</p>
+
+        <h3 id="acceptable-use" class="ds-legal__term-heading">2.9 Acceptable use of the site</h3>
+        <p>You agree not to use the site to:</p>
+        <ul>
+          <li>Scrape, crawl, or copy the catalog or content without written permission, other than what a normal browser does to render the page.</li>
+          <li>Attempt to gain unauthorized access to any part of the site, server, or network.</li>
+          <li>Interfere with the site or its services (denial-of-service attacks, sending malware, abusing the contact form).</li>
+          <li>Use the site to send spam, harass others, or violate any law.</li>
+          <li>Reverse engineer or attempt to extract the source code of any plugin or compiled asset, except where this right cannot be waived under applicable law.</li>
+        </ul>
+
+        <h3 id="ip" class="ds-legal__term-heading">2.10 Intellectual property</h3>
+        <p>The site, including its layout, text, images, and design, is owned by Disrupted Studio or licensed to it. All rights are reserved, except for the limited license granted by your purchase (see the license page) and the right to view the public pages of the site in a normal web browser.</p>
+        <p>Brand names, product names, and logos shown on the site are trademarks of their respective owners. Use of a trademark on this site does not imply endorsement by the trademark owner unless stated.</p>
+
+        <h3 id="third-party" class="ds-legal__term-heading">2.11 Third-party services and links</h3>
+        <p>The site uses third-party services for payments, fulfillment, analytics, and email (Shopify, Klaviyo, and similar). Those services have their own terms and privacy policies, which apply to their handling of your data. Links to external sites are provided for convenience and do not imply endorsement of those sites or their content.</p>
+
+        <h3 id="warranty" class="ds-legal__term-heading">2.12 Disclaimer of warranties</h3>
+        <p>The site and the products are provided <strong>as is</strong> and <strong>as available</strong>, without warranty of any kind, express or implied, including warranties of merchantability, fitness for a particular purpose, and non-infringement. The studio does not warrant that the site will be uninterrupted, error-free, or free of viruses, or that any product will be compatible with every software or hardware configuration.</p>
+        <p>This section does not limit any statutory consumer rights that apply in your country.</p>
+
+        <h3 id="liability" class="ds-legal__term-heading">2.13 Limitation of liability</h3>
+        <p>To the maximum extent permitted by law, Disrupted Studio is not liable for indirect, incidental, special, consequential, or punitive damages, including lost profits, lost data, or business interruption, arising out of or in connection with your use of the site or the products.</p>
+        <p>Disrupted Studio's total liability under these terms is limited to the amount you paid for the product that gives rise to the claim, or one hundred US dollars, whichever is greater.</p>
+
+        <h3 id="indemnification" class="ds-legal__term-heading">2.14 Indemnification</h3>
+        <p>You agree to indemnify and hold harmless Disrupted Studio from any claims, losses, or expenses (including reasonable legal fees) arising out of your breach of these terms, your misuse of the site, or your use of a product outside the scope of the license you bought.</p>
+
+        <h3 id="changes" class="ds-legal__term-heading">2.15 Changes to these terms</h3>
+        <p>These terms may be updated from time to time. The version in effect on the date of your order is the one that applies to that order. The changelog at the bottom of this page lists the substantive changes by date. Material changes will also be noted on the home page or by email to the address on file.</p>
+
+        <h3 id="termination" class="ds-legal__term-heading">2.16 Termination</h3>
+        <p>The studio may suspend or end your access to the site if you materially breach these terms. The license to any product you bought stays in force unless the license itself terminates under its own terms (see the license page).</p>
+        <p>Sections that should reasonably survive termination (intellectual property, disclaimer, limitation of liability, indemnification, governing law) survive.</p>
+
+        <h3 id="law" class="ds-legal__term-heading">2.17 Governing law and venue</h3>
+        <p>These terms are governed by the laws of the United States and the State of Georgia, without regard to conflict-of-laws principles. Any dispute arising under these terms will be resolved in the state or federal courts located in Fulton County, Georgia. You and Disrupted Studio each consent to that venue.</p>
+        <p>Nothing in this section prevents either party from seeking injunctive relief in any court of competent jurisdiction, or limits the rights of consumers under the mandatory laws of their country of residence.</p>
+
+        <h3 id="misc" class="ds-legal__term-heading">2.18 Miscellaneous</h3>
+        <p>These terms, together with the license page and the refund policy, form the entire agreement between you and Disrupted Studio for the use of the site and the purchase of products. If any clause is found unenforceable, the rest of the terms remain in effect. A failure to enforce a right is not a waiver of that right.</p>
+
+        <h3 id="contact" class="ds-legal__term-heading">2.19 Contact</h3>
+        <p>Questions about these terms can be sent to <a href="mailto:blainepatedesign@gmail.com">blainepatedesign@gmail.com</a>. Replies usually go out within two business days.</p>
+
+      </article>
+    </section>
+
+    {%- comment -%} ============ CHANGELOG ============ {%- endcomment -%}
+    <section class="ds-legal__block" aria-labelledby="terms-changelog">
+      <h2 class="ds-legal__block-title" id="terms-changelog">
+        <span class="ds-legal__block-num ds-mono">03</span>
+        Changelog
+      </h2>
+      <p class="ds-legal__block-intro">The version on this page when you placed your order is the one that applies to your purchase. Older versions are kept here for reference.</p>
+      <ul class="ds-legal__changelog">
+        <li>
+          <span class="ds-legal__changelog-version ds-mono">v1.0 - May 2026</span>
+          <span class="ds-legal__changelog-note">Initial publication. Covers site acceptance, eligibility, orders and payment, digital delivery, acceptable use, IP, disclaimers, limitation of liability, indemnification, and governing law. Defers asset use to the license page (section 2.7) and refund rules to the refund policy page (section 2.8) so each document stays single-purpose.</span>
+        </li>
+      </ul>
+    </section>
+
+  </div>
+</section>
+
+{% style %}
+  .ds-legal {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding: clamp(48px, 6vw, 96px) 0;
+  }
+  .ds-legal__container {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 var(--pad-x);
+  }
+
+  /* ----- Header ----- */
+  .ds-legal__header {
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: clamp(32px, 4vw, 56px);
+    margin-bottom: clamp(48px, 5vw, 72px);
+  }
+  .ds-legal__eyebrow {
+    color: var(--color-accent);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-legal__title {
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 var(--space-5);
+  }
+  .ds-legal__version {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .ds-legal__version-pill {
+    display: inline-block;
+    border: 1px solid var(--color-border);
+    padding: 4px 10px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .ds-legal__version-date {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+  .ds-legal__intro {
+    max-width: 64ch;
+    font-size: 17px;
+    line-height: 1.5;
+    margin: 0;
+    opacity: 0.85;
+  }
+
+  /* ----- Block ----- */
+  .ds-legal__block {
+    padding-block: clamp(40px, 5vw, 64px);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .ds-legal__block:last-of-type {
+    border-bottom: none;
+  }
+  .ds-legal__block-title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 var(--space-5);
+  }
+  .ds-legal__block-num {
+    color: var(--color-accent);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .ds-legal__block-intro {
+    max-width: 60ch;
+    line-height: 1.55;
+    margin: 0 0 var(--space-6);
+    opacity: 0.85;
+  }
+
+  /* ----- TL;DR grid ----- */
+  .ds-legal__tldr-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+  .ds-legal__tldr-card {
+    border: 1px solid var(--color-border);
+    padding: var(--space-5);
+    background: var(--color-bg-elev);
+  }
+  .ds-legal__tldr-card-eyebrow {
+    color: var(--color-accent);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-legal__tldr-card-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-legal__tldr-card-list li::before {
+    content: "\2192  ";
+    color: var(--color-accent);
+    margin-right: 6px;
+  }
+
+  /* ----- Body text ----- */
+  .ds-legal__body {
+    max-width: 70ch;
+  }
+  .ds-legal__term-heading {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: var(--space-6) 0 var(--space-3);
+  }
+  .ds-legal__body p {
+    line-height: 1.6;
+    margin: 0 0 var(--space-3);
+    opacity: 0.9;
+  }
+  .ds-legal__body ul {
+    line-height: 1.6;
+    margin: 0 0 var(--space-3);
+    padding-left: 24px;
+    opacity: 0.9;
+  }
+  .ds-legal__body li {
+    margin-bottom: 6px;
+  }
+  .ds-legal__body strong {
+    font-weight: 600;
+    opacity: 1;
+  }
+  .ds-legal__body a {
+    color: var(--color-fg);
+    border-bottom: 1px solid var(--color-border-strong);
+    text-decoration: none;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-legal__body a:hover {
+    border-color: var(--color-fg);
+  }
+
+  /* ----- Changelog ----- */
+  .ds-legal__changelog {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-legal__changelog > li {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--space-3) 0;
+    border-bottom: 1px dashed var(--color-border);
+  }
+  .ds-legal__changelog > li:last-child {
+    border-bottom: none;
+  }
+  .ds-legal__changelog-version {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--color-accent);
+  }
+  .ds-legal__changelog-note {
+    font-size: 14px;
+    opacity: 0.85;
+    line-height: 1.4;
+  }
+
+  /* ----- Mobile ----- */
+  @media (max-width: 768px) {
+    .ds-legal__tldr-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Terms of service",
+  "tag": "section",
+  "class": "ds-section ds-section--terms-of-service",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "default": "TERMS OF SERVICE",
+      "label": "Eyebrow",
+      "info": "Mono caps text above the title."
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "default": "Terms of service",
+      "label": "Page title"
+    },
+    {
+      "type": "text",
+      "id": "version",
+      "default": "v1.0",
+      "label": "Version",
+      "info": "Bump on each amendment. Old versions stay in the changelog at the bottom of the page."
+    },
+    {
+      "type": "text",
+      "id": "version_date",
+      "default": "May 2026",
+      "label": "Effective date",
+      "info": "Month + year. Shown next to the version pill."
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "default": "These are the rules for using this site and buying from it. By browsing or placing an order, you agree to them. The version on this page when you placed your order is the one that applies to that order.",
+      "label": "Intro paragraph"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Terms of service",
+      "category": "Disrupted Studio"
+    }
+  ]
+}
+{% endschema %}

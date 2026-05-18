@@ -1,0 +1,417 @@
+{%- comment -%}
+  sections/ds-refund-policy.liquid - Disrupted Studio refund policy page.
+
+  Rendered on /pages/refund-policy via templates/page.refund-policy.json.
+  Visual structure mirrors sections/ds-license-terms.liquid so all three
+  legal pages (license, refund, terms) feel like one consistent set.
+
+  --------------------------------------------------------------------
+  CONTENT POLICY
+
+  The body text is hardcoded in Liquid so amendments are version-
+  controlled in git. The merchant-editable surface is just the header
+  copy (eyebrow, title, version pill, intro). On every amendment:
+    1. Bump the version setting
+    2. Update version_date
+    3. Add a row to the Changelog block at the bottom
+
+  Facts must stay aligned with:
+    - The product PDP FAQs (templates/product.*.json -> faq_refund)
+    - The license terms section 3.7 (sections/ds-license-terms.liquid)
+  If you change any rule here, update those too.
+
+  --------------------------------------------------------------------
+  DRAFT - REVIEW BEFORE LAUNCH
+
+  Reasonable boilerplate for an indie digital-asset shop in the US,
+  matching the commitments already made in the PDP FAQs. Before going
+  live, have an attorney in your jurisdiction review the refund,
+  warranty, and chargeback clauses.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme
+  assign version = section.settings.version | default: 'v1.0'
+  assign version_date = section.settings.version_date | default: 'May 2026'
+  assign eyebrow = section.settings.eyebrow | default: 'REFUND POLICY'
+  assign title = section.settings.title | default: 'Refund policy'
+  assign intro = section.settings.intro | default: 'Plain-language summary first, full policy below. Everything in this store is a digital download, so the rules look different from a regular shop. The version on this page when you placed your order is the one that applies to your purchase.'
+-%}
+
+<section class="ds-legal color-{{ cs }}">
+  <div class="ds-legal__container">
+
+    {%- comment -%} ============ HEADER ============ {%- endcomment -%}
+    <header class="ds-legal__header">
+      <p class="ds-legal__eyebrow ds-mono">[ {{ eyebrow }} ]</p>
+      <h1 class="ds-legal__title">{{ title }}</h1>
+      <div class="ds-legal__version">
+        <span class="ds-legal__version-pill ds-mono">{{ version }}</span>
+        <span class="ds-legal__version-date ds-mono">Effective {{ version_date }}</span>
+      </div>
+      <p class="ds-legal__intro">{{ intro }}</p>
+    </header>
+
+    {%- comment -%} ============ TL;DR ============ {%- endcomment -%}
+    <section class="ds-legal__block" aria-labelledby="refund-tldr">
+      <h2 class="ds-legal__block-title" id="refund-tldr">
+        <span class="ds-legal__block-num ds-mono">01</span>
+        TL;DR
+      </h2>
+      <div class="ds-legal__tldr-grid">
+        <div class="ds-legal__tldr-card">
+          <p class="ds-legal__tldr-card-eyebrow ds-mono">[ ALL SALES FINAL ]</p>
+          <ul class="ds-legal__tldr-card-list">
+            <li>Downloads are delivered the moment you check out.</li>
+            <li>Once a file has been downloaded, the sale is considered final.</li>
+            <li>Please read the product page carefully before you buy.</li>
+          </ul>
+        </div>
+        <div class="ds-legal__tldr-card">
+          <p class="ds-legal__tldr-card-eyebrow ds-mono">[ EXCEPTIONS ]</p>
+          <ul class="ds-legal__tldr-card-list">
+            <li>Defective or broken files: replaced at no charge.</li>
+            <li>Duplicate orders placed in error: full refund of the duplicate.</li>
+            <li>EU buyers: 14-day right of withdrawal before you download.</li>
+          </ul>
+        </div>
+        <div class="ds-legal__tldr-card">
+          <p class="ds-legal__tldr-card-eyebrow ds-mono">[ HOW TO ASK ]</p>
+          <ul class="ds-legal__tldr-card-list">
+            <li>Email blainepatedesign@gmail.com.</li>
+            <li>Include your order number and the reason.</li>
+            <li>Expect a reply within two business days.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    {%- comment -%} ============ FULL POLICY ============ {%- endcomment -%}
+    <section class="ds-legal__block" aria-labelledby="refund-full">
+      <h2 class="ds-legal__block-title" id="refund-full">
+        <span class="ds-legal__block-num ds-mono">02</span>
+        Full policy
+      </h2>
+
+      <article class="ds-legal__body">
+
+        <h3 id="why-final" class="ds-legal__term-heading">2.1 Why digital sales are final</h3>
+        <p>Every product in this store is a digital file (a plugin, a font, a graphics pack, or a bundle). Files are delivered the moment your order is paid, by email and from your Shopify account if you have one. Once a file has been downloaded, you have the product. For that reason, all sales are final once the download has started.</p>
+        <p>This is the standard practice for indie digital studios such as Klim Type Foundry, Pangram Pangram, Mass-Driver, and Foundry Types. It is also the practice on marketplaces like Creative Market, Fontspring, and Gumroad. The model lets a small studio sell at fair prices without the cost of policing returns of files that can be kept after a refund.</p>
+
+        <h3 id="exceptions" class="ds-legal__term-heading">2.2 When a refund or replacement is offered</h3>
+        <p>A refund or replacement will be issued in these cases:</p>
+        <ul>
+          <li><strong>Defective or non-functional files.</strong> If a file is corrupted, will not open, or does not match what the product page describes, the file will be replaced at no charge. If a replacement is not possible, a full refund is issued.</li>
+          <li><strong>Duplicate orders placed in error.</strong> If the same product is purchased twice on the same account within 30 days, the duplicate is refunded in full.</li>
+          <li><strong>Wrong product delivered.</strong> If the order receipt does not match what was shipped, the correct product is delivered and any overcharge is refunded.</li>
+          <li><strong>Unauthorized charges.</strong> If a card is charged without your authorization, contact your bank first to dispute the charge, then email this studio. Files associated with the order will be deactivated.</li>
+        </ul>
+
+        <h3 id="eu" class="ds-legal__term-heading">2.3 EU buyers and the 14-day right of withdrawal</h3>
+        <p>Buyers in the European Union have a 14-day right of withdrawal on most online purchases under the Consumer Rights Directive (Directive 2011/83/EU). For digital content delivered without a physical medium, that right has an important exception.</p>
+        <p>Per Article 16(m) of the Directive, the right of withdrawal lapses once the download begins, provided the buyer has given prior express consent. By clicking the download link or starting the file delivery, you give that consent and waive the right of withdrawal.</p>
+        <p>If you have not yet downloaded the file, you may withdraw within 14 days of purchase for a full refund. Email blainepatedesign@gmail.com with your order number to start a withdrawal.</p>
+
+        <h3 id="not-covered" class="ds-legal__term-heading">2.4 What is not a reason for a refund</h3>
+        <p>To keep the policy fair and clear, these situations do not qualify for a refund:</p>
+        <ul>
+          <li>You changed your mind after downloading the file.</li>
+          <li>You did not read the product page before buying (system requirements, formats, license tier, included items).</li>
+          <li>You bought the wrong tier (the Personal vs Commercial split is described on every product page and on the license page). For tier upgrades, see the license page section 3.5: you pay the difference, no need for a refund and rebuy.</li>
+          <li>The product does not fit a use case it was not advertised for.</li>
+          <li>You did not realize the product was digital, not physical (the store sells only digital goods).</li>
+          <li>The file was delivered correctly and is working as described, but you no longer want it.</li>
+        </ul>
+
+        <h3 id="chargebacks" class="ds-legal__term-heading">2.5 Chargebacks</h3>
+        <p>If you initiate a chargeback or payment dispute with your bank or card issuer for an order, the license to use the affected files terminates automatically. You must delete every copy of the file and stop using any work that contains it. End products already distributed to third parties before the chargeback may remain with those third parties.</p>
+        <p>If you have a problem with an order, please email first. Most issues can be sorted faster by email than through a dispute, and you keep your license either way.</p>
+
+        <h3 id="how" class="ds-legal__term-heading">2.6 How to request a refund or replacement</h3>
+        <p>Send an email to <a href="mailto:blainepatedesign@gmail.com">blainepatedesign@gmail.com</a> with:</p>
+        <ul>
+          <li>Your order number (it is in the order confirmation email).</li>
+          <li>The product name.</li>
+          <li>A short description of the problem, or the reason for the refund request.</li>
+          <li>Screenshots or a short screen recording if the product is defective.</li>
+        </ul>
+        <p>You will get a reply within two business days. Refunds are processed through the original payment method and typically appear within five to ten business days, depending on your bank.</p>
+
+        <h3 id="warranty" class="ds-legal__term-heading">2.7 Warranty disclaimer</h3>
+        <p>Products are sold as is. There is no warranty that a product will be uninterrupted, error-free, or compatible with every software or hardware configuration. The product page lists supported systems and formats. If a defect is reported under section 2.2, it will be fixed, replaced, or refunded.</p>
+        <p>This policy does not limit any statutory consumer rights that apply in your country, including the rights of EU buyers under section 2.3.</p>
+
+        <h3 id="contact" class="ds-legal__term-heading">2.8 Contact and governing law</h3>
+        <p>This policy is provided by Disrupted Studio, a sole proprietorship based in Atlanta, Georgia, United States. Disrupted Studio can be reached at blainepatedesign@gmail.com.</p>
+        <p>This policy is governed by the laws of the United States and the State of Georgia, without regard to conflict-of-laws principles. Any dispute arising under this policy will be resolved in the state or federal courts located in Fulton County, Georgia.</p>
+
+      </article>
+    </section>
+
+    {%- comment -%} ============ CHANGELOG ============ {%- endcomment -%}
+    <section class="ds-legal__block" aria-labelledby="refund-changelog">
+      <h2 class="ds-legal__block-title" id="refund-changelog">
+        <span class="ds-legal__block-num ds-mono">03</span>
+        Changelog
+      </h2>
+      <p class="ds-legal__block-intro">The version on this page when you placed your order is the one that applies to your purchase. Older versions are kept here for reference.</p>
+      <ul class="ds-legal__changelog">
+        <li>
+          <span class="ds-legal__changelog-version ds-mono">v1.0 - May 2026</span>
+          <span class="ds-legal__changelog-note">Initial publication. Sets the all-sales-final rule for digital downloads, the four exception cases, and the EU 14-day pre-download withdrawal right under Article 16(m) of the Consumer Rights Directive. Aligns with the PDP FAQ answers and license section 3.7.</span>
+        </li>
+      </ul>
+    </section>
+
+  </div>
+</section>
+
+{% style %}
+  .ds-legal {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding: clamp(48px, 6vw, 96px) 0;
+  }
+  .ds-legal__container {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 var(--pad-x);
+  }
+
+  /* ----- Header ----- */
+  .ds-legal__header {
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: clamp(32px, 4vw, 56px);
+    margin-bottom: clamp(48px, 5vw, 72px);
+  }
+  .ds-legal__eyebrow {
+    color: var(--color-accent);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-legal__title {
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 var(--space-5);
+  }
+  .ds-legal__version {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .ds-legal__version-pill {
+    display: inline-block;
+    border: 1px solid var(--color-border);
+    padding: 4px 10px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .ds-legal__version-date {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+  .ds-legal__intro {
+    max-width: 64ch;
+    font-size: 17px;
+    line-height: 1.5;
+    margin: 0;
+    opacity: 0.85;
+  }
+
+  /* ----- Block ----- */
+  .ds-legal__block {
+    padding-block: clamp(40px, 5vw, 64px);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .ds-legal__block:last-of-type {
+    border-bottom: none;
+  }
+  .ds-legal__block-title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 var(--space-5);
+  }
+  .ds-legal__block-num {
+    color: var(--color-accent);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .ds-legal__block-intro {
+    max-width: 60ch;
+    line-height: 1.55;
+    margin: 0 0 var(--space-6);
+    opacity: 0.85;
+  }
+
+  /* ----- TL;DR grid ----- */
+  .ds-legal__tldr-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+  .ds-legal__tldr-card {
+    border: 1px solid var(--color-border);
+    padding: var(--space-5);
+    background: var(--color-bg-elev);
+  }
+  .ds-legal__tldr-card-eyebrow {
+    color: var(--color-accent);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-legal__tldr-card-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-legal__tldr-card-list li::before {
+    content: "\2192  ";
+    color: var(--color-accent);
+    margin-right: 6px;
+  }
+
+  /* ----- Body text ----- */
+  .ds-legal__body {
+    max-width: 70ch;
+  }
+  .ds-legal__term-heading {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: var(--space-6) 0 var(--space-3);
+  }
+  .ds-legal__body p {
+    line-height: 1.6;
+    margin: 0 0 var(--space-3);
+    opacity: 0.9;
+  }
+  .ds-legal__body ul {
+    line-height: 1.6;
+    margin: 0 0 var(--space-3);
+    padding-left: 24px;
+    opacity: 0.9;
+  }
+  .ds-legal__body li {
+    margin-bottom: 6px;
+  }
+  .ds-legal__body strong {
+    font-weight: 600;
+    opacity: 1;
+  }
+  .ds-legal__body a {
+    color: var(--color-fg);
+    border-bottom: 1px solid var(--color-border-strong);
+    text-decoration: none;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-legal__body a:hover {
+    border-color: var(--color-fg);
+  }
+
+  /* ----- Changelog ----- */
+  .ds-legal__changelog {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-legal__changelog > li {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--space-3) 0;
+    border-bottom: 1px dashed var(--color-border);
+  }
+  .ds-legal__changelog > li:last-child {
+    border-bottom: none;
+  }
+  .ds-legal__changelog-version {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--color-accent);
+  }
+  .ds-legal__changelog-note {
+    font-size: 14px;
+    opacity: 0.85;
+    line-height: 1.4;
+  }
+
+  /* ----- Mobile ----- */
+  @media (max-width: 768px) {
+    .ds-legal__tldr-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Refund policy",
+  "tag": "section",
+  "class": "ds-section ds-section--refund-policy",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "default": "REFUND POLICY",
+      "label": "Eyebrow",
+      "info": "Mono caps text above the title."
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "default": "Refund policy",
+      "label": "Page title"
+    },
+    {
+      "type": "text",
+      "id": "version",
+      "default": "v1.0",
+      "label": "Version",
+      "info": "Bump on each amendment. Old versions stay in the changelog at the bottom of the page."
+    },
+    {
+      "type": "text",
+      "id": "version_date",
+      "default": "May 2026",
+      "label": "Effective date",
+      "info": "Month + year. Shown next to the version pill."
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "default": "Plain-language summary first, full policy below. Everything in this store is a digital download, so the rules look different from a regular shop. The version on this page when you placed your order is the one that applies to your purchase.",
+      "label": "Intro paragraph"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Refund policy",
+      "category": "Disrupted Studio"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,50 @@
+/*
+ * ------------------------------------------------------------
+ * Disrupted Studio - TERMS OF SERVICE page template
+ *
+ * Renders the terms of service at /pages/terms-of-service.
+ *
+ * Merchant setup
+ *   1. Admin -> Online Store -> Pages -> Add page
+ *   2. Title: "Terms of service" (slug becomes /pages/terms-of-service)
+ *   3. Visibility: Visible
+ *   4. Theme template: pick "page.terms-of-service" from the right
+ *      sidebar dropdown
+ *   5. Save. Link from the footer Studio / Legal column and from
+ *      Shopify Settings -> Checkout -> Policies (paste the page URL
+ *      into the terms of service URL field).
+ *
+ * Section content
+ *   Body text lives in sections/ds-terms-of-service.liquid for
+ *   git-tracked accuracy. Header copy (eyebrow, title, version
+ *   pill, intro) is editable via theme editor -> Customize ->
+ *   Terms of service page.
+ *
+ * Versioning
+ *   Same convention as the license and refund policy pages: bump
+ *   the version on each amendment, update version_date, add a row
+ *   to the Changelog block in the section. Past versions apply to
+ *   past orders.
+ *
+ * Cross-references
+ *   Section 2.7 of this page points to /pages/license for asset
+ *   use rights. Section 2.8 points to /pages/refund-policy for the
+ *   refund rules. Keep those links working if you rename a page.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "ds-terms-of-service",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "eyebrow": "TERMS OF SERVICE",
+        "title": "Terms of service",
+        "version": "v1.0",
+        "version_date": "May 2026",
+        "intro": "These are the rules for using this site and buying from it. By browsing or placing an order, you agree to them. The version on this page when you placed your order is the one that applies to that order."
+      }
+    }
+  },
+  "order": ["main"]
+}

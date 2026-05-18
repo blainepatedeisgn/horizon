@@ -1,0 +1,51 @@
+/*
+ * ------------------------------------------------------------
+ * Disrupted Studio - REFUND POLICY page template
+ *
+ * Renders the refund policy at /pages/refund-policy.
+ *
+ * Merchant setup
+ *   1. Admin -> Online Store -> Pages -> Add page
+ *   2. Title: "Refund policy" (slug becomes /pages/refund-policy)
+ *   3. Visibility: Visible
+ *   4. Theme template: pick "page.refund-policy" from the right
+ *      sidebar dropdown
+ *   5. Save. Link from the footer Studio / Legal column and from
+ *      Shopify Settings -> Checkout -> Policies (paste the page URL
+ *      into the refund policy URL field so the checkout page links
+ *      to this version instead of Shopify's plain-text default).
+ *
+ * Section content
+ *   Body text lives in sections/ds-refund-policy.liquid for git-
+ *   tracked accuracy. Header copy (eyebrow, title, version pill,
+ *   intro) is editable via theme editor -> Customize -> Refund
+ *   policy page.
+ *
+ * Versioning
+ *   Same convention as the license page: bump the version on each
+ *   amendment, update version_date, add a row to the Changelog
+ *   block in the section. Past versions apply to past orders.
+ *
+ * Source of truth
+ *   The rules here mirror the answers to the "What's the refund
+ *   policy?" FAQ in templates/product.*.json and section 3.7 of
+ *   sections/ds-license-terms.liquid. If you change one, change
+ *   the others too so the customer-facing surface stays consistent.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "ds-refund-policy",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "eyebrow": "REFUND POLICY",
+        "title": "Refund policy",
+        "version": "v1.0",
+        "version_date": "May 2026",
+        "intro": "Plain-language summary first, full policy below. Everything in this store is a digital download, so the rules look different from a regular shop. The version on this page when you placed your order is the one that applies to your purchase."
+      }
+    }
+  },
+  "order": ["main"]
+}
