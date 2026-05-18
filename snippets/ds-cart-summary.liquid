@@ -1,39 +1,50 @@
 {%- comment -%}
   snippets/ds-cart-summary.liquid — Disrupted Studio cart drawer footer
 
-  Renders the bottom of the cart drawer: subtotal, any cart-level
-  discounts, total, checkout button, taxes/shipping note.
-
-  Designed to match the mockup's brutalist look:
-    Subtotal       $80.00
-    Launch −20%   −$16.00   (orange, only if discount present)
-    ──────────────────────
-    Total      $64.00 USD
-    [ CHECKOUT — $64.00 ]
-    Taxes calculated at checkout · Instant download
+  Renders the bottom of the cart drawer: total (subtotal/discount
+  breakdown only shown when a discount is applied), checkout button,
+  express checkout buttons, taxes/license note.
 
   Cart-level discounts use Shopify's `cart.cart_level_discount_applications`
   (auto-applied via discount codes or scripts). Line-level discounts are
   already reflected in line `final_price` so they don't need a separate row.
+
+  License-terms consent: the old click-wrap checkbox was removed in
+  favor of a "by purchasing you agree" line in the note below + matching
+  language on /pages/license. Purchase-as-acceptance is industry-standard
+  for digital goods (Pangram, Hvnter, Klim all use it).
 {%- endcomment -%}
+
+{%- liquid
+  # Show the Subtotal + per-discount breakdown only when a cart-level
+  # discount is actually in play. For the common case (no discount),
+  # subtotal === total === total_price minus tax (added at checkout),
+  # so a separate Subtotal row would just be visual noise.
+  assign has_discount = false
+  if cart.original_total_price > cart.total_price
+    assign has_discount = true
+  endif
+-%}
 
 <div class="ds-cart__summary">
   <div class="ds-cart__summary-rows">
-    <div class="ds-cart__sub-row">
-      <span class="ds-cart__sub-label">Subtotal</span>
-      <span class="ds-cart__sub-value">
-        <text-component value="{{ cart.original_total_price | money | strip_html }}">
-          {{ cart.original_total_price | money }}
-        </text-component>
-      </span>
-    </div>
-
-    {%- for discount in cart.cart_level_discount_applications -%}
-      <div class="ds-cart__sub-row ds-cart__sub-row--discount">
-        <span class="ds-cart__sub-label">{{ discount.title }}</span>
-        <span class="ds-cart__sub-value">−{{ discount.total_allocated_amount | money }}</span>
+    {%- if has_discount -%}
+      <div class="ds-cart__sub-row">
+        <span class="ds-cart__sub-label">Subtotal</span>
+        <span class="ds-cart__sub-value">
+          <text-component value="{{ cart.original_total_price | money | strip_html }}">
+            {{ cart.original_total_price | money }}
+          </text-component>
+        </span>
       </div>
-    {%- endfor -%}
+
+      {%- for discount in cart.cart_level_discount_applications -%}
+        <div class="ds-cart__sub-row ds-cart__sub-row--discount">
+          <span class="ds-cart__sub-label">{{ discount.title }}</span>
+          <span class="ds-cart__sub-value">−{{ discount.total_allocated_amount | money }}</span>
+        </div>
+      {%- endfor -%}
+    {%- endif -%}
 
     <div class="ds-cart__sub-row ds-cart__sub-row--total">
       <span class="ds-cart__sub-label">Total</span>
@@ -44,13 +55,6 @@
       </span>
     </div>
   </div>
-
-  {%- comment -%}
-    License consent gate. Renders the checkbox + JS that disables every
-    [name="checkout"] button until the user agrees. Shared snippet —
-    same instance also renders on the full cart page via main-cart.
-  {%- endcomment -%}
-  {%- render 'ds-cart-agreement' -%}
 
   <form
     action="{{ routes.cart_url }}"
@@ -72,22 +76,14 @@
       Pay, Google Pay) — Shopify renders whichever ones the merchant
       has enabled in Settings → Payments → Express checkouts. The
       `additional_checkout_buttons` variable is only true when at
-      least one is configured, so on stores without Shop Pay this
-      section emits nothing.
-
-      Wrapped in [data-ds-cart-express] so the license-agreement
-      gate (script in ds-header.liquid) can `inert` it until the
-      checkbox is ticked — without this, customers could bypass
-      the gate by tapping Shop Pay.
+      least one is configured, so on stores without these enabled
+      this section emits nothing.
 
       Shop Pay's web component handles its own click → token →
       checkout flow; we don't need our own form submission for it.
     {%- endcomment -%}
     {%- if additional_checkout_buttons -%}
-      <div
-        class="ds-cart__express"
-        data-ds-cart-express
-      >
+      <div class="ds-cart__express">
         {{ content_for_additional_checkout_buttons }}
       </div>
     {%- endif -%}
@@ -97,5 +93,8 @@
     Taxes calculated at checkout
     <br>
     Instant download after purchase
+    <br>
+    By purchasing, you agree to the
+    <a href="/pages/license" class="ds-cart__note-link" target="_blank" rel="noopener">License terms</a>
   </p>
 </div>
