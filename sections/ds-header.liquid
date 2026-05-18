@@ -68,12 +68,41 @@
     </div>
 
     {%- if main_menu != blank and linklists[main_menu].links.size > 0 -%}
+      {%- liquid
+        # Mega menu trigger detection. Match by lowercased title so
+        # the merchant can rename "Shop" to "Browse" or anything else
+        # via settings without touching code. Disabled if megamenu is
+        # off, has no collections, or no trigger label is set.
+        assign mm_enabled = section.settings.megamenu_enabled
+        assign mm_collections = section.settings.megamenu_collections
+        assign mm_trigger_label = section.settings.megamenu_trigger | default: '' | downcase
+        assign mm_active = false
+        if mm_enabled and mm_collections.size > 0 and mm_trigger_label != ''
+          assign mm_active = true
+        endif
+      -%}
       <nav class="ds-header__nav" aria-label="Main navigation">
         {%- for link in linklists[main_menu].links -%}
-          <a
-            href="{{ link.url }}"
-            class="ds-header__nav-link{% if link.active or link.child_active %} is-active{% endif %}"
-          >{{ link.title }}</a>
+          {%- assign this_title_lc = link.title | downcase -%}
+          {%- if mm_active and this_title_lc == mm_trigger_label -%}
+            <span
+              class="ds-header__nav-item ds-header__nav-item--mm"
+              data-ds-megamenu-trigger
+            >
+              <a
+                href="{{ link.url }}"
+                class="ds-header__nav-link ds-header__nav-link--mm{% if link.active or link.child_active %} is-active{% endif %}"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="ds-megamenu"
+              >{{ link.title }}<span class="ds-header__nav-chevron" aria-hidden="true">▾</span></a>
+            </span>
+          {%- else -%}
+            <a
+              href="{{ link.url }}"
+              class="ds-header__nav-link{% if link.active or link.child_active %} is-active{% endif %}"
+            >{{ link.title }}</a>
+          {%- endif -%}
         {%- endfor -%}
       </nav>
     {%- endif -%}
@@ -363,6 +392,99 @@
 {%- endif -%}
 
 {%- comment -%}
+  ----- MEGA MENU (desktop hover dropdown) -----
+  Full-width slide-down panel below the header on desktop. Triggered
+  by hovering the main-menu item whose label matches
+  settings.megamenu_trigger (default "Shop"). Left column = numbered
+  list of merchant-picked collections (pure typography, brutalist
+  rows). Right column = optional single "spotlight" product card.
+  When no spotlight product is configured the list spans full width.
+
+  Position: top: var(--ds-search-top) — the same JS-managed CSS var
+  that the search dropdown uses, so it auto-tracks the live bottom
+  edge of the header through scroll states + announce bar.
+
+  Hidden + display:none on touch / mobile (those use the mobile menu
+  drawer). Hidden + visibility:hidden in the default state on desktop
+  with a slide-down opacity+transform transition on .is-opening.
+
+  Markup mounted OUTSIDE .ds-header so backdrop-filter / sticky
+  containing-block traps don't interfere (same pattern as cart
+  drawer, search modal, mobile menu).
+{%- endcomment -%}
+{%- liquid
+  assign mm_show = false
+  if section.settings.megamenu_enabled and section.settings.megamenu_collections.size > 0
+    assign mm_show = true
+  endif
+  assign mm_feat = section.settings.megamenu_featured_product
+  assign mm_has_feat = false
+  if mm_feat != blank
+    assign mm_has_feat = true
+  endif
+-%}
+{%- if mm_show -%}
+  <div
+    id="ds-megamenu"
+    class="ds-megamenu{% if mm_has_feat %} ds-megamenu--with-feature{% endif %}"
+    data-ds-megamenu
+    aria-hidden="true"
+  >
+    <div class="ds-megamenu__inner">
+      <div class="ds-megamenu__left">
+        {%- if section.settings.megamenu_eyebrow != blank -%}
+          <div class="ds-megamenu__eyebrow">{{ section.settings.megamenu_eyebrow }}</div>
+        {%- endif -%}
+        <ul class="ds-megamenu__list">
+          {%- for collection in section.settings.megamenu_collections -%}
+            {%- assign num = forloop.index | prepend: '0' | slice: -2, 2 -%}
+            <li class="ds-megamenu__item">
+              <a href="{{ collection.url }}" class="ds-megamenu__link">
+                <span class="ds-megamenu__num" aria-hidden="true">{{ num }}.</span>
+                <span class="ds-megamenu__name">{{ collection.title }}</span>
+                <span class="ds-megamenu__count" aria-hidden="true">{{ collection.products_count }} items</span>
+                <span class="ds-megamenu__arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+
+      {%- if mm_has_feat -%}
+        <div class="ds-megamenu__right">
+          <a href="{{ mm_feat.url }}" class="ds-megamenu__feature">
+            <div class="ds-megamenu__feature-media">
+              {%- if mm_feat.featured_image -%}
+                {{
+                  mm_feat.featured_image
+                  | image_url: width: 800
+                  | image_tag:
+                      loading: 'lazy',
+                      alt: mm_feat.title,
+                      widths: '400,600,800',
+                      sizes: '(min-width: 1200px) 40vw, 50vw',
+                      class: 'ds-megamenu__feature-img'
+                }}
+              {%- else -%}
+                <span class="ds-megamenu__feature-img-placeholder" aria-hidden="true"></span>
+              {%- endif -%}
+            </div>
+            <div class="ds-megamenu__feature-meta">
+              <div class="ds-megamenu__feature-eyebrow">Spotlight</div>
+              <div class="ds-megamenu__feature-title">{{ mm_feat.title }}</div>
+              <div class="ds-megamenu__feature-row">
+                <span class="ds-megamenu__feature-price">{{ mm_feat.price | money }}</span>
+                <span class="ds-megamenu__feature-cta">View product <span aria-hidden="true">→</span></span>
+              </div>
+            </div>
+          </a>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}
+
+{%- comment -%}
   ----- SEARCH MODAL -----
   Centered cmdk-style search popup. Mounted outside .ds-header (same
   reason as the cart drawer + mobile menu — escape backdrop-filter
@@ -581,6 +703,29 @@
     opacity: 1;
     border-bottom-color: var(--color-accent);
   }
+  /* Mega-menu trigger wrapper — preserves inline flow with the other
+     nav links. The wrapper itself is the hover area picked up by JS;
+     the <a> inside is the actual clickable link. */
+  .ds-header__nav-item--mm {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .ds-header__nav-link--mm {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .ds-header__nav-chevron {
+    font-size: 9px;
+    transform: translateY(1px);
+    opacity: 0.7;
+    transition: transform var(--t-fast) var(--ease);
+  }
+  .ds-header__nav-item--mm.is-open .ds-header__nav-chevron {
+    transform: translateY(1px) rotate(180deg);
+  }
+
   .ds-header__actions {
     display: flex;
     align-items: center;
@@ -1968,6 +2113,247 @@
   }
 
   /* ============================================================
+     MEGA MENU (ds-megamenu) — desktop hover dropdown
+
+     Full-width slide-down panel pinned to the bottom edge of the
+     header (via --ds-search-top, same JS-managed var the search
+     dropdown uses). Two-column grid inside when a spotlight
+     product is configured, single column when not. Hidden on
+     touch / narrow viewports.
+
+     Animation: opacity + transform translateY entrance, gated by
+     .is-opening class added by JS. visibility:hidden in the
+     idle state so the layout doesn't intercept pointer events.
+
+     Layout:
+       • Outer panel: position:fixed, full viewport width, opaque
+         background, bottom border to separate from the page.
+       • Inner: var(--pad-x) horizontal padding so the content
+         aligns with the header logo/nav above.
+       • Left column: eyebrow + numbered list of collections.
+         Each row is a grid: num · name · count · arrow → arrow,
+         space-between justification, full-width hover state.
+       • Right column (when spotlight product is set): 50/50
+         split with left. Image + minimal info card, hard
+         brutalist borders, image scales subtly on hover.
+  ============================================================ */
+  .ds-megamenu {
+    position: fixed;
+    top: var(--ds-search-top, 64px);
+    left: 0;
+    right: 0;
+    width: 100vw;
+    z-index: 90;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+
+    /* Idle state — hidden, no pointer events, no layout impact. */
+    opacity: 0;
+    transform: translateY(-12px);
+    pointer-events: none;
+    visibility: hidden;
+    transition:
+      opacity 180ms ease,
+      transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      visibility 0s linear 240ms;
+  }
+  .ds-megamenu.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    visibility: visible;
+    transition:
+      opacity 180ms ease,
+      transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-megamenu { transition: visibility 0s; transform: none; }
+    .ds-megamenu.is-open { transform: none; }
+  }
+  .ds-megamenu__inner {
+    padding: clamp(24px, 3vw, 40px) var(--pad-x);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(24px, 4vw, 56px);
+    max-height: calc(100vh - var(--ds-search-top, 64px) - 40px);
+    overflow-y: auto;
+  }
+  .ds-megamenu--with-feature .ds-megamenu__inner {
+    grid-template-columns: 1fr 1fr;
+  }
+  /* LEFT COLUMN — eyebrow + collection list */
+  .ds-megamenu__left {
+    min-width: 0;
+  }
+  .ds-megamenu__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin-bottom: var(--space-4);
+  }
+  .ds-megamenu__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .ds-megamenu__item {
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-megamenu__item:last-child {
+    border-bottom: 1px solid var(--color-border);
+  }
+  .ds-megamenu__link {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    column-gap: var(--space-4);
+    padding: clamp(14px, 1.4vw, 22px) 0;
+    color: var(--color-fg);
+    text-decoration: none;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-megamenu__link:hover,
+  .ds-megamenu__link:focus-visible {
+    color: var(--color-accent);
+    outline: 0;
+  }
+  .ds-megamenu__num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-fg-muted);
+    letter-spacing: 0.04em;
+  }
+  .ds-megamenu__name {
+    font-size: clamp(18px, 1.8vw, 28px);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .ds-megamenu__count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--color-fg-muted);
+    white-space: nowrap;
+  }
+  .ds-megamenu__arrow {
+    font-size: 16px;
+    color: var(--color-fg-muted);
+    transition: color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+  }
+  .ds-megamenu__link:hover .ds-megamenu__arrow,
+  .ds-megamenu__link:focus-visible .ds-megamenu__arrow {
+    color: var(--color-accent);
+    transform: translateX(4px);
+  }
+
+  /* RIGHT COLUMN — spotlight product card */
+  .ds-megamenu__right {
+    display: flex;
+    min-width: 0;
+  }
+  .ds-megamenu__feature {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    width: 100%;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+    overflow: hidden;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-megamenu__feature:hover,
+  .ds-megamenu__feature:focus-visible {
+    border-color: var(--color-fg);
+    outline: 0;
+  }
+  .ds-megamenu__feature-media {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--color-bg);
+    border-right: 1px solid var(--color-border);
+  }
+  .ds-megamenu__feature-img,
+  .ds-megamenu__feature-img-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: var(--color-bg);
+    transition: transform 280ms var(--ease);
+  }
+  .ds-megamenu__feature:hover .ds-megamenu__feature-img {
+    transform: scale(1.02);
+  }
+  .ds-megamenu__feature-meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    justify-content: space-between;
+    min-width: 0;
+  }
+  .ds-megamenu__feature-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+  .ds-megamenu__feature-title {
+    font-size: clamp(16px, 1.4vw, 22px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .ds-megamenu__feature-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-3);
+  }
+  .ds-megamenu__feature-price {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--color-fg);
+  }
+  .ds-megamenu__feature-cta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .ds-megamenu__feature:hover .ds-megamenu__feature-cta {
+    color: var(--color-accent);
+  }
+
+  /* Hide entirely on touch / narrow viewports. The mobile menu
+     drawer covers this audience. */
+  @media (max-width: 900px), (hover: none) {
+    .ds-megamenu { display: none !important; }
+    .ds-header__nav-chevron { display: none; }
+  }
+  /* Stack the two columns on intermediate (tablet) widths so the
+     spotlight doesn't squeeze too narrow before mobile takes over. */
+  @media (min-width: 901px) and (max-width: 1100px) {
+    .ds-megamenu--with-feature .ds-megamenu__inner {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ============================================================
      SEARCH MODAL (ds-search-modal)
      Full-width dropdown anchored beneath the header bar.
      The native <dialog> renders in the top layer, so we just pin it
@@ -2470,6 +2856,44 @@
       "label": "Main menu",
       "info": "Pick a navigation menu (Online Store → Navigation). Recommend creating one with Shop / Plugins / Fonts / Graphics / About."
     },
+    { "type": "header", "content": "Mega menu (desktop hover)" },
+    {
+      "type": "paragraph",
+      "content": "Hover dropdown that opens below one of your main-menu items on desktop. Pure typography list of collections on the left, optional spotlight product on the right. Hidden on mobile / touch devices (they use the slide-out menu drawer)."
+    },
+    {
+      "type": "checkbox",
+      "id": "megamenu_enabled",
+      "label": "Enable mega menu",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "megamenu_trigger",
+      "label": "Trigger menu item",
+      "info": "Label of the main menu item that opens the mega menu on hover. Case-insensitive match against your menu link titles.",
+      "default": "Shop"
+    },
+    {
+      "type": "text",
+      "id": "megamenu_eyebrow",
+      "label": "Eyebrow text",
+      "info": "Small mono-caps label above the collection list. Leave blank to hide.",
+      "default": "Browse by category"
+    },
+    {
+      "type": "collection_list",
+      "id": "megamenu_collections",
+      "label": "Collections",
+      "info": "Up to 6 collections shown as a numbered list on the left side of the dropdown.",
+      "limit": 6
+    },
+    {
+      "type": "product",
+      "id": "megamenu_featured_product",
+      "label": "Spotlight product",
+      "info": "Optional big product card on the right side of the dropdown. Leave blank to make the list span full width."
+    },
     { "type": "header", "content": "Actions" },
     {
       "type": "checkbox",
@@ -2806,6 +3230,100 @@
         window.requestAnimationFrame(installGuard);
       }
     }
+  })();
+
+  // Mega menu — hover/focus-driven dropdown on the desktop nav.
+  //
+  // Picks up the matching nav item wrapped via Liquid above (only
+  // exists when megamenu is enabled + the trigger label matches a
+  // link in the main menu + at least one collection is configured).
+  // No-ops entirely on touch / non-hover devices — mobile gets the
+  // slide-out menu drawer instead.
+  //
+  // Behaviour:
+  //   • mouseenter on EITHER the trigger or the menu panel → open
+  //     after a 120ms intent delay (so mouse-overshoot doesn't flash)
+  //   • mouseleave → close after a 200ms grace period (covers the
+  //     diagonal mouse path from trigger → panel)
+  //   • focusin on the trigger → open immediately (keyboard nav)
+  //   • Escape → close + return focus to the trigger link
+  //   • Click on a link inside the panel navigates as normal and
+  //     the panel closes naturally on the next page render
+  (function () {
+    if (!matchMedia('(hover: hover)').matches) return;
+
+    var trigger = document.querySelector('[data-ds-megamenu-trigger]');
+    var menu = document.querySelector('[data-ds-megamenu]');
+    if (!trigger || !menu) return;
+
+    var triggerLink = trigger.querySelector('a');
+    var OPEN_DELAY = 120;
+    var CLOSE_DELAY = 200;
+    var openTimer = null;
+    var closeTimer = null;
+
+    function reallyOpen() {
+      menu.classList.add('is-open');
+      menu.setAttribute('aria-hidden', 'false');
+      trigger.classList.add('is-open');
+      if (triggerLink) triggerLink.setAttribute('aria-expanded', 'true');
+    }
+    function reallyClose() {
+      menu.classList.remove('is-open');
+      menu.setAttribute('aria-hidden', 'true');
+      trigger.classList.remove('is-open');
+      if (triggerLink) triggerLink.setAttribute('aria-expanded', 'false');
+    }
+
+    function scheduleOpen() {
+      if (closeTimer) { window.clearTimeout(closeTimer); closeTimer = null; }
+      if (openTimer || menu.classList.contains('is-open')) return;
+      openTimer = window.setTimeout(function () {
+        openTimer = null;
+        reallyOpen();
+      }, OPEN_DELAY);
+    }
+    function scheduleClose() {
+      if (openTimer) { window.clearTimeout(openTimer); openTimer = null; }
+      if (closeTimer || !menu.classList.contains('is-open')) return;
+      closeTimer = window.setTimeout(function () {
+        closeTimer = null;
+        reallyClose();
+      }, CLOSE_DELAY);
+    }
+
+    trigger.addEventListener('mouseenter', scheduleOpen);
+    trigger.addEventListener('mouseleave', scheduleClose);
+    menu.addEventListener('mouseenter', scheduleOpen);
+    menu.addEventListener('mouseleave', scheduleClose);
+
+    // Keyboard: opening on focus inside the trigger.
+    trigger.addEventListener('focusin', scheduleOpen);
+
+    // Close when focus leaves both trigger and menu (use document
+    // focusout so we can check where focus actually landed via
+    // requestAnimationFrame — by the time the next frame runs,
+    // document.activeElement points to the new target).
+    document.addEventListener('focusout', function () {
+      window.requestAnimationFrame(function () {
+        if (
+          !trigger.contains(document.activeElement) &&
+          !menu.contains(document.activeElement)
+        ) {
+          scheduleClose();
+        }
+      });
+    });
+
+    // Escape closes + restores focus to the trigger link.
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      if (!menu.classList.contains('is-open')) return;
+      if (openTimer) { window.clearTimeout(openTimer); openTimer = null; }
+      if (closeTimer) { window.clearTimeout(closeTimer); closeTimer = null; }
+      reallyClose();
+      if (triggerLink) triggerLink.focus();
+    });
   })();
 
   // Drawer slide-in animation gate — adds .is-opening to the
