@@ -15,7 +15,7 @@
  * per-product in admin via the "Theme template" dropdown.
  *
  * Section order:
- *   main → typespecimen → faq → related
+ *   main → features → typespecimen → faq → related
  *
  * Per-product content sources:
  *   typespecimen → product.metafields.disrupted.font_file (.woff2 / .ttf / .otf)
@@ -36,6 +36,12 @@
         "color_scheme": "scheme-1",
         "sub_cta_label": "See the specimen",
         "sub_cta_url": "#specimen"
+      }
+    },
+    "features": {
+      "type": "ds-pdp-features",
+      "settings": {
+        "color_scheme": "scheme-1"
       }
     },
     "specimen": {
@@ -67,5 +73,5 @@
       }
     }
   },
-  "order": ["main", "specimen", "faq", "related"]
+  "order": ["main", "features", "specimen", "faq", "related"]
 }
