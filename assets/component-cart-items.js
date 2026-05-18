@@ -104,9 +104,18 @@ class CartItemsComponent extends Component {
     if (isEmptyCart && template instanceof HTMLTemplateElement) {
       const clone = document.importNode(template.content, true);
 
-      startViewTransition(() => {
+      if (this.isDrawer) {
+        // Skip view-transition for the drawer's empty-cart swap.
+        // startViewTransition() snapshots and re-paints the visible
+        // viewport, which forces the dialog's slide-in animation
+        // to re-fire (looks identical to a close+reopen). Direct
+        // replaceChildren is instant and avoids the flicker.
         this.replaceChildren(clone);
-      }, [this.isDrawer ? 'empty-cart-drawer' : 'empty-cart-page']);
+      } else {
+        startViewTransition(() => {
+          this.replaceChildren(clone);
+        }, ['empty-cart-page']);
+      }
 
       return;
     }

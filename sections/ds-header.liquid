@@ -877,15 +877,20 @@
     flex-direction: column;
     transform: translateX(0);
   }
-  /* Slide-in animation runs once when the dialog gains [open] */
+  /* Slide-in animation — strictly one-shot via the .is-opening class
+     toggled by JS on DialogOpenEvent. The old version bound the
+     animation to .ds-cart-drawer[open] .ds-cart-drawer__panel,
+     which made the animation re-fire whenever morph touched the
+     panel's attributes (even with hydration mode the morph's
+     copyAttributes can re-evaluate the animation rule and replay
+     the slide-in, producing a visible "close+reopen" flicker on
+     every cart change). Gating on a JS-managed class means the
+     animation runs ONLY on actual dialog-open. */
   @keyframes ds-cart-drawer-slide-in {
     from { transform: translateX(100%); }
     to   { transform: translateX(0); }
   }
-  .ds-cart-drawer[open] .ds-cart-drawer__panel {
-    /* Tightened from 360ms → 220ms for snappier perceived response.
-       Combined with the eager-open JS below, drawer is visible in
-       one paint cycle from click. */
+  .ds-cart-drawer.is-opening .ds-cart-drawer__panel {
     animation: ds-cart-drawer-slide-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
@@ -900,7 +905,7 @@
     animation: ds-cart-drawer-close-noop 1ms forwards;
   }
   @media (prefers-reduced-motion: reduce) {
-    .ds-cart-drawer[open] .ds-cart-drawer__panel { animation: none; }
+    .ds-cart-drawer.is-opening .ds-cart-drawer__panel { animation: none; }
   }
   /* Head — Title + close X */
   .ds-cart-drawer__head {
@@ -2625,6 +2630,29 @@
       e.preventDefault();
       write([]);
       render();
+    });
+  })();
+
+  // Drawer slide-in animation gate — adds .is-opening to the
+  // <dialog.ds-cart-drawer> the moment the dialog actually opens
+  // (DialogOpenEvent), removes it on animationend. The CSS bound
+  // the slide-in to .ds-cart-drawer.is-opening (not .ds-cart-drawer
+  // [open]) so the animation only runs on real opens — morph
+  // touching the panel's attributes during a cart update no longer
+  // re-evaluates the keyframe rule and re-plays the slide. Fixes
+  // the close+reopen flicker on every add/remove/qty-change.
+  (function () {
+    document.addEventListener('dialog:open', function (e) {
+      var dialog = e.target && e.target.querySelector
+        ? e.target.querySelector('.ds-cart-drawer')
+        : null;
+      if (!dialog) return;
+      dialog.classList.add('is-opening');
+      // Pure CSS animationend cleanup. once:true so we don't pile
+      // listeners across repeat opens.
+      dialog.addEventListener('animationend', function () {
+        dialog.classList.remove('is-opening');
+      }, { once: true });
     });
   })();
 
