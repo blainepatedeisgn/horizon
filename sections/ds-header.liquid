@@ -1425,55 +1425,16 @@
     --shop-pay-button-border-radius: 0;
   }
 
-  /* Mobile: stack the express buttons vertically. Shopify renders
-     Shop Pay / Apple Pay / PayPal in a flex row by default; on a
-     ~390px viewport that compresses each button to ~110px wide,
-     which crops the Apple Pay wordmark and reads cramped against
-     the full-width Checkout button above. We target every layer
-     of Shopify's injected wrapper markup because the exact
-     structure varies by which express methods are enabled and by
-     SDK version: <div data-shopify-buttoncontainer>, .dynamic-
-     checkout__content, .dynamic-checkout__buttons, .additional-
-     checkout-buttons, and .shopify-payment-button have all been
-     observed in the wild. Force flex column on each, and force
-     full-width on every web component / button child. */
+  /* Mobile: minimum-intervention layout — just force the
+     container itself to lay out as a single column. Earlier
+     attempts to target every Shopify wrapper class were either
+     ineffective (Shopify-injected styles winning specificity) or
+     destabilizing (margin/flex resets cascading where they
+     shouldn't). We'll iterate this once we can inspect the actual
+     rendered express markup on the dev store. */
   @media (max-width: 600px) {
-    .ds-cart__express,
-    .ds-cart__express > div,
-    .ds-cart__express > ul,
-    .ds-cart__express [data-shopify-buttoncontainer],
-    .ds-cart__express .dynamic-checkout__content,
-    .ds-cart__express .dynamic-checkout__buttons,
-    .ds-cart__express .shopify-payment-button,
-    .ds-cart__express .additional-checkout-buttons {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: var(--space-2) !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      align-items: stretch !important;
-      list-style: none !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-    /* Every leaf payment button — web component or otherwise —
-       gets full width and a 52px min touch target. */
-    .ds-cart__express shop-pay-button,
-    .ds-cart__express shop-pay-wallet-button,
-    .ds-cart__express apple-pay-button,
-    .ds-cart__express shopify-paypal-button,
-    .ds-cart__express shopify-google-pay-button,
-    .ds-cart__express .shopify-cleanslate,
-    .ds-cart__express .dynamic-checkout__buttons-item,
-    .ds-cart__express .shopify-payment-button > *,
-    .ds-cart__express [data-shopify-buttoncontainer] > *,
-    .ds-cart__express > div > *,
-    .ds-cart__express > ul > * {
-      width: 100% !important;
-      max-width: 100% !important;
-      min-height: 52px !important;
-      flex: 0 0 auto !important;
-      margin: 0 !important;
+    .ds-cart__express {
+      gap: var(--space-2);
     }
   }
 
@@ -2558,34 +2519,27 @@
       var skel = buildSkeleton(source);
       if (!skel) return;
 
-      var cartBody = document.querySelector('cart-items-component');
-      if (!cartBody) return;
+      var drawer = getDrawer();
+      if (!drawer) return;
+      var panel = drawer.querySelector('.ds-cart-drawer__panel');
+      if (!panel) return;
 
-      // Wipe any prior skeleton (rapid clicks); also hide the empty
-      // state so we don't render "your cart is empty" + the skeleton
-      // side by side. The empty state restores naturally on the next
-      // morph if the cart somehow stays empty.
-      var existing = cartBody.querySelector('[data-cart-skeleton]');
-      if (existing) existing.remove();
-      var empty = cartBody.querySelector('.ds-cart__empty');
-      if (empty) empty.style.display = 'none';
+      // Wipe any prior skeleton (rapid clicks).
+      drawer.querySelectorAll('[data-cart-skeleton]').forEach(function (el) { el.remove(); });
 
-      // Prefer top of existing items list — matches Shopify's
-      // "new items go to top of cart" default. Falls back to
-      // top of the scrollable or top of cart-items-component.
-      var itemsList = cartBody.querySelector('.ds-cart__items');
-      var scrollable = cartBody.querySelector('.ds-cart__scrollable');
-      if (itemsList) {
-        // Wrap skeleton in an <li> so it lives inside the existing list
-        var li = document.createElement('li');
-        li.setAttribute('data-cart-skeleton', '');
-        li.className = 'ds-cart__skeleton-li';
-        li.appendChild(skel);
-        itemsList.prepend(li);
-      } else if (scrollable) {
-        scrollable.prepend(skel);
+      // Inject as a sibling of cart-items-component INSIDE the
+      // panel — explicitly outside the morph target. cart-items-
+      // component is what Horizon morphs on cart updates, and
+      // putting the skeleton inside it (or worse, inside the items
+      // <ul>) lets morphdom confuse skeleton elements with real
+      // line items and produce ghost-row layouts. Living outside
+      // the morph target means our cleanup logic is fully in
+      // charge of when the skeleton disappears.
+      var cartBody = panel.querySelector('cart-items-component');
+      if (cartBody) {
+        cartBody.parentNode.insertBefore(skel, cartBody);
       } else {
-        cartBody.prepend(skel);
+        panel.appendChild(skel);
       }
     }
     function clearSkeleton() {
