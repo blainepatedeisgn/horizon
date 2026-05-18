@@ -122,6 +122,7 @@
             on:click="/open"
             aria-haspopup="dialog"
             aria-label="Cart, {{ cart.item_count }} items"
+            data-hydration-key="ds-header-cart-link"
           >
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false" width="16" height="16">
               <path d="M3 4h2l1.6 9.4a1 1 0 0 0 1 .8h7.2a1 1 0 0 0 1-.8L17.5 7H6" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
@@ -139,7 +140,22 @@
             class="ds-cart-drawer"
             aria-labelledby="ds-cart-drawer-title"
           >
-            <div class="ds-cart-drawer__panel">
+            {%- comment -%}
+              data-hydration-key on the panel (NOT on the dialog
+              itself) is the critical bit — it tells morph.js to
+              update only the panel's contents on every cart change
+              and leave the parent <dialog> element entirely alone.
+              That preserves the dialog's [open] attribute so the
+              drawer doesn't close+reopen on add / remove / qty
+              updates. cart-items-component below carries the
+              `data-drawer` flag that switches morphSection() to
+              hydration mode, and the matching keyed wrapper is
+              what hydration looks for.
+            {%- endcomment -%}
+            <div
+              class="ds-cart-drawer__panel"
+              data-hydration-key="ds-cart-drawer-panel"
+            >
               <div class="ds-cart-drawer__head">
                 <h2 id="ds-cart-drawer-title" class="ds-cart-drawer__title">
                   Cart
@@ -172,6 +188,7 @@
               <cart-items-component
                 class="ds-cart-drawer__body"
                 data-section-id="{{ section.id }}"
+                data-drawer
               >
                 {%- if cart.empty? -%}
                   {%- render 'ds-cart-products', force_empty: true -%}
