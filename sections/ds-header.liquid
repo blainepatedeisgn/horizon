@@ -414,8 +414,13 @@
 {%- endcomment -%}
 {%- liquid
   assign mm_show = false
-  if section.settings.megamenu_enabled and section.settings.megamenu_collections.size > 0
+  if section.settings.megamenu_enabled
     assign mm_show = true
+  endif
+  assign mm_collections = section.settings.megamenu_collections
+  assign mm_use_fallback = false
+  if mm_show and mm_collections.size == 0
+    assign mm_use_fallback = true
   endif
   assign mm_feat = section.settings.megamenu_featured_product
   assign mm_has_feat = false
@@ -436,17 +441,38 @@
           <div class="ds-megamenu__eyebrow">{{ section.settings.megamenu_eyebrow }}</div>
         {%- endif -%}
         <ul class="ds-megamenu__list">
-          {%- for collection in section.settings.megamenu_collections -%}
-            {%- assign num = forloop.index | prepend: '0' | slice: -2, 2 -%}
-            <li class="ds-megamenu__item">
-              <a href="{{ collection.url }}" class="ds-megamenu__link">
-                <span class="ds-megamenu__num" aria-hidden="true">{{ num }}.</span>
-                <span class="ds-megamenu__name">{{ collection.title }}</span>
-                <span class="ds-megamenu__count" aria-hidden="true">{{ collection.products_count }} items</span>
-                <span class="ds-megamenu__arrow" aria-hidden="true">→</span>
-              </a>
-            </li>
-          {%- endfor -%}
+          {%- if mm_use_fallback -%}
+            {%- comment -%}
+              Fallback set when no collections are picked yet. Mirrors
+              the empty-cart-state pattern: Plugins / Fonts / Graphics
+              hardcoded to /collections/{handle}. Hides item count
+              (we don't know it without a real collection ref).
+            {%- endcomment -%}
+            {%- assign fb = 'plugins,fonts,graphics' | split: ',' -%}
+            {%- for handle in fb -%}
+              {%- assign num = forloop.index | prepend: '0' | slice: -2, 2 -%}
+              <li class="ds-megamenu__item">
+                <a href="/collections/{{ handle }}" class="ds-megamenu__link">
+                  <span class="ds-megamenu__num" aria-hidden="true">{{ num }}.</span>
+                  <span class="ds-megamenu__name">{{ handle | capitalize }}</span>
+                  <span class="ds-megamenu__count" aria-hidden="true"></span>
+                  <span class="ds-megamenu__arrow" aria-hidden="true">→</span>
+                </a>
+              </li>
+            {%- endfor -%}
+          {%- else -%}
+            {%- for collection in mm_collections -%}
+              {%- assign num = forloop.index | prepend: '0' | slice: -2, 2 -%}
+              <li class="ds-megamenu__item">
+                <a href="{{ collection.url }}" class="ds-megamenu__link">
+                  <span class="ds-megamenu__num" aria-hidden="true">{{ num }}.</span>
+                  <span class="ds-megamenu__name">{{ collection.title }}</span>
+                  <span class="ds-megamenu__count" aria-hidden="true">{{ collection.products_count }} items</span>
+                  <span class="ds-megamenu__arrow" aria-hidden="true">→</span>
+                </a>
+              </li>
+            {%- endfor -%}
+          {%- endif -%}
         </ul>
       </div>
 
