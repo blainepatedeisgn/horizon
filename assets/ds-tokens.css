@@ -429,19 +429,15 @@ body {
     background var(--t-fast) var(--ease),
     color      var(--t-fast) var(--ease);
 }
-.ds-product-card__quick:hover {
-  background: var(--color-accent);
-  color: var(--color-accent-fg);
-}
-
 /* Hover-capable devices (desktop with mouse): hide the quick-add
-   until the card is hovered or focused. Wrapping this in
-   `@media (hover: hover)` is the critical bit — without it, iOS
-   Safari gives elements a "sticky" hover state on first tap, which
-   reveals the button but doesn't activate it. The user then has to
-   tap a SECOND time to actually add. By scoping the hover-reveal
-   to real-hover devices only, touch devices never enter that
-   broken two-tap path. */
+   until the card is hovered or focused, AND apply the orange
+   accent on direct button hover. Wrapping ALL :hover rules on
+   the button in `@media (hover: hover)` is the critical bit —
+   without it, iOS Safari gives the button a "sticky" hover state
+   on first tap (button turns orange) but defers the click event
+   to a second tap. By scoping every hover rule to real-hover
+   devices only, touch devices see a permanently-visible button
+   with no hover styles, so iOS treats the first tap as the click. */
 @media (hover: hover) {
   .ds-product-card__quick {
     opacity: 0;
@@ -451,6 +447,10 @@ body {
   .ds-product-card:focus-within .ds-product-card__quick {
     opacity: 1;
     transform: scale(1);
+  }
+  .ds-product-card__quick:hover {
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
   }
 }
 
