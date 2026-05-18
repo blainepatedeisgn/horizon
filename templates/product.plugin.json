@@ -61,7 +61,52 @@
         "color_scheme": "scheme-1",
         "heading": "Common questions",
         "num_label": "06"
-      }
+      },
+      "blocks": {
+        "faq_compat": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Does this work with my version of Photoshop?",
+            "answer": "Check the Compat row in the spec table above. UXP plugins require Photoshop 23.3 or later on Mac and Windows. CS6 and older Photoshop versions are not supported."
+          }
+        },
+        "faq_install": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How do I install the .ccx file?",
+            "answer": "Double-click the .ccx file you downloaded. Photoshop opens, prompts you to install, and the plugin appears under the Plugins menu. No restart needed for most installs."
+          }
+        },
+        "faq_seats": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I use the plugin on multiple machines?",
+            "answer": "Yes — one designer on up to 2 of your own devices (e.g., laptop + desktop). For 5+ seats or studio-wide installation, email blainepatedesign@gmail.com for a custom Studio quote."
+          }
+        },
+        "faq_commercial": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I use the output commercially?",
+            "answer": "Yes — with the Commercial license. Personal license covers your own non-monetized work (hobby art, portfolio, learning). Commercial license is required for client work, products you sell, paid ads, or anything monetized. See the License page for the full breakdown."
+          }
+        },
+        "faq_updates": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Will I get updates?",
+            "answer": "Yes — lifetime updates within the current major version. Major upgrades (v2, v3, etc.) may be priced separately when they ship."
+          }
+        },
+        "faq_refund": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What's the refund policy?",
+            "answer": "Digital downloads — all sales final. Defective or non-functional files are replaced at no charge; email blainepatedesign@gmail.com. EU buyers have a 14-day right of withdrawal before downloading per Article 16(m) of the Consumer Rights Directive."
+          }
+        }
+      },
+      "block_order": ["faq_compat", "faq_install", "faq_seats", "faq_commercial", "faq_updates", "faq_refund"]
     },
     "related": {
       "type": "ds-pdp-related",

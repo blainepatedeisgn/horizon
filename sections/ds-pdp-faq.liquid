@@ -1,25 +1,32 @@
 {%- comment -%}
-  sections/ds-pdp-faq.liquid — Per-product FAQ accordion
+  sections/ds-pdp-faq.liquid — Per-template FAQ accordion
 
-  Reads `product.metafields.disrupted.faq` (list of `faq_item` metaobjects).
-  Each metaobject:
-    question (single_line_text)    The question header
-    answer   (multi_line_text)     The body, supports line breaks
+  Each Q/A is a section BLOCK ("faq_item"), pre-populated via the
+  product template JSON (templates/product.plugin.json,
+  product.font.json, etc.) so a freshly-assigned product picks up
+  the right defaults for its type without per-product metafield setup.
 
-  Uses native HTML `<details>` / `<summary>` for the accordion — no
-  JavaScript needed for the open/close behaviour. CSS handles the
-  rotate animation on the toggle icon. Respects prefers-reduced-motion.
+  Merchant edits via theme editor → Customize → product template
+  → FAQ section → blocks. Reorder, add, remove, edit per template.
 
-  If the product has no `faq` metafield value, the entire section is hidden.
-  See docs/changes.md for metaobject definition setup.
+  Migration note: previous version read product.metafields.disrupted.faq
+  (list of faq_item metaobjects). That metafield is no longer read by
+  this section — the definition can be deleted in Settings → Custom
+  data → Products. Per-product overrides aren't supported anymore;
+  to give a single product a unique FAQ, edit the template's blocks
+  (affects all products on that template) or assign that product to
+  a different template.
+
+  Uses native HTML <details> / <summary> for the accordion — no JS
+  needed. CSS handles the rotate animation on the toggle icon.
+  Respects prefers-reduced-motion.
 {%- endcomment -%}
 
 {%- liquid
   assign cs = section.settings.color_scheme | default: 'scheme-1'
-  assign faq_items = product.metafields.disrupted.faq.value
 -%}
 
-{%- if faq_items and faq_items.size > 0 -%}
+{%- if section.blocks.size > 0 -%}
 <section id="faq" class="ds-pdp-faq color-{{ cs }}">
   <div class="ds-pdp-faq__inner">
 
@@ -40,25 +47,27 @@
     {%- endif -%}
 
     <div class="ds-pdp-faq__list">
-      {%- for item in faq_items -%}
-        {%- liquid
-          assign question = item.question.value
-          assign answer = item.answer.value
-          assign num_str = forloop.index | prepend: '0' | slice: -2, 2
-        -%}
-        {%- if question != blank -%}
-          <details class="ds-pdp-faq__item">
-            <summary class="ds-pdp-faq__q">
-              <span class="ds-pdp-faq__q-num">{{ num_str }}</span>
-              <span class="ds-pdp-faq__q-text">{{ question }}</span>
-              <span class="ds-pdp-faq__q-toggle" aria-hidden="true">+</span>
-            </summary>
-            {%- if answer != blank -%}
-              <div class="ds-pdp-faq__a">
-                <div class="ds-pdp-faq__a-inner">{{ answer | newline_to_br }}</div>
-              </div>
-            {%- endif -%}
-          </details>
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'faq_item' -%}
+          {%- liquid
+            assign question = block.settings.question
+            assign answer = block.settings.answer
+            assign num_str = forloop.index | prepend: '0' | slice: -2, 2
+          -%}
+          {%- if question != blank -%}
+            <details class="ds-pdp-faq__item" {{ block.shopify_attributes }}>
+              <summary class="ds-pdp-faq__q">
+                <span class="ds-pdp-faq__q-num">{{ num_str }}</span>
+                <span class="ds-pdp-faq__q-text">{{ question }}</span>
+                <span class="ds-pdp-faq__q-toggle" aria-hidden="true">+</span>
+              </summary>
+              {%- if answer != blank -%}
+                <div class="ds-pdp-faq__a">
+                  <div class="ds-pdp-faq__a-inner">{{ answer | newline_to_br }}</div>
+                </div>
+              {%- endif -%}
+            </details>
+          {%- endif -%}
         {%- endif -%}
       {%- endfor -%}
     </div>
@@ -221,9 +230,29 @@
     },
     {
       "type": "paragraph",
-      "content": "Q&A content comes from the `disrupted.faq` metafield on each product (a list of \"FAQ item\" metaobjects). See docs/changes.md for setup."
+      "content": "FAQ questions are blocks (add/remove/reorder below). Edits here apply to every product on this template — to give a single product a unique FAQ, assign it to a different template."
     }
   ],
+  "blocks": [
+    {
+      "type": "faq_item",
+      "name": "FAQ item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "Question"
+        },
+        {
+          "type": "textarea",
+          "id": "answer",
+          "label": "Answer",
+          "info": "Line breaks render as paragraph breaks."
+        }
+      ]
+    }
+  ],
+  "max_blocks": 16,
   "presets": [
     {
       "name": "Disrupted PDP FAQ"

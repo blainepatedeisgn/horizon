@@ -61,7 +61,52 @@
         "color_scheme": "scheme-1",
         "heading": "Common questions",
         "num_label": "04"
-      }
+      },
+      "blocks": {
+        "faq_formats": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What file formats are included?",
+            "answer": "Check the Formats row in the spec table above. Most typefaces ship as OTF, TTF, and WOFF2. WOFF2 is the modern web format; OTF/TTF cover desktop installation across Mac, Windows, and Adobe apps."
+          }
+        },
+        "faq_web": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I use this on my website?",
+            "answer": "Yes, with a Commercial license — self-hosted WOFF/WOFF2 webfont, no pageview cap. Personal license is desktop-only (your own non-sale design work). See the License page for the full breakdown."
+          }
+        },
+        "faq_client": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I use this in a client logo or branding system?",
+            "answer": "Yes, with a Commercial license. Personal license does not cover client work or anything monetized. The license is granted to the entity named on the order — for client work, place the order in the client's name (industry standard practice)."
+          }
+        },
+        "faq_language": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What languages does it support?",
+            "answer": "Check the Language row in the spec table. Most typefaces support Latin Extended (English, most Western European languages, some Eastern European). Extended language coverage (Cyrillic, Greek, Vietnamese) varies per font."
+          }
+        },
+        "faq_modify": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I modify the font (add glyphs, edit letterforms)?",
+            "answer": "Not without explicit permission. Modification requires a separate agreement — email blainepatedesign@gmail.com to discuss. Combining the font with other typefaces in a design (mixing it with another font in a layout) does NOT count as modification and is permitted."
+          }
+        },
+        "faq_refund": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What's the refund policy?",
+            "answer": "Digital downloads — all sales final once the font has been downloaded. EU buyers have a 14-day right of withdrawal before downloading per Article 16(m) of the Consumer Rights Directive. Defective files are replaced at no charge."
+          }
+        }
+      },
+      "block_order": ["faq_formats", "faq_web", "faq_client", "faq_language", "faq_modify", "faq_refund"]
     },
     "related": {
       "type": "ds-pdp-related",

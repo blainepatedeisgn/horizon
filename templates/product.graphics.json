@@ -49,7 +49,52 @@
         "color_scheme": "scheme-1",
         "heading": "Questions",
         "num_label": "04"
-      }
+      },
+      "blocks": {
+        "faq_formats": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What file formats are included?",
+            "answer": "Check the Formats row in the spec table above. Most packs ship as vector (SVG) for clean scaling plus raster (PNG with transparency or JPG) at the resolution listed in the specs."
+          }
+        },
+        "faq_modify": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I modify, recolor, or combine these?",
+            "answer": "Yes — modify, combine, recolor, remix freely as part of your own work. You can't redistribute the source files as standalone assets, but using them inside a larger composition (a layout, a poster, a website) is exactly what they're for."
+          }
+        },
+        "faq_commercial": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I use these in client work?",
+            "answer": "Yes, with a Commercial license. Personal license is for non-monetized projects only (hobby art, learning, personal social posts). Commercial covers client work, products you sell, paid ads, and any monetized use. See the License page for the full split."
+          }
+        },
+        "faq_end_products": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How many end products can I make with this?",
+            "answer": "Commercial license covers up to 250,000 end products for sale (a t-shirt run, a print edition, a packaging line, etc.). Beyond that, email blainepatedesign@gmail.com for Enterprise pricing."
+          }
+        },
+        "faq_resell": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I include these in a graphics pack I sell?",
+            "answer": "No — sublicensing the source assets as standalone files is prohibited. You can include them embedded inside larger compositions you sell (e.g., a poster design, a brand kit, a template) but not as their own standalone pack."
+          }
+        },
+        "faq_refund": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What's the refund policy?",
+            "answer": "Digital downloads — all sales final once downloaded. EU buyers have a 14-day right of withdrawal before downloading per Article 16(m) of the Consumer Rights Directive. Defective files are replaced at no charge."
+          }
+        }
+      },
+      "block_order": ["faq_formats", "faq_modify", "faq_commercial", "faq_end_products", "faq_resell", "faq_refund"]
     },
     "related": {
       "type": "ds-pdp-related",

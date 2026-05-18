@@ -63,7 +63,52 @@
         "color_scheme": "scheme-1",
         "heading": "Bundle FAQ",
         "num_label": "03"
-      }
+      },
+      "blocks": {
+        "faq_contents": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What's included in the bundle?",
+            "answer": "Every product listed in the bundle contents section above. You'll get download links for each one in the order confirmation email — same files you'd get if you bought them individually."
+          }
+        },
+        "faq_license": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Does the bundle license cover all the products?",
+            "answer": "Yes. When you pick Commercial on the bundle, every included product is licensed Commercially. When you pick Personal, every included product is Personal. Bundles inherit a single tier across the whole set."
+          }
+        },
+        "faq_savings": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How much do I save versus buying individually?",
+            "answer": "The bundle price is below the sum of the individual prices — the savings amount is shown above in the bundle contents section. The discount is reflected in the bundle's listed price, not as a separate coupon."
+          }
+        },
+        "faq_separate": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I buy the items separately later?",
+            "answer": "Yes, each product is also available on its own. Buying the bundle is just a discounted bulk option — there's no exclusive content locked behind it."
+          }
+        },
+        "faq_transfer": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I gift the bundle or split it across two people?",
+            "answer": "No, licenses are non-transferable and tied to the buyer named on the order. If you want a gift, place the order in the recipient's name."
+          }
+        },
+        "faq_refund": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What's the refund policy?",
+            "answer": "Digital downloads — all sales final once downloaded. EU buyers have a 14-day right of withdrawal before downloading per Article 16(m) of the Consumer Rights Directive. Defective files are replaced at no charge."
+          }
+        }
+      },
+      "block_order": ["faq_contents", "faq_license", "faq_savings", "faq_separate", "faq_transfer", "faq_refund"]
     },
     "related": {
       "type": "ds-pdp-related",
