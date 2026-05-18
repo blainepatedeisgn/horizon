@@ -1063,10 +1063,10 @@
     padding: var(--space-5);
   }
 
-  /* Empty state — typographic "00." anchor + decisive primary
-     CTA + secondary text links for the other two categories.
-     Centered vertically in the drawer body so it commands the
-     attention of a first-visit or post-purchase visitor. */
+  /* Empty state — "EMPTY." caption + pre-filled orange Continue
+     Shopping CTA + up to 3 outline category buttons stacked
+     vertically (each fills orange on hover/focus). Centered in
+     the drawer body. Targets configurable via Theme Settings. */
   .ds-cart__empty {
     height: 100%;
     display: flex;
@@ -1077,32 +1077,16 @@
     text-align: center;
     padding: var(--space-6);
   }
-  /* Big ghosted mono number — purely decorative visual anchor.
-     Without this the empty state reads as a small caption + button
-     floating in a void. Opacity 0.18 keeps it tasteful, not
-     shouty. Inherits color from the panel so it lands as a faint
-     off-white on the brand-black drawer. */
-  .ds-cart__empty-num {
-    font-family: var(--font-mono);
-    font-size: clamp(56px, 14vw, 88px);
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: var(--color-fg);
-    opacity: 0.18;
-    margin: 0;
-  }
   .ds-cart__empty-text {
     font-family: var(--font-mono);
     font-size: 11px;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--color-fg-muted);
     margin: 0 0 var(--space-2);
   }
-  /* Primary CTA — orange filled, takes width from the .ds-btn
-     base then we clamp a sensible max so it doesn't span the
-     whole drawer on desktop. */
+  /* Primary CTA — orange filled. Clamped to 280px max so it
+     doesn't stretch ungainly wide on desktop drawers. */
   .ds-cart__empty-cta {
     width: 100%;
     max-width: 280px;
@@ -1110,31 +1094,53 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
+    margin-bottom: var(--space-2);
   }
-  /* Secondary inline text links for the other categories. */
-  .ds-cart__empty-secondary {
+  /* Category buttons — outline by default, fill orange on hover/
+     focus/tap. Same max-width as the primary CTA so they stack
+     in a tidy column. */
+  .ds-cart__empty-cats {
     display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 280px;
+  }
+  .ds-cart__empty-cat {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    padding: 13px 18px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-fg);
     font-family: var(--font-mono);
     font-size: 11px;
-    letter-spacing: 0.12em;
+    font-weight: 500;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--color-fg-muted);
+    text-decoration: none;
+    transition:
+      background var(--t-fast) var(--ease),
+      border-color var(--t-fast) var(--ease),
+      color var(--t-fast) var(--ease);
   }
-  .ds-cart__empty-link {
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+  .ds-cart__empty-cat-arrow {
+    color: var(--color-fg-muted);
     transition: color var(--t-fast) var(--ease);
   }
-  .ds-cart__empty-link:hover,
-  .ds-cart__empty-link:focus-visible {
-    color: var(--color-fg);
+  .ds-cart__empty-cat:hover,
+  .ds-cart__empty-cat:focus-visible,
+  .ds-cart__empty-cat:active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-background);
     outline: 0;
   }
-  .ds-cart__empty-sep {
-    opacity: 0.5;
+  .ds-cart__empty-cat:hover .ds-cart__empty-cat-arrow,
+  .ds-cart__empty-cat:focus-visible .ds-cart__empty-cat-arrow,
+  .ds-cart__empty-cat:active .ds-cart__empty-cat-arrow {
+    color: var(--color-background);
   }
 
   /* Items list */

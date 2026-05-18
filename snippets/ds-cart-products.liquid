@@ -38,36 +38,41 @@
 <div class="cart-items__wrapper ds-cart__items-wrap">
   {%- if cart.empty? or force_empty -%}
     {%- comment -%}
-      Brutalist empty state with three components giving it visual
-      weight even in an otherwise-blank drawer body:
+      Empty state composition:
+        • "EMPTY." caption (mono, small)
+        • Pre-filled orange Continue Shopping CTA — primary action,
+          target configurable via Theme Settings → empty_cart_button_link
+        • Up to 3 outline category buttons stacked vertically — picked
+          from Theme Settings → empty_cart_categories. Each is an
+          outlined brutalist row that fills orange on hover/focus/tap.
+          Renders nothing if the merchant hasn't configured any
+          collections.
 
-      • Big mono "00." as a typographic anchor (ghosted via opacity
-        so it reads as decorative, not informational).
-      • Brand-voice caption.
-      • Single primary CTA — orange filled, full-width, decisive.
-        Routes to the lead-product collection.
-      • Two secondary text links for the other two categories
-        (inline, separated by a mid-dot).
-
-      Collection URLs hardcoded to /collections/plugins / fonts /
-      graphics. Swap inline if the live store uses different
-      handles.
+      Settings live in config/settings_schema.json. Once the theme
+      is published the merchant picks both targets in
+      Customize → Theme settings → (Cart section).
     {%- endcomment -%}
     <div class="ds-cart__empty">
-      <div class="ds-cart__empty-num" aria-hidden="true">00.</div>
-      <p class="ds-cart__empty-text">Nothing loaded yet.</p>
+      <p class="ds-cart__empty-text">Empty.</p>
+
       <a
-        href="/collections/plugins"
+        href="{{ settings.empty_cart_button_link | default: routes.all_products_collection_url }}"
         class="ds-btn ds-btn--lg ds-btn--accent ds-cart__empty-cta"
       >
-        Browse plugins
+        Continue shopping
         <span aria-hidden="true">→</span>
       </a>
-      <div class="ds-cart__empty-secondary">
-        <a href="/collections/fonts" class="ds-cart__empty-link">Fonts</a>
-        <span class="ds-cart__empty-sep" aria-hidden="true">·</span>
-        <a href="/collections/graphics" class="ds-cart__empty-link">Graphics</a>
-      </div>
+
+      {%- if settings.empty_cart_categories.size > 0 -%}
+        <div class="ds-cart__empty-cats">
+          {%- for cat in settings.empty_cart_categories -%}
+            <a href="{{ cat.url }}" class="ds-cart__empty-cat">
+              <span class="ds-cart__empty-cat-name">{{ cat.title }}</span>
+              <span class="ds-cart__empty-cat-arrow" aria-hidden="true">→</span>
+            </a>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
     </div>
   {%- else -%}
     <span class="visually-hidden" ref="cartItemCount" aria-hidden="true">{{- cart.item_count -}}</span>
