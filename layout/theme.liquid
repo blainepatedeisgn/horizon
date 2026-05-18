@@ -44,6 +44,17 @@
       inline section <style> blocks that reference --ds-* tokens.  This avoids
       a brief FOUC where Horizon defaults flashed before the overrides applied.
     {%- endcomment -%}
+
+    {%- comment -%}
+      Modulepreload the JS modules that drive the cart drawer + ATC AJAX,
+      so the browser starts fetching them at high priority in parallel
+      with HTML parse. Without this, they're declared by section <script>
+      tags further down the page and load late — the first ATC click can
+      hit "module not ready" and miss the eager-open optimization.
+    {%- endcomment -%}
+    <link rel="modulepreload" href="{{ 'cart-drawer.js' | asset_url }}" as="script">
+    <link rel="modulepreload" href="{{ 'product-form.js' | asset_url }}" as="script">
+    <link rel="modulepreload" href="{{ 'component-cart-items.js' | asset_url }}" as="script">
   </head>
 
   <body class="page-width-{{ settings.page_width }} card-hover-effect-{{ settings.card_hover_effect }}">

@@ -916,7 +916,10 @@
     to   { transform: translateX(0); }
   }
   .ds-cart-drawer[open] .ds-cart-drawer__panel {
-    animation: ds-cart-drawer-slide-in 360ms cubic-bezier(.2, .7, .2, 1);
+    /* Tightened from 360ms → 220ms for snappier perceived response.
+       Combined with the eager-open JS below, drawer is visible in
+       one paint cycle from click. */
+    animation: ds-cart-drawer-slide-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   /* DialogComponent.closeDialog() waits for animationend on the dialog
@@ -2210,5 +2213,34 @@
       write([]);
       render();
     });
+  })();
+
+  // Eager-open cart drawer on add-to-cart submit.
+  //
+  // Why: <cart-drawer-component> normally opens AFTER the /cart/add.js
+  // round-trip completes (it listens for CartAddEvent). That gates the
+  // drawer-visible moment behind 200-600ms of network. Opening it the
+  // instant the form submits closes that perception gap — drawer
+  // appears in ~16ms; the cart contents then morph in once the XHR
+  // resolves a few hundred ms later.
+  //
+  // Calling drawer.open() while a fetch is in-flight is safe:
+  // DialogComponent.showDialog() is idempotent (checks dialog.open
+  // first), and the existing auto-open path becomes a no-op when the
+  // dialog is already open. Failure case: if /cart/add returns an
+  // error, the drawer stays open showing the previous cart state +
+  // the product-form-component's own error UI surfaces in the form.
+  (function () {
+    function isAddToCartForm(form) {
+      if (!form || !form.action) return false;
+      return form.action.indexOf('/cart/add') !== -1;
+    }
+    document.addEventListener('submit', function (e) {
+      if (!isAddToCartForm(e.target)) return;
+      var drawer = document.querySelector('cart-drawer-component');
+      if (drawer && typeof drawer.open === 'function') {
+        try { drawer.open(); } catch (_) { /* component not yet upgraded */ }
+      }
+    }, true); // capture phase — fire before any preventDefault
   })();
 </script>
