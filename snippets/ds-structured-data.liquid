@@ -1,0 +1,120 @@
+{%- comment -%}
+  snippets/ds-structured-data.liquid — JSON-LD structured data for SEO.
+
+  Rendered once per page in layout/theme.liquid. Emits:
+    • Organization        sitewide  — links shop identity for Google
+    • WebSite             sitewide  — enables the site-search rich box
+    • Product             products  — name, description, image[], brand,
+                                       Offer (price + currency + stock)
+    • BreadcrumbList      products  — Home → Collection → Product
+
+  FAQPage schema is emitted by sections/ds-pdp-faq.liquid since it
+  depends on the section's blocks. Article + WebPage schemas are
+  left to Shopify's default content_for_header handling.
+
+  Multiple <script type="application/ld+json"> tags is the accepted
+  pattern — Google parses each independently and merges them in its
+  knowledge graph. Easier to maintain than one giant @graph object.
+
+  All image URLs are absolute (prepended with https:) — JSON-LD
+  validators prefer fully-qualified URLs and Shopify's image_url
+  filter returns protocol-relative (//) by default.
+{%- endcomment -%}
+
+{%- comment -%} ===== Organization (sitewide) ===== {%- endcomment -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": {{ shop.name | json }},
+  "url": {{ shop.url | json }}{% if settings.favicon != blank %},
+  "logo": {{ settings.favicon | image_url: width: 512 | prepend: 'https:' | json }}{% endif %}
+}
+</script>
+
+{%- comment -%} ===== WebSite + SearchAction (sitewide) ===== {%- endcomment -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": {{ shop.name | json }},
+  "url": {{ shop.url | json }},
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ shop.url }}/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+{%- if template.name == 'product' and product -%}
+  {%- liquid
+    assign variant = product.selected_or_first_available_variant
+    assign currency = cart.currency.iso_code
+    assign desc = product.description | strip_html | strip_newlines | truncate: 300
+    assign brand_name = product.vendor | default: shop.name
+  -%}
+
+  {%- comment -%} ===== Product schema ===== {%- endcomment -%}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": {{ product.title | json }},
+    "description": {{ desc | json }},
+    "url": "{{ shop.url }}{{ product.url }}",
+    "image": [
+      {%- for media in product.media limit: 4 -%}
+        {{ media.preview_image | image_url: width: 1200 | prepend: 'https:' | json }}{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    ],{% if variant.sku != blank %}
+    "sku": {{ variant.sku | json }},{% endif %}
+    "brand": {
+      "@type": "Brand",
+      "name": {{ brand_name | json }}
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": "{{ shop.url }}{{ product.url }}",
+      "priceCurrency": {{ currency | json }},
+      "price": "{{ variant.price | divided_by: 100.0 }}",
+      "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  }
+  </script>
+
+  {%- comment -%} ===== BreadcrumbList (Home → Collection → Product) ===== {%- endcomment -%}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": {{ shop.url | json }}
+      }{% if product.collections.first %},
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": {{ product.collections.first.title | json }},
+        "item": "{{ shop.url }}{{ product.collections.first.url }}"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": {{ product.title | json }},
+        "item": "{{ shop.url }}{{ product.url }}"
+      }{% else %},
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": {{ product.title | json }},
+        "item": "{{ shop.url }}{{ product.url }}"
+      }{% endif %}
+    ]
+  }
+  </script>
+{%- endif -%}

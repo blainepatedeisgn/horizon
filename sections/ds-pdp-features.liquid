@@ -59,6 +59,18 @@
         {%- if images and images.size > 0 -%}
           <div class="ds-pdp-features__images">
             {%- for image in images limit: 3 -%}
+              {%- assign caption = captions[forloop.index0] -%}
+              {%- comment -%}
+                Alt text strategy: prefer the paired caption (it's
+                already a short human-written description of what
+                the image shows). Fall back to the feature's title +
+                index for content-relevant alt text. Never empty —
+                empty alts here hurt image search SEO AND accessibility.
+              {%- endcomment -%}
+              {%- assign img_alt = caption -%}
+              {%- if img_alt == blank -%}
+                {%- assign img_alt = title | default: 'Feature image' -%}
+              {%- endif -%}
               <figure class="ds-pdp-features__img">
                 {{
                   image
@@ -67,10 +79,9 @@
                     loading: 'lazy',
                     widths: '400,600,800,1200',
                     sizes: '(min-width: 800px) 33vw, 100vw',
-                    alt: '',
+                    alt: img_alt,
                     class: 'ds-pdp-features__img-media'
                 }}
-                {%- assign caption = captions[forloop.index0] -%}
                 {%- if caption != blank -%}
                   <figcaption class="ds-pdp-features__caption"><span>{{ caption | escape }}</span></figcaption>
                 {%- endif -%}

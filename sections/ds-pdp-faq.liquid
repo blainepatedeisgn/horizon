@@ -73,6 +73,49 @@
     </div>
   </div>
 </section>
+
+{%- comment -%}
+  FAQPage structured data — unlocks Google's expandable FAQ rich
+  snippet in search results, which is a direct CTR win on product
+  pages with FAQs. Two-pass loop: first count valid Q/A pairs (so
+  we can emit commas correctly), then render them. Plain JSON
+  doesn't allow trailing commas in arrays.
+
+  Each Question / Answer pair maps directly to one section block
+  so the SEO surface stays in sync with what visitors actually see.
+{%- endcomment -%}
+{%- liquid
+  assign valid_q_count = 0
+  for block in section.blocks
+    if block.type == 'faq_item' and block.settings.question != blank and block.settings.answer != blank
+      assign valid_q_count = valid_q_count | plus: 1
+    endif
+  endfor
+  assign rendered_q = 0
+-%}
+{%- if valid_q_count > 0 -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for block in section.blocks -%}
+      {%- if block.type == 'faq_item' and block.settings.question != blank and block.settings.answer != blank -%}
+        {%- assign rendered_q = rendered_q | plus: 1 -%}
+        {
+          "@type": "Question",
+          "name": {{ block.settings.question | json }},
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": {{ block.settings.answer | strip_html | strip_newlines | json }}
+          }
+        }{% if rendered_q < valid_q_count %},{% endif %}
+      {%- endif -%}
+    {%- endfor -%}
+  ]
+}
+</script>
+{%- endif -%}
 {%- endif -%}
 
 {% style %}
