@@ -205,12 +205,22 @@
             "meta_line_1": "04 collections",
             "meta_line_2": "FROM $18"
           }
+        },
+        "ds_category_tile_qazd9f": {
+          "type": "ds-category-tile",
+          "settings": {
+            "collection": "freebies",
+            "label": "Freebies",
+            "meta_line_1": "02 freebies",
+            "meta_line_2": "FREE"
+          }
         }
       },
       "block_order": [
         "tile_plugins",
         "tile_fonts",
-        "tile_graphics"
+        "tile_graphics",
+        "ds_category_tile_qazd9f"
       ],
       "settings": {
         "color_scheme": "",
