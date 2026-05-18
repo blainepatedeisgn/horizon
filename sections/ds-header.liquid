@@ -1106,22 +1106,25 @@
   /* Featured product card — the centerpiece. 1:1 image; title +
      price stacked; eyebrow trust line; primary CTA.
        Desktop: image full-width on top, body (meta + button)
-                stacked below.
-       Mobile:  image fixed 140px on the left, body in the right
-                column stacked vertically. Like a cart line item
-                but with a CTA button instead of qty controls. */
+                stacked below — title row spans full card width.
+       Mobile:  image fixed 140×140 square on the left, body in
+                the right column with explicit 140px card height
+                so the whole thing reads compact + balanced. Body
+                content compresses (title clamps to 2 lines,
+                tighter padding) to fit inside the image height. */
   .ds-cart__empty-feature {
     display: flex;
     flex-direction: column;
     border: 1px solid var(--color-border);
     background: var(--color-bg-elev);
+    width: 100%; /* explicit so it always spans full drawer */
   }
   .ds-cart__empty-feature-media {
     display: block;
     aspect-ratio: 1 / 1;
     overflow: hidden;
     background: var(--color-bg);
-    /* Image fills the square */
+    width: 100%;
   }
   .ds-cart__empty-feature-img,
   .ds-cart__empty-feature-img-placeholder {
@@ -1132,12 +1135,13 @@
     background: var(--color-bg);
   }
   /* Body wraps meta + button so they can move as a unit when the
-     card flips to horizontal on mobile. On desktop it's just a
-     pass-through flex column. */
+     card flips to horizontal on mobile. On desktop it's a flex
+     column that stretches to the card width. */
   .ds-cart__empty-feature-body {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    width: 100%;
   }
   .ds-cart__empty-feature-meta {
     padding: var(--space-4);
@@ -1146,16 +1150,20 @@
     gap: 4px;
     border-top: 1px solid var(--color-border);
   }
+  /* Title row spans full meta width — title link grows, price
+     pinned right via justify-content: space-between. */
   .ds-cart__empty-feature-title-row {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: var(--space-3);
+    width: 100%;
   }
   .ds-cart__empty-feature-title-link {
     color: inherit;
     text-decoration: none;
     min-width: 0;
+    flex: 1;
   }
   .ds-cart__empty-feature-title {
     font-size: 16px;
@@ -1169,6 +1177,7 @@
     font-weight: 500;
     color: var(--color-fg);
     flex-shrink: 0;
+    white-space: nowrap;
   }
   .ds-cart__empty-feature-eyebrow {
     font-family: var(--font-mono);
@@ -1177,20 +1186,27 @@
     text-transform: uppercase;
     color: var(--color-fg-muted);
   }
-  /* Form wrapper is layout-neutral; button does the work */
+  /* Form wrapper — pass-through container for the AJAX add. */
   .ds-cart__empty-feature-form {
     display: block;
+    width: 100%;
+    margin: 0;
     border-top: 1px solid var(--color-border);
   }
+  /* CTA button — full-width inside its container. display:flex
+     (not inline-flex) so the width:100% reliably takes effect
+     across browsers including Safari which sometimes refuses to
+     stretch inline-flex elements. */
   .ds-cart__empty-feature-btn {
     width: 100%;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     border-top: 1px solid var(--color-border);
   }
-  /* When form wraps the button, the form already has the border-top */
+  /* When the form wraps the button, the form already has the
+     border-top, so suppress the inner button's. */
   .ds-cart__empty-feature-form .ds-cart__empty-feature-btn {
     border-top: 0;
   }
@@ -1243,11 +1259,12 @@
   }
 
   /* Mobile (<= 640px) — featured product card flips to side-by-
-     side. 1:1 image kept at a fixed 140px square on the left, body
-     (meta + CTA) takes the remaining width on the right. Compacts
-     the whole card from ~500px tall (stacked 360x360 + meta + btn)
-     down to ~150px tall, freeing screen real estate for the
-     categories + dock below. */
+     side AND is pinned at a fixed 140px tall. Image stays a 1:1
+     square (140×140) by both width AND height being explicit, so
+     it doesn't get stretched by the body column's content height.
+     Body content compresses to fit (title clamps to 2 lines max,
+     tighter padding, smaller eyebrow). Result: a compact 140-tall
+     rectangle that reads like a beefier cart line item. */
   @media (max-width: 640px) {
     .ds-cart__empty {
       padding: var(--space-4) var(--space-4);
@@ -1262,25 +1279,24 @@
 
     .ds-cart__empty-feature {
       flex-direction: row;
+      height: 140px; /* pins the card */
     }
     .ds-cart__empty-feature-media {
       width: 140px;
+      height: 140px; /* explicit — flex stretch can't override aspect-ratio reliably across browsers */
       flex-shrink: 0;
-      /* aspect-ratio: 1/1 inherited, so height = 140px */
     }
     .ds-cart__empty-feature-body {
       flex: 1;
-      /* divider between image column and body column */
+      height: 100%;
       border-left: 1px solid var(--color-border);
     }
     .ds-cart__empty-feature-meta {
-      /* Was top-bordered to separate from the image above on
-         desktop; on mobile the image is to the LEFT, so the
-         border-left on the body handles separation and the
-         meta's top-border becomes redundant. */
       border-top: 0;
       flex: 1;
       padding: var(--space-3);
+      min-height: 0;
+      overflow: hidden;
     }
     /* Title row stacks vertically on mobile so a long title +
        price don't collide in the narrow right column. */
@@ -1291,6 +1307,20 @@
     }
     .ds-cart__empty-feature-title {
       font-size: 14px;
+      line-height: 1.2;
+      /* Clamp to 2 lines max — prevents long product names from
+         overflowing the 140px-tall card. */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .ds-cart__empty-feature-price {
+      font-size: 13px;
+    }
+    .ds-cart__empty-feature-eyebrow {
+      font-size: 9px;
+      letter-spacing: 0.1em;
     }
     .ds-cart__empty-feature-btn {
       min-height: 40px;
