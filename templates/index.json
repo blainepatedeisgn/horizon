@@ -70,6 +70,8 @@
         "color_scheme": "",
         "before_image": "shopify://shop_images/before.png",
         "after_image": "shopify://shop_images/Artboard_3.png",
+        "before_2": "shopify://shop_images/biw.png",
+        "after_2": "shopify://shop_images/Artboard_4.png",
         "before_label": "Before",
         "after_label": "After",
         "starting_position": 50,
