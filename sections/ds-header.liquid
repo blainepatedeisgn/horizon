@@ -1359,6 +1359,31 @@
     --shop-pay-button-border-radius: 0;
   }
 
+  /* Mobile: stack the express buttons vertically. Shopify renders
+     Shop Pay / Apple Pay / PayPal in a flex row by default; on a
+     ~390px viewport that compresses each button to ~110px wide,
+     which crops the Apple Pay wordmark and reads cramped against
+     the full-width Checkout button above. Grid override with one
+     column forces single-column layout. We target multiple wrapper
+     levels because Shopify's injected markup varies by which
+     express methods are enabled. */
+  @media (max-width: 600px) {
+    .ds-cart__express,
+    .ds-cart__express > div,
+    .ds-cart__express [data-shopify-buttoncontainer] {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: var(--space-2) !important;
+      width: 100% !important;
+    }
+    .ds-cart__express shop-pay-button,
+    .ds-cart__express [role="button"],
+    .ds-cart__express [data-shopify-buttoncontainer] > * {
+      min-height: 52px; /* slightly taller touch target on mobile */
+      width: 100% !important;
+    }
+  }
+
   /* License agreement gate — brutalist square checkbox + link to the
      license page. Disables the Checkout button until checked. CSS lives
      here so it applies on both the cart drawer and the full cart page
