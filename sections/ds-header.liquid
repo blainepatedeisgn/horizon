@@ -155,6 +155,20 @@
                 >×</button>
               </div>
 
+              {%- comment -%}
+                Loading bar — sits at the top edge of the body area
+                below the head. Hidden by default; visible only when
+                <cart-drawer-component> carries .is-loading (toggled
+                by the ATC submit handler at the bottom of this file).
+                Auto-clears on the `cart:update` event after Horizon's
+                morph completes. Gives an "in-progress" cue between
+                drawer-open and items-rendered so the empty cart
+                doesn't read as broken on the first add.
+              {%- endcomment -%}
+              <div class="ds-cart-drawer__loading" aria-hidden="true">
+                <div class="ds-cart-drawer__loading-bar"></div>
+              </div>
+
               <cart-items-component
                 class="ds-cart-drawer__body"
                 data-section-id="{{ section.id }}"
@@ -218,6 +232,14 @@
             // Walks every checkbox + every checkout button on the
             // page and pulls them into the sessionStorage-backed
             // source of truth. Cheap, idempotent.
+            //
+            // The accelerated-checkout container ([data-ds-cart-express])
+            // gets the `inert` attribute when locked — that blocks
+            // both mouse and keyboard interaction across all its
+            // descendants (Shop Pay, PayPal, etc. web components),
+            // which we can't reliably disable individually because
+            // they ship their own shadow DOMs. CSS handles the
+            // visual fade via `[inert]` selector.
             function syncAll() {
               var agreed = getAgreed();
               document.querySelectorAll('[data-ds-cart-agreement]').forEach(function (cb) {
@@ -226,6 +248,10 @@
               document.querySelectorAll('button[name="checkout"], input[name="checkout"]').forEach(function (btn) {
                 btn.disabled = !agreed;
                 btn.setAttribute('aria-disabled', String(!agreed));
+              });
+              document.querySelectorAll('[data-ds-cart-express]').forEach(function (el) {
+                if (agreed) el.removeAttribute('inert');
+                else el.setAttribute('inert', '');
               });
             }
 
@@ -963,6 +989,17 @@
   .ds-cart-drawer__close {
     background: transparent;
     border: 0;
+    /* Safari renders <button> with a native UA outline + subtle inner
+       border by default; both stay visible after a click until blur,
+       producing the "black inner stroke" the user sees underneath
+       the grey hover overlay. appearance: none neutralizes the UA
+       chrome; outline + box-shadow: none kills any inherited focus
+       ring. Keyboard accessibility is preserved via :focus-visible
+       below. */
+    appearance: none;
+    -webkit-appearance: none;
+    outline: 0;
+    box-shadow: none;
     width: 36px;
     height: 36px;
     display: flex;
@@ -975,7 +1012,62 @@
     line-height: 1;
     transition: background var(--t-fast) var(--ease);
   }
-  .ds-cart-drawer__close:hover { background: var(--color-border); }
+  .ds-cart-drawer__close:hover,
+  .ds-cart-drawer__close:focus {
+    background: var(--color-border);
+    outline: 0;
+    box-shadow: none;
+  }
+  /* Keyboard-only focus ring — preserves a11y without leaking into
+     mouse interactions. */
+  .ds-cart-drawer__close:focus-visible {
+    outline: 2px solid var(--color-accent, #ff4d1f);
+    outline-offset: -2px;
+  }
+
+  /* Loading bar — thin orange shimmer that slides L→R across the top
+     edge of the drawer body while /cart/add.js is in flight. Hidden
+     by default (opacity 0); the .is-loading class on
+     <cart-drawer-component> reveals it AND starts the animation.
+     Paused-by-default means we don't pay animation cost when idle.
+     Cleared by the `cart:update` event after Horizon morphs in the
+     fresh items, OR by a 5s safety timer if the request fails. */
+  .ds-cart-drawer__loading {
+    position: relative;
+    height: 2px;
+    background: var(--color-border);
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 120ms var(--ease, ease);
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+  cart-drawer-component.is-loading .ds-cart-drawer__loading {
+    opacity: 1;
+  }
+  .ds-cart-drawer__loading-bar {
+    position: absolute;
+    inset: 0;
+    background: var(--color-accent, #ff4d1f);
+    transform: translateX(-100%);
+    animation: ds-cart-loading 900ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    animation-play-state: paused;
+  }
+  cart-drawer-component.is-loading .ds-cart-drawer__loading-bar {
+    animation-play-state: running;
+  }
+  @keyframes ds-cart-loading {
+    0%   { transform: translateX(-100%); }
+    50%  { transform: translateX(20%); }
+    100% { transform: translateX(110%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-cart-drawer__loading-bar {
+      animation: none;
+      transform: none;
+      opacity: 0.6;
+    }
+  }
 
   /* Body: scrollable area (items + upsell) + pinned summary footer */
   .ds-cart-drawer__body {
@@ -1235,6 +1327,37 @@
   }
   .ds-cart__checkout-form { margin: 0; }
   .ds-cart__checkout-btn { width: 100%; }
+
+  /* Accelerated checkout buttons (Shop Pay, PayPal, Apple Pay, Google
+     Pay) — Shopify renders its own <shop-pay-button> web component
+     and friends inside this wrapper. We:
+       1) give them breathing room from our Checkout button,
+       2) force full width to match the typographic rhythm,
+       3) fade them out + lock interaction when the license-agreement
+          gate isn't satisfied. The `inert` attribute (toggled by the
+          gate's syncAll() below) handles keyboard + screen-reader
+          locking; CSS adds the visual cue.
+     Shopify ships these buttons unstyled with low contrast on dark
+     backgrounds, so we also bump min-height + reset rounding for
+     our brutalist square aesthetic. */
+  .ds-cart__express {
+    margin-top: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    transition: opacity 120ms var(--ease, ease);
+  }
+  .ds-cart__express[inert] { opacity: 0.4; }
+  .ds-cart__express shop-pay-button,
+  .ds-cart__express [role="button"],
+  .ds-cart__express > * {
+    width: 100% !important;
+    min-height: 48px;
+    border-radius: 0 !important;
+  }
+  .ds-cart__express shop-pay-button {
+    --shop-pay-button-border-radius: 0;
+  }
 
   /* License agreement gate — brutalist square checkbox + link to the
      license page. Disables the Checkout button until checked. CSS lives
@@ -2215,7 +2338,7 @@
     });
   })();
 
-  // Semi-eager cart drawer open on add-to-cart submit.
+  // Semi-eager cart drawer open + in-flight loading bar.
   //
   // <cart-drawer-component> normally opens AFTER /cart/add.js resolves
   // (~200-600ms of network). Opening it on the SAME tick as the click
@@ -2230,20 +2353,61 @@
   //
   // 180ms = within the "fast" perception band, longer than a single
   // paint cycle. Tune by editing OPEN_DELAY_MS if it still feels off.
+  //
+  // The .is-loading class shows a 2px orange shimmer bar at the top
+  // of the body while we wait. It clears on `cart:update` (which
+  // Horizon's <cart-items-component> dispatches after morphing in
+  // the fresh items) or on `cart:error`, with a 5s safety timer as
+  // belt-and-suspenders in case a network failure swallows both.
   (function () {
     var OPEN_DELAY_MS = 180;
+    var SAFETY_TIMEOUT_MS = 5000;
+    var safetyTimer = null;
+
     function isAddToCartForm(form) {
       if (!form || !form.action) return false;
       return form.action.indexOf('/cart/add') !== -1;
     }
+    function getDrawer() {
+      return document.querySelector('cart-drawer-component');
+    }
+    function setLoading(on) {
+      var drawer = getDrawer();
+      if (!drawer) return;
+      drawer.classList.toggle('is-loading', !!on);
+    }
+    function clearLoading() {
+      if (safetyTimer) {
+        window.clearTimeout(safetyTimer);
+        safetyTimer = null;
+      }
+      setLoading(false);
+    }
+
     document.addEventListener('submit', function (e) {
       if (!isAddToCartForm(e.target)) return;
+
+      // Reset any stale safety timer from a prior in-flight add.
+      if (safetyTimer) window.clearTimeout(safetyTimer);
+      setLoading(true);
+      safetyTimer = window.setTimeout(clearLoading, SAFETY_TIMEOUT_MS);
+
       window.setTimeout(function () {
-        var drawer = document.querySelector('cart-drawer-component');
+        var drawer = getDrawer();
         if (drawer && typeof drawer.open === 'function') {
           try { drawer.open(); } catch (_) { /* component not upgraded */ }
         }
       }, OPEN_DELAY_MS);
     }, true); // capture phase
+
+    // Horizon dispatches `cart:update` after each successful morph
+    // (assets/events.js → ThemeEvents.cartUpdate). That's our cue
+    // that the items are now in the DOM and the bar can disappear.
+    document.addEventListener('cart:update', clearLoading);
+
+    // Belt-and-suspenders for failed adds — sold-out variant, gift
+    // card limits, network drop. Horizon dispatches `cart:error`
+    // from cart-items-component on these paths.
+    document.addEventListener('cart:error', clearLoading);
   })();
 </script>

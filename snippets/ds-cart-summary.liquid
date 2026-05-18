@@ -66,6 +66,31 @@
     >
       Checkout — {{ cart.total_price | money }}
     </button>
+
+    {%- comment -%}
+      Accelerated / express checkout buttons (Shop Pay, PayPal, Apple
+      Pay, Google Pay) — Shopify renders whichever ones the merchant
+      has enabled in Settings → Payments → Express checkouts. The
+      `additional_checkout_buttons` variable is only true when at
+      least one is configured, so on stores without Shop Pay this
+      section emits nothing.
+
+      Wrapped in [data-ds-cart-express] so the license-agreement
+      gate (script in ds-header.liquid) can `inert` it until the
+      checkbox is ticked — without this, customers could bypass
+      the gate by tapping Shop Pay.
+
+      Shop Pay's web component handles its own click → token →
+      checkout flow; we don't need our own form submission for it.
+    {%- endcomment -%}
+    {%- if additional_checkout_buttons -%}
+      <div
+        class="ds-cart__express"
+        data-ds-cart-express
+      >
+        {{ content_for_additional_checkout_buttons }}
+      </div>
+    {%- endif -%}
   </form>
 
   <p class="ds-cart__note">
