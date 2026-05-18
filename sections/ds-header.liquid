@@ -1286,10 +1286,16 @@
     .ds-cart__empty-feature {
       flex-direction: row;
       height: 140px; /* pins the card */
+      overflow: hidden; /* belt-and-suspenders sub-pixel clip */
     }
     .ds-cart__empty-feature-media {
       width: 140px;
-      height: 140px; /* explicit — flex stretch can't override aspect-ratio reliably across browsers */
+      /* height: 100% (= card interior height after border-box's 1px
+         top/bottom borders are subtracted) instead of an explicit
+         140px. Explicit 140 overflowed the card's 138 interior by
+         2px, pushing the image's bottom edge 1px below the body
+         column's bottom and causing the misalignment the user saw. */
+      height: 100%;
       flex-shrink: 0;
     }
     .ds-cart__empty-feature-body {
