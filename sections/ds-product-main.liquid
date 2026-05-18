@@ -287,13 +287,41 @@
           <p class="ds-pdp__info-tagline">{{ tagline | escape }}</p>
         {%- endif -%}
 
-        {%- comment -%} PRICE ROW (price + compare-at + sale tag inline) {%- endcomment -%}
+        {%- comment -%}
+          PRICE ROW (price + compare-at + sale tag inline)
+
+          All three spans always render so the JS variant-change handler
+          can update them in place without re-parsing markup. The strike
+          + discount spans use `hidden` when the current variant has no
+          compare-at price; JS toggles the attribute on switch.
+
+          on_sale + discount_percent are recalculated from the CURRENT
+          variant's compare-at (was previously product.compare_at_price,
+          which doesn't reflect per-variant pricing — e.g., a free
+          Personal variant + a paid Commercial variant where only one
+          is "on sale" relative to its own compare-at).
+        {%- endcomment -%}
+        {%- liquid
+          assign cv_on_sale = false
+          assign cv_discount_pct = 0
+          if current_variant.compare_at_price and current_variant.compare_at_price > current_variant.price
+            assign cv_on_sale = true
+            assign cv_saved = current_variant.compare_at_price | minus: current_variant.price
+            assign cv_discount_pct = cv_saved | times: 100.0 | divided_by: current_variant.compare_at_price | round
+          endif
+        -%}
         <div class="ds-pdp__info-price-row">
-          <span class="ds-pdp__info-price">{{ current_variant.price | money }}</span>
-          {%- if on_sale -%}
-            <span class="ds-pdp__info-price-strike">{{ product.compare_at_price | money }}</span>
-            <span class="ds-pdp__info-sale-tag">Launch −{{ discount_percent }}%</span>
-          {%- endif -%}
+          <span class="ds-pdp__info-price" data-ds-price>{{ current_variant.price | money }}</span>
+          <span
+            class="ds-pdp__info-price-strike"
+            data-ds-compare
+            {% unless cv_on_sale %}hidden{% endunless %}
+          >{%- if cv_on_sale -%}{{ current_variant.compare_at_price | money }}{%- endif -%}</span>
+          <span
+            class="ds-pdp__info-sale-tag"
+            data-ds-discount
+            {% unless cv_on_sale %}hidden{% endunless %}
+          >{%- if cv_on_sale -%}Launch −{{ cv_discount_pct }}%{%- endif -%}</span>
         </div>
 
         {%- comment -%}
@@ -418,6 +446,10 @@
                           class="ds-pdp__tier-card-input"
                           name="ds-tier-{{ section.id }}"
                           value="{{ variant.id }}"
+                          data-price="{{ variant.price }}"
+                          data-compare-at="{{ variant.compare_at_price | default: 0 }}"
+                          data-price-formatted="{{ variant.price | money | escape }}"
+                          data-compare-formatted="{{ variant.compare_at_price | money | escape }}"
                           {% if variant.id == current_variant.id %}checked{% endif %}
                           {% unless variant.available %}disabled{% endunless %}
                         >
@@ -446,6 +478,10 @@
                     {%- for variant in product.variants -%}
                       <option
                         value="{{ variant.id }}"
+                        data-price="{{ variant.price }}"
+                        data-compare-at="{{ variant.compare_at_price | default: 0 }}"
+                        data-price-formatted="{{ variant.price | money | escape }}"
+                        data-compare-formatted="{{ variant.compare_at_price | money | escape }}"
                         {% if variant.id == current_variant.id %}selected{% endif %}
                         {% unless variant.available %}disabled{% endunless %}
                       >
@@ -487,23 +523,48 @@
               if (!sec) return;
               var hidden = sec.querySelector('[data-ds-variant-input]');
               if (!hidden) return;
-              var atcPrice = sec.querySelector('[data-ds-main-atc-price]');
+              var atcPrice  = sec.querySelector('[data-ds-main-atc-price]');
+              var priceEl   = sec.querySelector('[data-ds-price]');
+              var compareEl = sec.querySelector('[data-ds-compare]');
+              var discountEl = sec.querySelector('[data-ds-discount]');
 
-              function updatePrice(text) {
-                if (atcPrice && text) atcPrice.textContent = text;
+              /* Read variant data off the control that just changed
+                 (radio input or <option>) and update every price surface
+                 the PDP exposes — main display price, strikethrough,
+                 launch %, AND the ATC button price. Switching tiers now
+                 updates ALL of them, not just the ATC button. */
+              function applyVariant(control) {
+                if (!control) return;
+                var priceCents       = parseInt(control.getAttribute('data-price'), 10);
+                var compareCents     = parseInt(control.getAttribute('data-compare-at'), 10) || 0;
+                var priceFormatted   = control.getAttribute('data-price-formatted') || '';
+                var compareFormatted = control.getAttribute('data-compare-formatted') || '';
+
+                if (priceEl && priceFormatted) priceEl.textContent = priceFormatted;
+                if (atcPrice && priceFormatted) atcPrice.textContent = priceFormatted;
+
+                var onSale = compareCents > priceCents && compareCents > 0;
+                if (onSale) {
+                  if (compareEl) {
+                    compareEl.textContent = compareFormatted;
+                    compareEl.removeAttribute('hidden');
+                  }
+                  if (discountEl) {
+                    var pct = Math.round((compareCents - priceCents) / compareCents * 100);
+                    discountEl.textContent = 'Launch −' + pct + '%';
+                    discountEl.removeAttribute('hidden');
+                  }
+                } else {
+                  if (compareEl)  compareEl.setAttribute('hidden', '');
+                  if (discountEl) discountEl.setAttribute('hidden', '');
+                }
               }
 
               var select = sec.querySelector('[data-ds-variant-select]');
               if (select) {
                 select.addEventListener('change', function () {
                   hidden.value = select.value;
-                  // Pull price from the selected option's label text
-                  // (we render it as "Title — $XX.YY" in the markup).
-                  var opt = select.options[select.selectedIndex];
-                  if (opt) {
-                    var m = opt.textContent.match(/(\$|€|£)\s?[\d.,]+/);
-                    if (m) updatePrice(m[0]);
-                  }
+                  applyVariant(select.options[select.selectedIndex]);
                 });
                 return;
               }
@@ -513,11 +574,7 @@
                 radios.addEventListener('change', function (e) {
                   if (!e.target || !e.target.matches('input[type="radio"]')) return;
                   hidden.value = e.target.value;
-                  // Pull price straight from the card's .price span —
-                  // no regex needed, clean DOM read.
-                  var card = e.target.closest('.ds-pdp__tier-card');
-                  var priceEl = card && card.querySelector('.ds-pdp__tier-card-price');
-                  if (priceEl) updatePrice(priceEl.textContent);
+                  applyVariant(e.target);
                 });
               }
             })();
@@ -1627,14 +1684,10 @@
 
     if (mainSelect && stickyVariant) {
       mainSelect.addEventListener('change', function () {
-        // Pull price from the option's label text (we embed it as
-        // "Title — $XX.YY"). Same regex as before.
+        // Each <option> has data-price-formatted (the rendered "$X.YY")
+        // — clean read, no regex needed.
         var opt = mainSelect.options[mainSelect.selectedIndex];
-        var priceText = '';
-        if (opt) {
-          var m = opt.textContent.match(/(\$|€|£)\s?[\d.,]+/);
-          if (m) priceText = m[0];
-        }
+        var priceText = opt ? opt.getAttribute('data-price-formatted') || '' : '';
         applyToSticky(mainSelect.value, priceText);
       });
     }
@@ -1642,11 +1695,8 @@
     if (mainRadios && stickyVariant) {
       mainRadios.addEventListener('change', function (e) {
         if (!e.target || !e.target.matches('input[type="radio"]')) return;
-        // Pull the price directly from the card's price span — no regex
-        // needed since the markup gives us a clean element to read.
-        var card = e.target.closest('.ds-pdp__tier-card');
-        var priceEl = card && card.querySelector('.ds-pdp__tier-card-price');
-        applyToSticky(e.target.value, priceEl ? priceEl.textContent : '');
+        var priceText = e.target.getAttribute('data-price-formatted') || '';
+        applyToSticky(e.target.value, priceText);
       });
     }
   })();
