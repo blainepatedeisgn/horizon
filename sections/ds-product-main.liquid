@@ -1261,8 +1261,23 @@
   .ds-pdp__info-description ol {
     padding-left: var(--space-4);
     margin: var(--space-3) 0;
+    /* Defensive override: kill any multi-column / grid styling the
+       description HTML might bring in. Shopify's rich text editor
+       has a "columns" feature, and pasted HTML from other sites
+       sometimes carries inline `column-count` or `display: grid`
+       on <ul>/<ol> — which renders bullets in too-narrow columns
+       (2-word lines) instead of a flat readable list. !important
+       because the offending styles can be INLINE on the element. */
+    column-count: 1 !important;
+    columns: auto !important;
+    display: block !important;
+    grid-template-columns: none !important;
   }
-  .ds-pdp__info-description li { margin-bottom: var(--space-2); }
+  .ds-pdp__info-description li {
+    margin-bottom: var(--space-2);
+    /* Items in a CSS column or grid can carry inline width — reset */
+    break-inside: auto;
+  }
 
   /* -------------------------------------------------------------------
      Mobile (≤600px) — phone-specific tightening
