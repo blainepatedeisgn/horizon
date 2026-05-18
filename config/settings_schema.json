@@ -1772,10 +1772,16 @@
         "default": "/collections/all"
       },
       {
+        "type": "product",
+        "id": "empty_cart_featured_product",
+        "label": "Empty cart drawer — featured product",
+        "info": "Single product card shown prominently in the cart drawer when empty. Pick your strongest lead product (e.g. BACKLIT). Leave blank to hide the feature section."
+      },
+      {
         "type": "collection_list",
         "id": "empty_cart_categories",
         "label": "Empty cart drawer — quick category links",
-        "info": "Up to 3 collections shown as outline buttons in the cart drawer when empty (under the Continue Shopping CTA).",
+        "info": "Up to 3 collections shown as outline buttons below the featured product when the cart is empty.",
         "limit": 3
       },
       {

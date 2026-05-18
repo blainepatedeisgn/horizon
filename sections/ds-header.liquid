@@ -1063,69 +1063,171 @@
     padding: var(--space-5);
   }
 
-  /* Empty state — split layout: centered content cluster on top,
-     brand wordmark pinned bottom. Content cluster (anchor →
-     categories → continue-shopping CTA) sits in the natural
-     vertical center of the available space; wordmark anchors the
-     composition at the bottom edge so the whole drawer doesn't
-     feel top-heavy. */
+  /* Empty state v5 — Drake's / ALD pattern. Every vertical band
+     holds real content: editorial lede → featured product card
+     (visual anchor) → category nav → trust+wordmark dock. No band
+     is decoration alone. */
   .ds-cart__empty {
     height: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: var(--space-5) var(--space-6) var(--space-5);
+    text-align: left;
+    padding: var(--space-5) var(--space-5);
+    gap: var(--space-5);
   }
-  .ds-cart__empty-content {
-    flex: 1;
+
+  /* Editorial lede — replaces the ghosted "EMPTY." anchor with
+     copy that has voice + hierarchy. Two-line headline + one-line
+     subcopy. Brand voice doing the visual weight work that the
+     previous ghosted typography couldn't. */
+  .ds-cart__empty-lede {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-4);
-    width: 100%;
+    gap: var(--space-2);
   }
-  /* Big "EMPTY." typographic anchor — replaces the old "00."
-     pattern. Same idea (large ghosted mono fills the visual void)
-     but the word reads as informational rather than decorative.
-     Clamped 44 → 64px so it never spills outside the drawer
-     width regardless of viewport. */
-  .ds-cart__empty-anchor {
-    font-family: var(--font-mono);
-    font-size: clamp(44px, 13vw, 64px);
+  .ds-cart__empty-headline {
+    font-family: var(--font-paragraph--family, inherit);
+    font-size: clamp(26px, 7vw, 36px);
     font-weight: 500;
-    line-height: 1;
-    letter-spacing: 0.04em;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
     color: var(--color-fg);
-    opacity: 0.22;
     margin: 0;
-    user-select: none;
   }
-  /* Primary CTA — orange filled. Sits BELOW the category buttons
-     now (user moved it under per the layout request). Clamped to
-     280px max so it doesn't stretch ungainly wide on desktop. */
-  .ds-cart__empty-cta {
+  .ds-cart__empty-subcopy {
+    font-family: var(--font-paragraph--family, inherit);
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--color-fg-muted);
+    margin: 0;
+    max-width: 32ch;
+  }
+
+  /* Featured product card — the centerpiece. Square 1:1 image,
+     title + price stacked, eyebrow trust line, primary CTA. This
+     is the visual anchor that replaces the bottom-half void. */
+  .ds-cart__empty-feature {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+  }
+  .ds-cart__empty-feature-media {
+    display: block;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--color-bg);
+    /* Image fills the square */
+  }
+  .ds-cart__empty-feature-img,
+  .ds-cart__empty-feature-img-placeholder {
     width: 100%;
-    max-width: 280px;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: var(--color-bg);
+  }
+  .ds-cart__empty-feature-meta {
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-cart__empty-feature-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .ds-cart__empty-feature-title-link {
+    color: inherit;
+    text-decoration: none;
+    min-width: 0;
+  }
+  .ds-cart__empty-feature-title {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--color-fg);
+  }
+  .ds-cart__empty-feature-price {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-fg);
+    flex-shrink: 0;
+  }
+  .ds-cart__empty-feature-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  /* Form wrapper is layout-neutral; button does the work */
+  .ds-cart__empty-feature-form {
+    display: block;
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-cart__empty-feature-btn {
+    width: 100%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-top: var(--space-2);
+    border-top: 1px solid var(--color-border);
   }
-  /* Brand wordmark — small mono signature pinned to the bottom
-     of the empty state. Acts like a watermark / typographic
-     period at the end of the composition. */
+  /* When form wraps the button, the form already has the border-top */
+  .ds-cart__empty-feature-form .ds-cart__empty-feature-btn {
+    border-top: 0;
+  }
+
+  /* Categories section — small label + the three outline buttons.
+     Label gives the buttons context as secondary navigation
+     instead of competing with the featured CTA above. */
+  .ds-cart__empty-cats-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-cart__empty-cats-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    opacity: 0.7;
+  }
+
+  /* Trust + wordmark dock — pinned to the bottom via margin-top:
+     auto. The trust line gives the wordmark a reason to be there
+     (brand signs off on a promise) instead of floating alone. */
+  .ds-cart__empty-dock {
+    margin-top: auto;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .ds-cart__empty-trust {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
   .ds-cart__empty-mark {
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--color-fg-muted);
-    opacity: 0.55;
-    padding-top: var(--space-5);
+    color: var(--color-fg);
+    opacity: 0.65;
   }
   /* Category buttons — outline by default, fill orange on hover/
      focus/tap. Same max-width as the primary CTA so they stack
