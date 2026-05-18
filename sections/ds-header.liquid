@@ -1429,24 +1429,51 @@
      Shop Pay / Apple Pay / PayPal in a flex row by default; on a
      ~390px viewport that compresses each button to ~110px wide,
      which crops the Apple Pay wordmark and reads cramped against
-     the full-width Checkout button above. Grid override with one
-     column forces single-column layout. We target multiple wrapper
-     levels because Shopify's injected markup varies by which
-     express methods are enabled. */
+     the full-width Checkout button above. We target every layer
+     of Shopify's injected wrapper markup because the exact
+     structure varies by which express methods are enabled and by
+     SDK version: <div data-shopify-buttoncontainer>, .dynamic-
+     checkout__content, .dynamic-checkout__buttons, .additional-
+     checkout-buttons, and .shopify-payment-button have all been
+     observed in the wild. Force flex column on each, and force
+     full-width on every web component / button child. */
   @media (max-width: 600px) {
     .ds-cart__express,
     .ds-cart__express > div,
-    .ds-cart__express [data-shopify-buttoncontainer] {
-      display: grid !important;
-      grid-template-columns: 1fr !important;
+    .ds-cart__express > ul,
+    .ds-cart__express [data-shopify-buttoncontainer],
+    .ds-cart__express .dynamic-checkout__content,
+    .ds-cart__express .dynamic-checkout__buttons,
+    .ds-cart__express .shopify-payment-button,
+    .ds-cart__express .additional-checkout-buttons {
+      display: flex !important;
+      flex-direction: column !important;
       gap: var(--space-2) !important;
       width: 100% !important;
+      max-width: 100% !important;
+      align-items: stretch !important;
+      list-style: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
+    /* Every leaf payment button — web component or otherwise —
+       gets full width and a 52px min touch target. */
     .ds-cart__express shop-pay-button,
-    .ds-cart__express [role="button"],
-    .ds-cart__express [data-shopify-buttoncontainer] > * {
-      min-height: 52px; /* slightly taller touch target on mobile */
+    .ds-cart__express shop-pay-wallet-button,
+    .ds-cart__express apple-pay-button,
+    .ds-cart__express shopify-paypal-button,
+    .ds-cart__express shopify-google-pay-button,
+    .ds-cart__express .shopify-cleanslate,
+    .ds-cart__express .dynamic-checkout__buttons-item,
+    .ds-cart__express .shopify-payment-button > *,
+    .ds-cart__express [data-shopify-buttoncontainer] > *,
+    .ds-cart__express > div > *,
+    .ds-cart__express > ul > * {
       width: 100% !important;
+      max-width: 100% !important;
+      min-height: 52px !important;
+      flex: 0 0 auto !important;
+      margin: 0 !important;
     }
   }
 
