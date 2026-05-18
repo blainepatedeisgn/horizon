@@ -165,13 +165,40 @@
     </div>
   </div>
 
-  {%- comment -%} ----- WORDMARK ----- {%- endcomment -%}
+  {%- comment -%} ----- WORDMARK -----
+
+    Renders as an SVG whose viewBox is measured at runtime to match
+    the rendered text bbox exactly.  The SVG is `width: 100%` so it
+    fills the container; the viewBox + preserveAspectRatio="meet"
+    handles the scale.
+
+    Replaces a previous CSS `font-size: clamp(56px, 19vw, 200px)`
+    approach which overflowed the viewport on narrow widths — at
+    19vw on a 375px phone, "DISRUPTED" at letter-spacing -0.045em
+    rendered ~450px wide and overflowed the ~337px container.  Both
+    `white-space: nowrap` AND `overflow: hidden` couldn't save it
+    because the text simply didn't fit; the bottom-right "D" was
+    visibly clipped.  Measuring the text and scaling the SVG to fit
+    the container guarantees no overflow on any viewport width.
+    Same approach as sections/ds-wordmark.liquid.
+  {%- endcomment -%}
   {%- if section.settings.show_wordmark -%}
+    {%- assign wm_text = section.settings.wordmark_text | default: 'DISRUPTED' -%}
     <div class="ds-footer__wordmark" aria-hidden="true">
-      {{- section.settings.wordmark_text | default: 'DISRUPTED' -}}
-      {%- if section.settings.show_wordmark_reg -%}
-        <span class="ds-footer__wordmark-reg">®</span>
-      {%- endif -%}
+      <svg
+        class="ds-footer__wordmark-svg"
+        data-ds-footer-wordmark
+        aria-hidden="true"
+        viewBox="0 0 600 100"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <text
+          class="ds-footer__wordmark-text"
+          x="0"
+          y="0"
+          dominant-baseline="text-before-edge"
+        >{{- wm_text | escape -}}{%- if section.settings.show_wordmark_reg -%}<tspan class="ds-footer__wordmark-reg-svg" baseline-shift="super" font-size="0.45em" dx="0.2em">®</tspan>{%- endif -%}</text>
+      </svg>
     </div>
   {%- endif -%}
 </footer>
@@ -365,33 +392,39 @@
     color: var(--color-fg);
   }
 
-  /* Wordmark */
+  /* Wordmark — SVG with JS-measured viewBox.  See markup comment
+     for the migration rationale.  No font-size clamp here; the
+     SVG handles scale based on the runtime bbox measurement. */
   .ds-footer__wordmark {
-    font-size: clamp(56px, 18vw, 256px);
-    font-weight: 700;
-    letter-spacing: -0.055em;
-    line-height: 0.82;
-    text-align: center;
     margin-top: clamp(32px, 5vw, 56px);
     padding: 0 var(--pad-x) clamp(16px, 2vw, 32px);
-    color: var(--color-fg);
     user-select: none;
-    white-space: nowrap;
+    overflow: hidden;   /* hard clip — the SVG inside is already
+                           sized via max-width: 100% but this is
+                           belt-and-braces against any sub-pixel
+                           SVG content overflow on Mobile Safari. */
+  }
+  .ds-footer__wordmark-svg {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
     overflow: hidden;
   }
-  .ds-footer__wordmark-reg {
-    font-size: 0.18em;
-    vertical-align: super;
-    font-family: var(--font-mono);
-    letter-spacing: 0;
-    color: var(--color-fg-muted);
-    margin-left: 8px;
+  .ds-footer__wordmark-text {
+    fill: var(--color-fg);
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 100px;          /* SVG-coord base size for bbox math
+                                   only; the viewBox scale handles
+                                   actual rendered size. */
+    letter-spacing: -0.055em;
   }
-  @media (max-width: 640px) {
-    .ds-footer__wordmark {
-      font-size: clamp(56px, 19vw, 200px);
-      letter-spacing: -0.045em;
-    }
+  .ds-footer__wordmark-reg-svg {
+    fill: var(--color-fg-muted);
+    font-family: var(--font-mono);
+    font-weight: 400;
+    letter-spacing: 0;
   }
 
   /* ============================================================
@@ -439,6 +472,61 @@
     }
   }
 {% endstyle %}
+
+<script>
+  // Wordmark fit — see markup + CSS comments above for rationale.
+  // Mirrors the approach in sections/ds-wordmark.liquid:
+  //   1. RAF after load — fast first paint at the right size
+  //   2. Double-RAF after fonts.ready — accurate measure once the
+  //      web font has been applied AND a layout pass has run
+  //      (iOS Safari can leave layout one frame stale after font swap)
+  //   3. Debounced resize listener — recompute on viewport change
+  //
+  // Inset padding uses the LARGER of:
+  //   • 6% of bbox.height (handles short text where width is small)
+  //   • 1.5% of bbox.width (handles long text where height-based
+  //     padding would scale to too few rendered pixels)
+  // This ensures enough breathing room to absorb getBBox under-
+  // reporting glyph side-bearings under negative letter-spacing,
+  // and Mobile Safari rendering glyph outlines a sub-pixel past
+  // their reported bbox.
+  (function () {
+    document.querySelectorAll('[data-ds-footer-wordmark]').forEach(function (svg) {
+      var text = svg.querySelector('text');
+      if (!text) return;
+      function fit() {
+        try {
+          var bbox = text.getBBox();
+          if (bbox.width > 0 && bbox.height > 0) {
+            var pad = Math.max(bbox.height * 0.06, bbox.width * 0.015);
+            svg.setAttribute(
+              'viewBox',
+              (bbox.x - pad) + ' ' +
+              (bbox.y - pad) + ' ' +
+              (bbox.width + pad * 2) + ' ' +
+              (bbox.height + pad * 2)
+            );
+          }
+        } catch (e) {
+          // getBBox throws if detached/hidden — retry on next event.
+        }
+      }
+      requestAnimationFrame(fit);
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(fit);
+          });
+        });
+      }
+      var resizeTimer = null;
+      window.addEventListener('resize', function () {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(fit, 100);
+      }, { passive: true });
+    });
+  })();
+</script>
 
 {% schema %}
 {

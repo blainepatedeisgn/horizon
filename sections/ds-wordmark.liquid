@@ -64,12 +64,12 @@
     max-width: 100%;    /* belt-and-braces: never exceed container width */
     height: auto;
     user-select: none;
-    /* No `overflow: visible` here — Mobile Safari has bugs where SVG
-       content with overflow:visible ignores the parent's overflow:hidden,
-       leading to text bleeding past the right edge of the viewport on
-       narrow widths.  The SVG's UA default `overflow: hidden` clips
-       content to the viewBox, which is fine because the JS adds a small
-       padding inset to the viewBox to absorb glyph-edge sub-pixels. */
+    overflow: hidden;   /* Explicit, not UA default — Mobile Safari has
+                           been observed to render SVG <text> glyph
+                           side-bearings past the viewBox edge when the
+                           SVG default overflow isn't pinned in CSS.
+                           Combined with the viewBox inset below this is
+                           belt + braces + an additional layer of clip. */
   }
   .ds-wordmark__svg-text {
     fill: var(--color-fg);
@@ -107,15 +107,18 @@
         try {
           var bbox = text.getBBox();
           if (bbox.width > 0 && bbox.height > 0) {
-            // Small inset around the measured bbox.  getBBox doesn't
-            // always include the last glyph's right side-bearing when
-            // there's negative letter-spacing — without this padding
-            // the rightmost glyph would slip past the viewBox edge,
-            // visible as a 1–3px overflow on the right side of the
-            // wordmark on mobile.  3% of bbox height is enough to
-            // absorb the side-bearing without making the wordmark
-            // visibly smaller.
-            var pad = bbox.height * 0.03;
+            // Inset around the measured bbox.  getBBox under-reports the
+            // last glyph's right side-bearing when there's negative
+            // letter-spacing (the rightmost glyph slips past the viewBox
+            // edge), AND Mobile Safari has been observed to render
+            // glyph outlines a sub-pixel beyond their reported bbox.
+            // Use the LARGER of:
+            //   • 6% of height  — handles short text (small bbox.width)
+            //   • 1.5% of width — handles long text (where 6% height
+            //     would be too tight relative to the rendered scale)
+            // Width-aware padding ensures the breathing room scales
+            // proportionally with the rendered wordmark on any device.
+            var pad = Math.max(bbox.height * 0.06, bbox.width * 0.015);
             svg.setAttribute(
               'viewBox',
               (bbox.x - pad) + ' ' +
@@ -138,7 +141,16 @@
       requestAnimationFrame(fit);
 
       if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(fit);
+        // Double-RAF after fonts.ready: on iOS Safari, the font swap
+        // can leave the layout one frame stale — measuring immediately
+        // returns dimensions from the fallback font's metrics.  Waiting
+        // two frames guarantees the new font has been applied AND a
+        // layout pass has run, so getBBox returns the correct bbox.
+        document.fonts.ready.then(function () {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(fit);
+          });
+        });
       }
 
       // Debounce resize so we don't measure on every scroll-bar-induced
