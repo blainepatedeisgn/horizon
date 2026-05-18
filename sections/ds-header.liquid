@@ -2317,6 +2317,62 @@
     });
   })();
 
+  // Mobile quick-add bypass — iOS sticky-hover defeat.
+  //
+  // Even with all :hover rules on the button itself wrapped in
+  // @media (hover: hover), iOS still defers the first tap on a
+  // .ds-product-card__quick--add because the parent .ds-product-
+  // card has a :hover rule (image swap, kept intentionally so the
+  // hover feature still works on tap-outside-the-+). iOS treats any
+  // ancestor :hover as grounds to defer descendant clicks.
+  //
+  // Workaround: capture touchend on the + button, confirm it was
+  // a tap (not a scroll), preventDefault to cancel the deferred
+  // click iOS would have fired later, and manually submit the
+  // form. requestSubmit() preserves Horizon's product-form-component
+  // submit-event listener; falls back to btn.click() on browsers
+  // (older iOS Safari) that don't expose requestSubmit.
+  (function () {
+    if (!('ontouchstart' in window)) return;
+
+    var startX = 0, startY = 0, startTime = 0;
+
+    document.addEventListener('touchstart', function (e) {
+      var btn = e.target && e.target.closest && e.target.closest('.ds-product-card__quick--add');
+      if (!btn) return;
+      var touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      startTime = Date.now();
+    }, { passive: true });
+
+    document.addEventListener('touchend', function (e) {
+      var btn = e.target && e.target.closest && e.target.closest('.ds-product-card__quick--add');
+      if (!btn) return;
+
+      // Tap, not scroll/drag — finger moved < 10px in < 700ms.
+      var touch = e.changedTouches[0];
+      var dx = Math.abs(touch.clientX - startX);
+      var dy = Math.abs(touch.clientY - startY);
+      var dt = Date.now() - startTime;
+      if (dx > 10 || dy > 10 || dt > 700) return;
+
+      // Cancel the deferred click iOS would otherwise fire on the
+      // next tap.
+      e.preventDefault();
+
+      var form = btn.closest('form');
+      if (form && typeof form.requestSubmit === 'function') {
+        form.requestSubmit(btn);
+      } else if (form) {
+        // Fallback: programmatic click on the submit button still
+        // triggers the form's submit event (which product-form-
+        // component is listening on).
+        btn.click();
+      }
+    }, { passive: false });
+  })();
+
   // Semi-eager cart drawer open + in-flight loading bar.
   //
   // <cart-drawer-component> normally opens AFTER /cart/add.js resolves
