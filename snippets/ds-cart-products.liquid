@@ -37,14 +37,23 @@
 
 <div class="cart-items__wrapper ds-cart__items-wrap">
   {%- if cart.empty? or force_empty -%}
+    {%- comment -%}
+      Brutalist empty state — three category pills hand-routed to
+      the merchant's main collections. The brand-voice copy
+      ("Nothing loaded yet") nods to the digital-download context
+      without being too clever. If collection handles on the live
+      store differ from the defaults below, swap them inline —
+      they're not configurable via section settings because this
+      snippet renders inside both the cart drawer and the cart
+      page and the schema lives on different files.
+    {%- endcomment -%}
     <div class="ds-cart__empty">
-      <p class="ds-cart__empty-text">Your cart is empty.</p>
-      <a
-        href="{{ settings.empty_cart_button_link | default: routes.all_products_collection_url }}"
-        class="ds-btn ds-btn--lg ds-cart__empty-cta"
-      >
-        Continue shopping
-      </a>
+      <p class="ds-cart__empty-text">Nothing loaded yet.</p>
+      <div class="ds-cart__empty-cats">
+        <a href="/collections/plugins" class="ds-cart__empty-cat">Plugins</a>
+        <a href="/collections/fonts" class="ds-cart__empty-cat">Fonts</a>
+        <a href="/collections/graphics" class="ds-cart__empty-cat">Graphics</a>
+      </div>
     </div>
   {%- else -%}
     <span class="visually-hidden" ref="cartItemCount" aria-hidden="true">{{- cart.item_count -}}</span>

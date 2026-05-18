@@ -1063,7 +1063,10 @@
     padding: var(--space-5);
   }
 
-  /* Empty state */
+  /* Empty state — "Nothing loaded yet" lede + three brutalist
+     category pills that flip orange on hover. Sits centered in
+     the drawer body so it owns the moment when a fresh visitor
+     opens the drawer (or returns after completing a purchase). */
   .ds-cart__empty {
     height: 100%;
     display: flex;
@@ -1072,14 +1075,44 @@
     justify-content: center;
     gap: var(--space-5);
     text-align: center;
+    padding: var(--space-6);
   }
   .ds-cart__empty-text {
     font-family: var(--font-mono);
     font-size: 12px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--color-fg-muted);
     margin: 0;
+  }
+  .ds-cart__empty-cats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+  .ds-cart__empty-cat {
+    padding: 12px 20px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition:
+      background var(--t-fast) var(--ease),
+      border-color var(--t-fast) var(--ease),
+      color var(--t-fast) var(--ease);
+  }
+  .ds-cart__empty-cat:hover,
+  .ds-cart__empty-cat:focus-visible {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-background);
+    outline: 0;
   }
 
   /* Items list */
