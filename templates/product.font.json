@@ -91,13 +91,6 @@
             "answer": "English only, uppercase. Every typeface ships Basic Latin uppercase glyphs (A–Z), numerals (0–9), and basic punctuation — no lowercase, no extended Latin, no other scripts. If you need lowercase or another language, email blainepatedesign@gmail.com — useful demand drives the roadmap."
           }
         },
-        "faq_modify": {
-          "type": "faq_item",
-          "settings": {
-            "question": "Can I modify the font (add glyphs, edit letterforms)?",
-            "answer": "Not without explicit permission. Modification requires a separate agreement — email blainepatedesign@gmail.com to discuss. Combining the font with other typefaces in a design (mixing it with another font in a layout) does NOT count as modification and is permitted."
-          }
-        },
         "faq_refund": {
           "type": "faq_item",
           "settings": {
@@ -106,7 +99,7 @@
           }
         }
       },
-      "block_order": ["faq_formats", "faq_web", "faq_client", "faq_language", "faq_modify", "faq_refund"]
+      "block_order": ["faq_formats", "faq_web", "faq_client", "faq_language", "faq_refund"]
     },
     "related": {
       "type": "ds-pdp-related",
