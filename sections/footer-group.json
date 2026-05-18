@@ -1,13 +1,10 @@
 /*
  * ------------------------------------------------------------
- * Disrupted Studio footer group
+ * IMPORTANT: The contents of this file are auto-generated.
  *
- * Single custom section (ds-footer) replaces Horizon's stock
- * "footer" + "footer-utilities" sections entirely. Brutalist 4-col
- * layout with brand blurb, link columns, newsletter+social, legal
- * row, and giant DISRUPTED® wordmark.
- *
- * Configurable via Online Store → Themes → Customize → Footer.
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
  * ------------------------------------------------------------
  */
 {
@@ -16,17 +13,6 @@
   "sections": {
     "ds_footer": {
       "type": "ds-footer",
-      "settings": {
-        "color_scheme": "scheme-1",
-        "brand_name": "DISRUPTED STUDIO",
-        "brand_blurb": "A small studio building plugins, type, and graphic assets for designers. Made in Atlanta, GA. One-time purchase, free updates.",
-        "copyright_text": "© 2026 Disrupted Studio · All rights reserved",
-        "show_payment_chips": true,
-        "payment_chips": "Visa, MC, AmEx, PayPal, Apple Pay, Shop",
-        "show_wordmark": true,
-        "wordmark_text": "DISRUPTED",
-        "show_wordmark_reg": true
-      },
       "blocks": {
         "shop_links": {
           "type": "link_column",
@@ -53,10 +39,42 @@
             "success_message": "Thanks. See you in your inbox.",
             "show_social": true
           }
+        },
+        "link_column_frLTiJ": {
+          "type": "link_column",
+          "disabled": true,
+          "settings": {
+            "heading": "Shop",
+            "menu": ""
+          }
         }
       },
-      "block_order": ["shop_links", "studio_links", "newsletter"]
+      "block_order": [
+        "shop_links",
+        "studio_links",
+        "newsletter",
+        "link_column_frLTiJ"
+      ],
+      "settings": {
+        "color_scheme": "scheme-1",
+        "brand_name": "DISRUPTED STUDIO",
+        "brand_blurb": "A small studio building plugins, type, and graphic assets for designers. Made in Atlanta, GA. One-time purchase, free updates.",
+        "instagram_url": "",
+        "x_url": "",
+        "youtube_url": "",
+        "tiktok_url": "",
+        "facebook_url": "",
+        "email_address": "",
+        "copyright_text": "© 2026 Disrupted Studio · All rights reserved",
+        "show_payment_chips": true,
+        "payment_chips": "Visa, MC, AmEx, PayPal, Apple Pay, Shop",
+        "show_wordmark": false,
+        "wordmark_text": "DISRUPTED",
+        "show_wordmark_reg": true
+      }
     }
   },
-  "order": ["ds_footer"]
+  "order": [
+    "ds_footer"
+  ]
 }
