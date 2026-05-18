@@ -671,6 +671,35 @@
             applyPair((pairIndex + 1) % pairs.length);
           });
         }
+
+        /* Preload pairs 2 and 3 so the prev/next swap is instant
+           instead of triggering a fresh network fetch on first click.
+           Pair 1 is already loaded (rendered as <img> with eager +
+           fetchpriority=high at page load); the others are stored
+           only as data-* URL attributes until the user navigates.
+
+           Same pattern as the PDP gallery thumb preload (commit
+           3ae443e) — runs at requestIdleCallback time so the
+           preload doesn't compete with the first pair's
+           fetchpriority=high load. Low fetchPriority on each Image()
+           keeps the preload polite. */
+        function preloadOtherPairs() {
+          // pairs[0] is already in DOM as the rendered <img> tags.
+          for (var p = 1; p < pairs.length; p++) {
+            var pair = pairs[p];
+            [pair.before, pair.after].forEach(function (url) {
+              if (!url) return;
+              var img = new Image();
+              if ('fetchPriority' in img) img.fetchPriority = 'low';
+              img.src = url;
+            });
+          }
+        }
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(preloadOtherPairs, { timeout: 2000 });
+        } else {
+          setTimeout(preloadOtherPairs, 500);
+        }
       }
 
       el.addEventListener('keydown', function (e) {
