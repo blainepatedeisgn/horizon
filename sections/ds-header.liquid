@@ -1103,9 +1103,13 @@
     max-width: 32ch;
   }
 
-  /* Featured product card — the centerpiece. Square 1:1 image,
-     title + price stacked, eyebrow trust line, primary CTA. This
-     is the visual anchor that replaces the bottom-half void. */
+  /* Featured product card — the centerpiece. 1:1 image; title +
+     price stacked; eyebrow trust line; primary CTA.
+       Desktop: image full-width on top, body (meta + button)
+                stacked below.
+       Mobile:  image fixed 140px on the left, body in the right
+                column stacked vertically. Like a cart line item
+                but with a CTA button instead of qty controls. */
   .ds-cart__empty-feature {
     display: flex;
     flex-direction: column;
@@ -1126,6 +1130,14 @@
     object-fit: cover;
     display: block;
     background: var(--color-bg);
+  }
+  /* Body wraps meta + button so they can move as a unit when the
+     card flips to horizontal on mobile. On desktop it's just a
+     pass-through flex column. */
+  .ds-cart__empty-feature-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
   .ds-cart__empty-feature-meta {
     padding: var(--space-4);
@@ -1228,6 +1240,72 @@
     text-transform: uppercase;
     color: var(--color-fg);
     opacity: 0.65;
+  }
+
+  /* Mobile (<= 640px) — featured product card flips to side-by-
+     side. 1:1 image kept at a fixed 140px square on the left, body
+     (meta + CTA) takes the remaining width on the right. Compacts
+     the whole card from ~500px tall (stacked 360x360 + meta + btn)
+     down to ~150px tall, freeing screen real estate for the
+     categories + dock below. */
+  @media (max-width: 640px) {
+    .ds-cart__empty {
+      padding: var(--space-4) var(--space-4);
+      gap: var(--space-4);
+    }
+    .ds-cart__empty-headline {
+      font-size: 24px;
+    }
+    .ds-cart__empty-subcopy {
+      font-size: 13px;
+    }
+
+    .ds-cart__empty-feature {
+      flex-direction: row;
+    }
+    .ds-cart__empty-feature-media {
+      width: 140px;
+      flex-shrink: 0;
+      /* aspect-ratio: 1/1 inherited, so height = 140px */
+    }
+    .ds-cart__empty-feature-body {
+      flex: 1;
+      /* divider between image column and body column */
+      border-left: 1px solid var(--color-border);
+    }
+    .ds-cart__empty-feature-meta {
+      /* Was top-bordered to separate from the image above on
+         desktop; on mobile the image is to the LEFT, so the
+         border-left on the body handles separation and the
+         meta's top-border becomes redundant. */
+      border-top: 0;
+      flex: 1;
+      padding: var(--space-3);
+    }
+    /* Title row stacks vertically on mobile so a long title +
+       price don't collide in the narrow right column. */
+    .ds-cart__empty-feature-title-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+    .ds-cart__empty-feature-title {
+      font-size: 14px;
+    }
+    .ds-cart__empty-feature-btn {
+      min-height: 40px;
+      font-size: 12px;
+    }
+
+    .ds-cart__empty-cats-section {
+      gap: var(--space-2);
+    }
+    .ds-cart__empty-cat {
+      padding: 11px 16px;
+    }
+    .ds-cart__empty-dock {
+      padding-top: var(--space-3);
+    }
   }
   /* Category buttons — outline by default, fill orange on hover/
      focus/tap. Same max-width as the primary CTA so they stack

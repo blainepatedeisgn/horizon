@@ -70,7 +70,12 @@
         </p>
       </div>
 
-      {%- comment -%} Featured product card (visual anchor) {%- endcomment -%}
+      {%- comment -%} Featured product card (visual anchor).
+        On desktop: stacked layout — full-width 1:1 image on top,
+        meta + CTA below. On mobile (<= 640px): side-by-side
+        layout — 1:1 image at fixed width on the left, meta + CTA
+        stacked in the right column. Same elements, just rearranged
+        via flex-direction in CSS. {%- endcomment -%}
       {%- if feat != blank -%}
         <div class="ds-cart__empty-feature">
           <a href="{{ feat.url }}" class="ds-cart__empty-feature-media">
@@ -81,8 +86,8 @@
                 | image_tag:
                     loading: 'lazy',
                     alt: feat.title,
-                    widths: '240,360,480',
-                    sizes: '(min-width: 768px) 400px, 100vw',
+                    widths: '160,240,360,480',
+                    sizes: '(min-width: 641px) 400px, 140px',
                     class: 'ds-cart__empty-feature-img'
               }}
             {%- else -%}
@@ -90,52 +95,54 @@
             {%- endif -%}
           </a>
 
-          <div class="ds-cart__empty-feature-meta">
-            <div class="ds-cart__empty-feature-title-row">
-              <a href="{{ feat.url }}" class="ds-cart__empty-feature-title-link">
-                <span class="ds-cart__empty-feature-title">{{ feat.title }}</span>
-              </a>
-              <span class="ds-cart__empty-feature-price">{{ feat.price | money }}</span>
+          <div class="ds-cart__empty-feature-body">
+            <div class="ds-cart__empty-feature-meta">
+              <div class="ds-cart__empty-feature-title-row">
+                <a href="{{ feat.url }}" class="ds-cart__empty-feature-title-link">
+                  <span class="ds-cart__empty-feature-title">{{ feat.title }}</span>
+                </a>
+                <span class="ds-cart__empty-feature-price">{{ feat.price | money }}</span>
+              </div>
+              <div class="ds-cart__empty-feature-eyebrow">
+                {%- if feat.type != blank -%}{{ feat.type }} · {%- endif -%}
+                Instant download
+              </div>
             </div>
-            <div class="ds-cart__empty-feature-eyebrow">
-              {%- if feat.type != blank -%}{{ feat.type }} · {%- endif -%}
-              Instant download
-            </div>
-          </div>
 
-          {%- if feat.has_only_default_variant -%}
-            {%- comment -%}
-              Single-variant feature — AJAX add via product-form-component,
-              same pattern as the upsell row. data-skeleton-* attrs feed
-              the optimistic skeleton (ds-header.liquid handler).
-            {%- endcomment -%}
-            <product-form-component
-              class="ds-cart__empty-feature-form"
-              data-product-id="{{ feat.id }}"
-              on:submit="/handleSubmit"
-              data-skeleton-title="{{ feat.title | escape }}"
-              data-skeleton-image="{%- if feat.featured_image -%}{{ feat.featured_image | image_url: width: 192 }}{%- endif -%}"
-            >
-              <div class="visually-hidden" aria-live="assertive" role="status" aria-atomic="true" ref="liveRegion"></div>
-              {%- form 'product', feat, novalidate: 'novalidate' -%}
-                <input type="hidden" name="id" ref="variantId" value="{{ feat.selected_or_first_available_variant.id }}">
-                <input type="hidden" name="quantity" value="1">
-                <button
-                  type="submit"
-                  class="ds-btn ds-btn--lg ds-btn--accent ds-cart__empty-feature-btn"
-                >
-                  Add to cart
-                  <span aria-hidden="true">→</span>
-                </button>
-              {%- endform -%}
-            </product-form-component>
-          {%- else -%}
-            {%- comment -%} Variant product — link to PDP to pick options {%- endcomment -%}
-            <a href="{{ feat.url }}" class="ds-btn ds-btn--lg ds-btn--accent ds-cart__empty-feature-btn">
-              View product
-              <span aria-hidden="true">→</span>
-            </a>
-          {%- endif -%}
+            {%- if feat.has_only_default_variant -%}
+              {%- comment -%}
+                Single-variant feature — AJAX add via product-form-component,
+                same pattern as the upsell row. data-skeleton-* attrs feed
+                the optimistic skeleton (ds-header.liquid handler).
+              {%- endcomment -%}
+              <product-form-component
+                class="ds-cart__empty-feature-form"
+                data-product-id="{{ feat.id }}"
+                on:submit="/handleSubmit"
+                data-skeleton-title="{{ feat.title | escape }}"
+                data-skeleton-image="{%- if feat.featured_image -%}{{ feat.featured_image | image_url: width: 192 }}{%- endif -%}"
+              >
+                <div class="visually-hidden" aria-live="assertive" role="status" aria-atomic="true" ref="liveRegion"></div>
+                {%- form 'product', feat, novalidate: 'novalidate' -%}
+                  <input type="hidden" name="id" ref="variantId" value="{{ feat.selected_or_first_available_variant.id }}">
+                  <input type="hidden" name="quantity" value="1">
+                  <button
+                    type="submit"
+                    class="ds-btn ds-btn--lg ds-btn--accent ds-cart__empty-feature-btn"
+                  >
+                    Add to cart
+                    <span aria-hidden="true">→</span>
+                  </button>
+                {%- endform -%}
+              </product-form-component>
+            {%- else -%}
+              {%- comment -%} Variant product — link to PDP to pick options {%- endcomment -%}
+              <a href="{{ feat.url }}" class="ds-btn ds-btn--lg ds-btn--accent ds-cart__empty-feature-btn">
+                View product
+                <span aria-hidden="true">→</span>
+              </a>
+            {%- endif -%}
+          </div>
         </div>
       {%- endif -%}
 
