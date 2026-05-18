@@ -2215,32 +2215,35 @@
     });
   })();
 
-  // Eager-open cart drawer on add-to-cart submit.
+  // Semi-eager cart drawer open on add-to-cart submit.
   //
-  // Why: <cart-drawer-component> normally opens AFTER the /cart/add.js
-  // round-trip completes (it listens for CartAddEvent). That gates the
-  // drawer-visible moment behind 200-600ms of network. Opening it the
-  // instant the form submits closes that perception gap — drawer
-  // appears in ~16ms; the cart contents then morph in once the XHR
-  // resolves a few hundred ms later.
+  // <cart-drawer-component> normally opens AFTER /cart/add.js resolves
+  // (~200-600ms of network). Opening it on the SAME tick as the click
+  // felt premature — drawer appeared before the user perceived the
+  // add as having happened. We hold for ~180ms so the open reads as a
+  // RESULT of the click, not a side effect.
   //
-  // Calling drawer.open() while a fetch is in-flight is safe:
-  // DialogComponent.showDialog() is idempotent (checks dialog.open
-  // first), and the existing auto-open path becomes a no-op when the
-  // dialog is already open. Failure case: if /cart/add returns an
-  // error, the drawer stays open showing the previous cart state +
-  // the product-form-component's own error UI surfaces in the form.
+  // If the AJAX is fast (<180ms) the native auto-open path runs first
+  // and our timer is a no-op (showDialog is idempotent). If it's slow,
+  // the drawer is already up by the time the response lands and the
+  // cart contents morph in seamlessly.
+  //
+  // 180ms = within the "fast" perception band, longer than a single
+  // paint cycle. Tune by editing OPEN_DELAY_MS if it still feels off.
   (function () {
+    var OPEN_DELAY_MS = 180;
     function isAddToCartForm(form) {
       if (!form || !form.action) return false;
       return form.action.indexOf('/cart/add') !== -1;
     }
     document.addEventListener('submit', function (e) {
       if (!isAddToCartForm(e.target)) return;
-      var drawer = document.querySelector('cart-drawer-component');
-      if (drawer && typeof drawer.open === 'function') {
-        try { drawer.open(); } catch (_) { /* component not yet upgraded */ }
-      }
-    }, true); // capture phase — fire before any preventDefault
+      window.setTimeout(function () {
+        var drawer = document.querySelector('cart-drawer-component');
+        if (drawer && typeof drawer.open === 'function') {
+          try { drawer.open(); } catch (_) { /* component not upgraded */ }
+        }
+      }, OPEN_DELAY_MS);
+    }, true); // capture phase
   })();
 </script>
