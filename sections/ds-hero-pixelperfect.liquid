@@ -476,6 +476,27 @@
   .ds-before-after__label--before { left: 12px; }
   .ds-before-after__label--after  { right: 12px; }
 
+  /* Tighten the horizontal gap between the text column and the
+     before/after slider on PP specifically. The shared .ds-hero
+     uses a 48px grid gap + a clamp(24px, 4vw, 56px) right padding
+     on the content column — fine for BACKLIT (where the right
+     column is a static 1:1 image) but on PP the slider now grows
+     into a wider rectangle on big screens, and the existing
+     spacing left the headline floating ~100px away from the
+     slider's left edge.
+
+     Scoped to PP via .ds-hero--pp, and only above mobile (>900px)
+     so the single-column mobile layout keeps its own gap rules.
+  */
+  @media (min-width: 901px) {
+    .ds-hero--pp {
+      gap: var(--space-5);                      /* 48 → 24 */
+    }
+    .ds-hero--pp .ds-hero__content {
+      padding-right: clamp(16px, 2vw, 32px);    /* up to 56 → up to 32 */
+    }
+  }
+
   /* Wide-desktop responsive scaling.
      On regular laptops (up to ~1280px viewport) the slider stays a
      560px-wide square — that's the original behavior. Beyond that,
