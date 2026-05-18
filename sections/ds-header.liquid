@@ -608,6 +608,28 @@
     border-radius: 99px;
     font-weight: 500;
     margin-left: 4px;
+    /* `transform-origin: center` so the scale pulse expands evenly
+       around the bubble's middle, not from a corner. */
+    transform-origin: center center;
+  }
+  /* Pulse animation triggered after a successful /cart/add (only —
+     not on remove or quantity-change). The JS adds .is-pulsing
+     after cart:update fires, the keyframe scale-ticks the bubble
+     to draw the eye to the new count value, then auto-removes via
+     animationend. Re-fires reliably on rapid adds because the JS
+     toggles the class with a forced reflow between removes/adds. */
+  @keyframes ds-cart-count-pulse {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+  .ds-header__cart-count.is-pulsing {
+    animation: ds-cart-count-pulse 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-header__cart-count.is-pulsing {
+      animation: none;
+    }
   }
   .ds-header__menu-toggle { display: none; }
 
@@ -2670,6 +2692,12 @@
     var OPEN_DELAY_MS = 180;
     var SAFETY_TIMEOUT_MS = 5000;
     var safetyTimer = null;
+    /* Flag set on each ATC submit, consumed by the cart:update
+       listener to fire the bubble pulse. Gating on this flag
+       (instead of pulsing on every cart:update) means removes,
+       quantity changes, and post-checkout re-renders DON'T
+       trigger an unwanted dance. */
+    var pulseOnNextUpdate = false;
 
     function isAddToCartForm(form) {
       if (!form || !form.action) return false;
@@ -2776,6 +2804,27 @@
       });
     }
 
+    /* Trigger the .ds-header__cart-count bubble's scale-pulse
+       animation. Called from the cart:update listener AFTER
+       Horizon has morphed in the fresh count value, so the new
+       number appears WITH the pulse rather than during it.
+
+       The remove → reflow → add dance is required because the
+       cart-count element gets re-rendered by morph on every
+       cart:update — if .is-pulsing was on the previous DOM node
+       it's gone from the new one, but we also want a fresh
+       animation each time even on rapid adds where the node
+       happens to persist. void offsetWidth forces a synchronous
+       layout flush so the browser sees the class go away before
+       it comes back. */
+    function pulseCount() {
+      var count = document.querySelector('.ds-header__cart-count');
+      if (!count) return;
+      count.classList.remove('is-pulsing');
+      void count.offsetWidth;
+      count.classList.add('is-pulsing');
+    }
+
     document.addEventListener('submit', function (e) {
       if (!isAddToCartForm(e.target)) return;
 
@@ -2783,9 +2832,11 @@
       if (safetyTimer) window.clearTimeout(safetyTimer);
       setLoading(true);
       injectSkeleton(e.target);
+      pulseOnNextUpdate = true;
       safetyTimer = window.setTimeout(function () {
         clearLoading();
         clearSkeleton();
+        pulseOnNextUpdate = false;
       }, SAFETY_TIMEOUT_MS);
 
       window.setTimeout(function () {
@@ -2805,6 +2856,12 @@
     document.addEventListener('cart:update', function () {
       clearLoading();
       clearSkeleton();
+      if (pulseOnNextUpdate) {
+        pulseOnNextUpdate = false;
+        // requestAnimationFrame so the pulse runs AFTER morph has
+        // settled the new bubble element into the DOM.
+        window.requestAnimationFrame(pulseCount);
+      }
     });
 
     // Belt-and-suspenders for failed adds — sold-out variant, gift
