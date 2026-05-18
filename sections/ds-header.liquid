@@ -2082,6 +2082,47 @@
     window.addEventListener('resize', onScrollOrResize, { passive: true });
   })();
 
+  // iOS Safari sticky-header URL-bar-collapse workaround.
+  //
+  // Symptom: on iPhone, a fast drag on the before/after slider can make
+  // the entire page header vanish.  The header doesn't come back until
+  // the user scrolls, at which point it snaps back into place.
+  //
+  // Cause: iOS Safari interprets rapid touch movement as scroll-like
+  // input and starts collapsing its URL bar, which resizes the visual
+  // viewport.  `position: sticky` elements on iOS can get stuck above
+  // the new viewport during the transition — visually they're scrolled
+  // off-screen even though the page hasn't scrolled.  The next real
+  // scroll event forces a layout pass and the header snaps back.
+  // `backdrop-filter: blur(...)` on the sticky header makes this worse
+  // because it creates a containing block that interacts badly with
+  // sticky positioning on iOS Safari specifically.
+  //
+  // Fix: listen for visualViewport.resize (fires when the URL bar
+  // transitions in/out) and force the sticky header to re-evaluate
+  // its position by nudging `top` to a fractional pixel and back.
+  // Reading offsetHeight alone isn't enough on iOS — we need an actual
+  // style write to trigger the sticky recalc.  The 0.001px change is
+  // invisible to the user.
+  (function () {
+    if (!window.visualViewport) return;
+    var stickyHeader = document.querySelector('.ds-header--sticky');
+    if (!stickyHeader) return;
+
+    var rafId = null;
+    function forceStickyRecalc() {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(function () {
+        rafId = null;
+        stickyHeader.style.top = '0.001px';
+        requestAnimationFrame(function () {
+          stickyHeader.style.top = '';
+        });
+      });
+    }
+    window.visualViewport.addEventListener('resize', forceStickyRecalc);
+  })();
+
   // Recent searches — track the last N queries in localStorage and
   // render them in the sidebar of the search dropdown. Stored under a
   // namespaced key so it doesn't collide with other Shopify themes.
