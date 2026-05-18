@@ -72,12 +72,14 @@
         # Mega menu trigger detection. Match by lowercased title so
         # the merchant can rename "Shop" to "Browse" or anything else
         # via settings without touching code. Disabled if megamenu is
-        # off, has no collections, or no trigger label is set.
+        # off or no trigger label is set. Note: we do NOT require
+        # collections.size > 0 here — the megamenu panel below has
+        # a hardcoded fallback list that renders when the merchant
+        # hasn't picked real collections yet.
         assign mm_enabled = section.settings.megamenu_enabled
-        assign mm_collections = section.settings.megamenu_collections
         assign mm_trigger_label = section.settings.megamenu_trigger | default: '' | downcase
         assign mm_active = false
-        if mm_enabled and mm_collections.size > 0 and mm_trigger_label != ''
+        if mm_enabled and mm_trigger_label != ''
           assign mm_active = true
         endif
       -%}
