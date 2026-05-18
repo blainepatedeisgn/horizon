@@ -83,7 +83,7 @@
         "settings": {
           "enabled": true,
           "show_mode": "every_visit",
-          "min_duration": 1300,
+          "min_duration": 2000,
           "frame_ms": 130,
           "fade_ms": 400
         }
