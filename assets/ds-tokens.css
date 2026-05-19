@@ -356,22 +356,14 @@ body {
   padding-top: var(--space-2);
   min-width: 0;
 }
-/* Title row — title on left, arrow on far right. Hidden by default
-   (opacity 0 + translateY) and pops up on card hover. Keeps a stable
-   height in both states (via the always-visible bottom row anchoring
-   the layout below it) so the grid doesn't shift on hover. */
+/* Title row — title on left (always visible), arrow on far right
+   (hidden by default, pops up on hover across from the pill below). */
 .ds-product-card__title-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-3);
   min-width: 0;
-  opacity: 0;
-  transform: translateY(6px);
-  transition:
-    opacity 180ms var(--ease),
-    transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
-  pointer-events: none;
 }
 .ds-product-card__title {
   font-size: var(--fs-h3);
@@ -379,7 +371,8 @@ body {
   letter-spacing: -0.01em;
   color: var(--color-fg);
   min-width: 0;
-  /* clamp to a single line so the row height stays predictable */
+  /* clamp to a single line so the row height stays predictable
+     and the arrow on the right always has a clean position */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -389,6 +382,13 @@ body {
   font-size: 16px;
   color: var(--color-accent);
   flex-shrink: 0;
+  /* Pop-up state: hidden + slid to the right by default; slides
+     into position + fades in on card hover. */
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity 180ms var(--ease),
+    transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 /* Bottom row — always visible. Pill on left, price on right. The
    `<span></span>` empty placeholder in the markup keeps the price
@@ -416,14 +416,13 @@ body {
   background: transparent;
 }
 
-/* Hover pop-up — title row slides up + fades in. Only on real-hover
-   devices (touch users see the always-visible bottom row without
-   needing the hover state). */
+/* Hover pop-up — arrow fades in + slides from the left into its
+   anchored right-edge spot. Only on real-hover devices; touch
+   users see the static layout without any animation. */
 @media (hover: hover) {
-  .ds-product-card:hover .ds-product-card__title-row {
+  .ds-product-card:hover .ds-product-card__arrow {
     opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
+    transform: translateX(0);
   }
 }
 .ds-product-card__price {
