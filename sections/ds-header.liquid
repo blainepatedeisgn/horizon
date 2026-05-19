@@ -2228,8 +2228,12 @@
     max-height: calc(100vh - var(--ds-search-top, 64px) - 40px);
     overflow-y: auto;
   }
+  /* When the spotlight is configured: list takes all remaining
+     width, spotlight column sizes to its content (max 520px). The
+     two columns sit flush against each other instead of leaving
+     a dead gap that the previous 1fr 1fr split was producing. */
   .ds-megamenu--with-feature .ds-megamenu__inner {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr auto;
   }
   /* LEFT COLUMN — eyebrow + collection list */
   .ds-megamenu__left {
@@ -2302,20 +2306,19 @@
 
   /* RIGHT COLUMN — spotlight product card.
      Capped at a max-width so the card stays modest regardless of
-     viewport size — was previously eating 50% of the dropdown which
-     felt over-sized. Right-aligned within its grid cell so it
-     hugs the right margin. */
+     viewport size. With the parent grid using `1fr auto` the right
+     cell hugs the card width directly, so no inner alignment
+     needed here — the card naturally sits beside the list. */
   .ds-megamenu__right {
     display: flex;
     min-width: 0;
-    justify-content: flex-end;
   }
   .ds-megamenu__feature {
     display: grid;
     grid-template-columns: 1fr 1fr;
     align-items: stretch;
-    width: 100%;
-    max-width: 520px;
+    width: 520px;
+    max-width: 100%;
     text-decoration: none;
     color: inherit;
     border: 1px solid var(--color-border);
