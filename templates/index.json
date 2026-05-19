@@ -176,6 +176,52 @@
         "view_all_url": ""
       }
     },
+    "ds_testimonials_rnM6fR": {
+      "type": "ds-testimonials",
+      "blocks": {
+        "testimonial_CPWm8J": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Quality images. Easy to work with and budget friendly. I would recommend this to anyone!",
+            "name": "Caleb R.",
+            "source": "Studio 2am",
+            "rating": 5
+          }
+        },
+        "testimonial_8PYrjA": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "High quality, huge variety, and easy to use.",
+            "name": "Brett A.",
+            "source": "Studio 2am",
+            "rating": 5
+          }
+        },
+        "testimonial_L64rnJ": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Incredibly fast effects and great variety of style options.",
+            "name": "Maya Singh",
+            "source": "Instagram",
+            "rating": 5
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_CPWm8J",
+        "testimonial_8PYrjA",
+        "testimonial_L64rnJ"
+      ],
+      "name": "Disrupted testimonials",
+      "settings": {
+        "color_scheme": "",
+        "eyebrow": "",
+        "heading": "Designers",
+        "num_label": "",
+        "subhead": "",
+        "layout": "grid"
+      }
+    },
     "category_teasers": {
       "type": "ds-category-teasers",
       "blocks": {
@@ -241,17 +287,6 @@
         "signup_tag": "newsletter",
         "success_message": "Thanks. See you in your inbox."
       }
-    },
-    "custom_liquid_FiLqxj": {
-      "type": "custom-liquid",
-      "name": "t:names.custom_liquid",
-      "settings": {
-        "custom_liquid": "google-site-verification: googlec3ffbaff1d96610c.html",
-        "color_scheme": "",
-        "section_width": "page-width",
-        "padding-block-start": 0,
-        "padding-block-end": 0
-      }
     }
   },
   "order": [
@@ -259,8 +294,8 @@
     "hero",
     "ds_product_scroller_QHJ8rQ",
     "product_grid",
+    "ds_testimonials_rnM6fR",
     "category_teasers",
-    "newsletter",
-    "custom_liquid_FiLqxj"
+    "newsletter"
   ]
 }
