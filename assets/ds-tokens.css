@@ -360,7 +360,10 @@ body {
 }
 .ds-product-card__title-group {
   display: inline-flex;
-  align-items: baseline;
+  /* center-align the title + arrow so the "→" glyph (which sits
+     near the baseline) doesn't read as falling to the bottom of
+     the title cap-height. center keeps the visual midlines aligned. */
+  align-items: center;
   gap: var(--space-2);
   min-width: 0;
 }
