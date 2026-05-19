@@ -362,22 +362,88 @@ body {
 .ds-product-card__title-block {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-2);
   min-width: 0;
   max-width: 100%;
+}
+/* Title row — three columns: numbered prefix, title, hover arrow.
+   The arrow is hidden by default and slides in on card hover via
+   the .ds-product-card:hover selector below. */
+.ds-product-card__title-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.ds-product-card__num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-fg-muted);
+  flex-shrink: 0;
+  transition: color var(--t-fast) var(--ease);
 }
 .ds-product-card__title {
   font-size: var(--fs-h3);
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--color-fg);
+  min-width: 0;
+  transition: color var(--t-fast) var(--ease);
 }
-.ds-product-card__category {
+.ds-product-card__arrow {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--color-fg-muted);
+  font-size: 14px;
+  color: var(--color-accent);
+  /* Hidden + slid right by default; on hover the parent card flips
+     these to visible + at-rest. */
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+  flex-shrink: 0;
+  /* Sit on its own baseline so it doesn't shift the title up/down */
+  align-self: center;
+}
+/* Category as a bordered pill — brutalist hard-edge chip. Fills
+   orange on card hover (matches the megamenu category pill + empty
+   cart category pill treatment). */
+.ds-product-card__category-pill {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: var(--color-fg-muted);
+  background: transparent;
+  transition:
+    background var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+
+/* Hover lift — only on devices with real hover. Title color shifts
+   to accent, arrow slides in, category pill flips to filled orange. */
+@media (hover: hover) {
+  .ds-product-card:hover .ds-product-card__title {
+    color: var(--color-accent);
+  }
+  .ds-product-card:hover .ds-product-card__arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .ds-product-card:hover .ds-product-card__category-pill {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-accent-fg);
+  }
 }
 .ds-product-card__price {
   font-family: var(--font-mono);

@@ -42,7 +42,7 @@
 
     <div class="ds-product-grid">
       {%- for product in products limit: products_to_show -%}
-        {% render 'ds-product-card', product: product, quick_add: true %}
+        {% render 'ds-product-card', product: product, quick_add: true, index: forloop.index %}
       {%- else -%}
         <div class="ds-product-grid__empty">
           {%- if section.settings.collection == blank -%}

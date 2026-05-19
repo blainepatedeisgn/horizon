@@ -192,7 +192,7 @@
             <div class="ds-collection__grid">
               {%- for item in results -%}
                 {%- if item.object_type == 'product' -%}
-                  {% render 'ds-product-card', product: item, quick_add: true %}
+                  {% render 'ds-product-card', product: item, quick_add: true, index: forloop.index %}
                 {%- endif -%}
               {%- endfor -%}
             </div>

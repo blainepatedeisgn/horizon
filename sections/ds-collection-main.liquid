@@ -242,7 +242,7 @@
         {%- if collection.products.size > 0 -%}
           <div class="ds-collection__grid">
             {%- for product in collection.products -%}
-              {% render 'ds-product-card', product: product, quick_add: true %}
+              {% render 'ds-product-card', product: product, quick_add: true, index: forloop.index %}
             {%- endfor -%}
           </div>
 

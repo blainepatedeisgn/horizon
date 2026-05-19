@@ -162,9 +162,16 @@
   <a href="{{ product.url }}" class="ds-product-card__meta-link">
     <div class="ds-product-card__meta">
       <div class="ds-product-card__title-block">
-        <div class="ds-product-card__title">{{ product.title }}</div>
+        <div class="ds-product-card__title-row">
+          {%- if index != nil -%}
+            {%- assign idx_str = index | prepend: '0' | slice: -2, 2 -%}
+            <span class="ds-product-card__num" aria-hidden="true">{{ idx_str }}.</span>
+          {%- endif -%}
+          <span class="ds-product-card__title">{{ product.title }}</span>
+          <span class="ds-product-card__arrow" aria-hidden="true">→</span>
+        </div>
         {%- if show_category and category != blank -%}
-          <div class="ds-product-card__category">{{ category }}</div>
+          <span class="ds-product-card__category-pill">{{ category }}</span>
         {%- endif -%}
       </div>
       <div class="ds-product-card__price">
