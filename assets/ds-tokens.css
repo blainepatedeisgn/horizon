@@ -356,11 +356,13 @@ body {
   padding-top: var(--space-2);
   min-width: 0;
 }
-/* Title row — title on left (always visible), arrow on far right
-   (hidden by default, pops up on hover across from the pill below). */
+/* Title row — title on left (always visible), arrow on far right.
+   align-items: center so the larger arrow glyph spans the title's
+   visual cap-height-to-baseline range rather than baseline-aligning
+   (which would let the arrow protrude above the title). */
 .ds-product-card__title-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
   min-width: 0;
@@ -379,7 +381,13 @@ body {
 }
 .ds-product-card__arrow {
   font-family: var(--font-mono);
-  font-size: 16px;
+  /* Bigger than the title font-size on purpose — the "→" glyph
+     itself is shorter than alphabetic glyphs (no ascenders /
+     descenders / strong vertical strokes), so the arrow needs
+     ~1.4x the title size to visually match the title's
+     cap-height-to-baseline span. */
+  font-size: clamp(28px, 2.4vw, 34px);
+  line-height: 1;
   color: var(--color-fg-muted);
   flex-shrink: 0;
   /* Always visible — fills the right side of the title row at
