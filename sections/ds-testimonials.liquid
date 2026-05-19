@@ -1,0 +1,353 @@
+{%- comment -%}
+  sections/ds-testimonials.liquid — Disrupted Studio brutalist testimonials
+
+  Designer endorsements / customer quotes for display-only social proof.
+  Use cases:
+    • Studio 2am or other marketplace reviews quoted on Disrupted Studio
+    • Beta-tester endorsements before Judge.me reviews accumulate
+    • Press quotes ("Featured in It's Nice That")
+    • General testimonials for the launch period
+
+  Each testimonial is a section block (add/remove via theme editor).
+  Section can be dropped on home page, About page, PDP, anywhere.
+
+  Visual: brutalist treatment — numbered rows, mono attribution,
+  optional star rating in mono typography, square borders, off-white
+  on black. Two layout modes:
+    • Grid (3 columns on desktop, 2 on tablet, stacked on mobile)
+    • Stacked rows (full-width, numbered prefix on the left)
+
+  IMPORTANT: this section is DISPLAY-ONLY. Quotes here are NOT injected
+  into Google's Product structured data (aggregateRating / review).
+  For schema-eligible verified reviews, use a reviews app like Judge.me
+  on actual Shopify orders. Marketplace reviews displayed here without
+  schema injection is the safe legal/SEO approach.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+  assign layout = section.settings.layout | default: 'grid'
+-%}
+
+{%- if section.blocks.size > 0 -%}
+<section
+  id="testimonials"
+  class="ds-testimonials ds-testimonials--{{ layout }} color-{{ cs }}"
+>
+  <div class="ds-testimonials__inner">
+
+    {%- if section.settings.heading != blank or section.settings.eyebrow != blank -%}
+      <div class="ds-section-head ds-testimonials__head">
+        {%- if section.settings.eyebrow != blank -%}
+          <span class="ds-section-head__eyebrow">{{ section.settings.eyebrow }}</span>
+        {%- endif -%}
+        {%- if section.settings.heading != blank -%}
+          <h2 class="ds-section-head__title">
+            {{ section.settings.heading }}
+            {%- if section.settings.num_label != blank -%}
+              <span class="ds-section-head__num">{{ section.settings.num_label }}</span>
+            {%- endif -%}
+          </h2>
+        {%- endif -%}
+        {%- if section.settings.subhead != blank -%}
+          <p class="ds-section-head__sub">{{ section.settings.subhead }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <ul class="ds-testimonials__list">
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'testimonial' and block.settings.quote != blank -%}
+          {%- liquid
+            assign num_str = forloop.index | prepend: '0' | slice: -2, 2
+            assign rating = block.settings.rating | plus: 0
+          -%}
+          <li class="ds-testimonials__item" {{ block.shopify_attributes }}>
+            <div class="ds-testimonials__num" aria-hidden="true">{{ num_str }}</div>
+            <div class="ds-testimonials__content">
+              {%- if rating > 0 -%}
+                <div
+                  class="ds-testimonials__rating"
+                  aria-label="Rated {{ rating }} out of 5"
+                >
+                  {%- for i in (1..5) -%}
+                    {%- if i <= rating -%}★{%- else -%}☆{%- endif -%}
+                  {%- endfor -%}
+                </div>
+              {%- endif -%}
+              <blockquote class="ds-testimonials__quote">{{ block.settings.quote }}</blockquote>
+              {%- if block.settings.name != blank or block.settings.source != blank -%}
+                <div class="ds-testimonials__attr">
+                  {%- if block.settings.name != blank -%}
+                    <span class="ds-testimonials__name">— {{ block.settings.name }}</span>
+                  {%- endif -%}
+                  {%- if block.settings.source != blank -%}
+                    <span class="ds-testimonials__source">via {{ block.settings.source }}</span>
+                  {%- endif -%}
+                </div>
+              {%- endif -%}
+            </div>
+          </li>
+        {%- endif -%}
+      {%- endfor -%}
+    </ul>
+  </div>
+</section>
+{%- endif -%}
+
+{% style %}
+  /* ds-testimonials — brutalist display-only testimonials */
+  .ds-testimonials {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    padding-top: clamp(56px, 7vw, 96px);
+    padding-bottom: clamp(56px, 7vw, 96px);
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-testimonials__inner {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+  .ds-testimonials__head {
+    margin-bottom: clamp(32px, 5vw, 56px);
+  }
+  .ds-testimonials__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* STACKED layout — full-width rows. Numbered prefix on left,
+     content on right. Top + bottom borders frame the list. */
+  .ds-testimonials--stacked .ds-testimonials__item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: clamp(16px, 3vw, 40px);
+    padding: clamp(28px, 4vw, 48px) 0;
+    border-top: 1px solid var(--color-border);
+  }
+  .ds-testimonials--stacked .ds-testimonials__item:last-child {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* GRID layout — 3 columns desktop, 2 tablet, 1 mobile.
+     Outlined cards with internal padding. */
+  .ds-testimonials--grid .ds-testimonials__list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+  @media (min-width: 700px) {
+    .ds-testimonials--grid .ds-testimonials__list {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1024px) {
+    .ds-testimonials--grid .ds-testimonials__list {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+  .ds-testimonials--grid .ds-testimonials__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: clamp(20px, 2.4vw, 32px);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+  }
+  .ds-testimonials--grid .ds-testimonials__num {
+    margin-bottom: var(--space-2);
+  }
+
+  /* Common — num, content, rating, quote, attribution */
+  .ds-testimonials__num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--color-fg-muted);
+  }
+  .ds-testimonials__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: 60ch;
+  }
+  .ds-testimonials__rating {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--color-accent);
+    line-height: 1;
+  }
+  .ds-testimonials__quote {
+    font-size: clamp(17px, 1.4vw, 20px);
+    line-height: 1.5;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    color: var(--color-fg);
+    margin: 0;
+    /* Brutalist quote treatment — pre-pended single guillemet,
+       no fancy curly typographic quotes (those read too
+       editorial for this aesthetic). */
+  }
+  .ds-testimonials__quote::before {
+    content: '\201C';
+  }
+  .ds-testimonials__quote::after {
+    content: '\201D';
+  }
+  .ds-testimonials__attr {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--space-3);
+    row-gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: var(--space-2);
+  }
+  .ds-testimonials__name {
+    color: var(--color-fg);
+  }
+  .ds-testimonials__source {
+    color: var(--color-fg-muted);
+  }
+
+  /* Mobile — stacked layout collapses num + content to one column */
+  @media (max-width: 700px) {
+    .ds-testimonials--stacked .ds-testimonials__item {
+      grid-template-columns: 1fr;
+      gap: var(--space-3);
+    }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Disrupted testimonials",
+  "tag": "section",
+  "class": "ds-section ds-section--testimonials",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "paragraph",
+      "content": "Display-only testimonials. Quotes here are NOT submitted to Google as product reviews — use a reviews app like Judge.me for verified-buyer reviews that affect search snippets. Best used for marketplace reviews (e.g. Studio 2am), press quotes, or beta-tester endorsements."
+    },
+    { "type": "header", "content": "Heading" },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "info": "Optional small mono-caps label above the heading."
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Designers",
+      "label": "Heading"
+    },
+    {
+      "type": "text",
+      "id": "num_label",
+      "label": "Number badge",
+      "info": "Optional mono superscript next to the heading (e.g. \"04\")."
+    },
+    {
+      "type": "text",
+      "id": "subhead",
+      "label": "Subhead",
+      "info": "Optional secondary text below the heading."
+    },
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Layout",
+      "default": "grid",
+      "options": [
+        { "value": "grid", "label": "Grid (3 columns)" },
+        { "value": "stacked", "label": "Stacked rows" }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "testimonial",
+      "name": "Testimonial",
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "quote",
+          "label": "Quote",
+          "info": "Quote marks added automatically — don't include them."
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Reviewer name"
+        },
+        {
+          "type": "text",
+          "id": "source",
+          "label": "Source",
+          "info": "Optional. Renders as \"via [source]\" — e.g. \"Studio 2am\", \"Twitter\", \"It's Nice That\"."
+        },
+        {
+          "type": "range",
+          "id": "rating",
+          "label": "Star rating",
+          "min": 0,
+          "max": 5,
+          "step": 1,
+          "default": 5,
+          "unit": "★",
+          "info": "0 hides the rating row."
+        }
+      ]
+    }
+  ],
+  "max_blocks": 12,
+  "presets": [
+    {
+      "name": "Disrupted testimonials",
+      "blocks": [
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "BACKLIT is the first pixel plugin that actually feels like Photoshop instead of a side-panel afterthought.",
+            "name": "Sarah Chen",
+            "source": "Studio 2am",
+            "rating": 5
+          }
+        },
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Bought the bundle, used the fonts on three projects the same week. Quality is dead-on.",
+            "name": "James North",
+            "source": "Studio 2am",
+            "rating": 5
+          }
+        },
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Disrupted Studio has the most coherent indie design catalog right now. Everything looks like it belongs together.",
+            "name": "Maya Singh",
+            "source": "Studio 2am",
+            "rating": 5
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
