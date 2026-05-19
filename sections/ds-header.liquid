@@ -2301,26 +2301,21 @@
   }
 
   /* RIGHT COLUMN — spotlight product card.
-     Sizing strategy: card height = right grid column height = left
-     column's list height (via the parent grid's default align-items:
-     stretch). The image is set to height:100% + aspect-ratio:1/1
-     with NO explicit width, so its width is derived from its height
-     to stay square — and both width AND height grow proportionally
-     as more collections are added to the list on the left. Meta
-     takes the remaining horizontal space via flex:1. */
+     Capped at a max-width so the card stays modest regardless of
+     viewport size — was previously eating 50% of the dropdown which
+     felt over-sized. Right-aligned within its grid cell so it
+     hugs the right margin. */
   .ds-megamenu__right {
     display: flex;
     min-width: 0;
-    height: 100%;
     justify-content: flex-end;
   }
   .ds-megamenu__feature {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     align-items: stretch;
-    height: 100%;
-    /* min-height so 1-2 collections doesn't shrink the card too
-       small. Once the list grows past this, the card scales up. */
-    min-height: 220px;
+    width: 100%;
+    max-width: 520px;
     text-decoration: none;
     color: inherit;
     border: 1px solid var(--color-border);
@@ -2335,10 +2330,6 @@
   }
   .ds-megamenu__feature-media {
     aspect-ratio: 1 / 1;
-    height: 100%;
-    /* No explicit width — aspect-ratio derives width from height,
-       keeping the image a true square that scales with list height. */
-    flex-shrink: 0;
     overflow: hidden;
     background: var(--color-bg);
     border-right: 1px solid var(--color-border);
@@ -2362,11 +2353,6 @@
     padding: clamp(16px, 1.6vw, 24px);
     justify-content: space-between;
     min-width: 0;
-    /* Takes remaining width after the square media; together with
-       the media's flex-shrink:0, this is what makes the image stay
-       square while the meta absorbs whatever horizontal space is
-       left in the card. */
-    flex: 1;
   }
   /* Top half — eyebrow / title / description. Grouped so they
      stay close together; the bottom group anchors to the bottom
