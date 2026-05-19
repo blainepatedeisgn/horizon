@@ -127,7 +127,12 @@
     color: var(--color-accent);
     font-size: 11px;
   }
-  .ds-hero .ds-rich-text { max-width: 38ch; }
+  /* Rich-text wrap cap — bumped from 38ch (~380px) which was
+     wrapping the copy mid-sentence on common viewports. 60ch
+     keeps it within readable line-length territory (50-75ch is
+     the typographic sweet spot) while letting the description
+     breathe wider in the hero text column. */
+  .ds-hero .ds-rich-text { max-width: 60ch; }
 
   /* Display title with white glow halo (static) + optional animated
      orange spotlight (.ds-hero-title--spotlight) that orbits behind
