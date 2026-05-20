@@ -305,10 +305,27 @@
         if (dialog.open) dialog.close();
       }
 
-      // Hijack clicks on any [href="#demo-modal"] inside the PP hero.
+      // Hijack clicks on the "Watch the demo" link inside the PP
+      // hero. Detection order:
+      //   1. Explicit: href="#demo-modal" (intentional opt-in)
+      //   2. Implicit: any <a> whose text label contains "demo"
+      //      (case-insensitive). This is the merchant-friendly
+      //      path — Shopify's URL picker makes setting a custom
+      //      fragment like #demo-modal awkward, so we just match
+      //      the button by its label.
+      // Either match → preventDefault + open the modal. Existing
+      // href/destination is ignored (the merchant intended this to
+      // open the video, not navigate).
       section.addEventListener('click', function (e) {
-        var link = e.target && e.target.closest && e.target.closest('a[href="#demo-modal"]');
+        if (!e.target || !e.target.closest) return;
+        var link = e.target.closest('a');
         if (!link) return;
+        var href = link.getAttribute('href') || '';
+        var text = (link.textContent || '').toLowerCase();
+        var matches =
+          href === '#demo-modal' ||
+          text.indexOf('demo') !== -1;
+        if (!matches) return;
         e.preventDefault();
         open();
       });
@@ -1134,7 +1151,7 @@
     },
     {
       "type": "paragraph",
-      "content": "When a video file is set below, a click on any link in this hero with the URL `#demo-modal` will open a fullscreen video overlay instead of navigating away. Set your \"Watch the demo\" button's URL to `#demo-modal` in its block settings to wire it up."
+      "content": "When a video file is set below, any link inside this hero whose label contains the word \"demo\" (e.g. \"Watch the demo\") will open a fullscreen video overlay instead of navigating. No need to change the link's URL — the label match auto-wires it. The link's destination is ignored when the modal opens."
     },
     {
       "type": "video",
