@@ -470,10 +470,17 @@
     flex-shrink: 0;
     transition: color var(--t-fast) var(--ease);
   }
-  .ds-demo-modal__close:hover,
-  .ds-demo-modal__close:focus-visible {
+  .ds-demo-modal__close:hover {
     color: var(--color-accent);
-    outline: 0;
+  }
+  /* Keyboard focus ring only — color stays white. The dialog's
+     showModal() auto-focuses the first tabbable element which is
+     the X, so if :focus-visible drove the orange color, the X
+     would appear orange the entire time the modal was open even
+     without a hover. Outline ring is the a11y artifact instead. */
+  .ds-demo-modal__close:focus-visible {
+    outline: 2px solid var(--color-fg-muted);
+    outline-offset: 2px;
   }
   @media (max-width: 600px) {
     /* Slightly bigger tap target on phones, but still no border */
