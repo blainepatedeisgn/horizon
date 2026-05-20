@@ -196,7 +196,227 @@
   </div>
 </div>
 
+{%- comment -%}
+  ---- DEMO VIDEO MODAL ----
+  Native <dialog> overlay that plays the merchant-set demo video.
+  Rendered as a sibling of the hero so it can escape any containing-
+  block / backdrop-filter traps (same pattern as cart drawer, search
+  modal). Idle state has the video unmounted (just the <dialog> shell),
+  so we don't load the file unless the user actually opens it. JS
+  injects the <video> on first open, removes it on close.
+
+  Wiring: section setting demo_video is set, JS hijacks clicks on
+  any [href="#demo-modal"] link inside .ds-hero--pp to open the
+  dialog. Button-row block's secondary_url should be set to
+  `#demo-modal` to wire up the existing "Watch the demo" button.
+{%- endcomment -%}
+{%- if section.settings.demo_video != blank -%}
+  {%- liquid
+    assign dv = section.settings.demo_video
+    assign dv_poster_src = ''
+    if section.settings.demo_video_poster != blank
+      assign dv_poster_src = section.settings.demo_video_poster | image_url: width: 1600
+    elsif dv.preview_image != blank
+      assign dv_poster_src = dv.preview_image | image_url: width: 1600
+    endif
+    assign dv_section_id = section.id
+  -%}
+  <dialog
+    id="ds-pp-demo-modal-{{ dv_section_id }}"
+    class="ds-demo-modal"
+    aria-labelledby="ds-pp-demo-modal-title-{{ dv_section_id }}"
+    data-ds-demo-modal
+  >
+    <h2 id="ds-pp-demo-modal-title-{{ dv_section_id }}" class="visually-hidden">Pixel Perfect demo video</h2>
+    <button
+      type="button"
+      class="ds-demo-modal__close"
+      data-ds-demo-modal-close
+      aria-label="Close demo video"
+    >×</button>
+    <div
+      class="ds-demo-modal__stage"
+      data-ds-demo-modal-stage
+      data-poster="{{ dv_poster_src | escape }}"
+    >
+      {%- comment -%}
+        Source URLs emitted as data attributes; the <video> element is
+        injected by JS on first open so we don't pay the network cost
+        on every page load.
+      {%- endcomment -%}
+      {%- for source in dv.sources -%}
+        <span
+          class="visually-hidden"
+          data-ds-demo-modal-source
+          data-src="{{ source.url | escape }}"
+          data-mime="{{ source.mime_type | escape }}"
+        ></span>
+      {%- endfor -%}
+    </div>
+  </dialog>
+
+  <script>
+    (function () {
+      var sectionId = {{ dv_section_id | json }};
+      var dialog = document.getElementById('ds-pp-demo-modal-' + sectionId);
+      var section = document.querySelector('.ds-hero--pp');
+      if (!dialog || !section) return;
+
+      var stage = dialog.querySelector('[data-ds-demo-modal-stage]');
+      var closeBtn = dialog.querySelector('[data-ds-demo-modal-close]');
+      var sourceNodes = dialog.querySelectorAll('[data-ds-demo-modal-source]');
+      var videoEl = null;
+
+      function buildVideo() {
+        if (videoEl) return;
+        videoEl = document.createElement('video');
+        videoEl.className = 'ds-demo-modal__video';
+        videoEl.setAttribute('controls', '');
+        videoEl.setAttribute('playsinline', '');
+        videoEl.setAttribute('preload', 'metadata');
+        var poster = stage.getAttribute('data-poster');
+        if (poster) videoEl.setAttribute('poster', poster);
+        sourceNodes.forEach(function (node) {
+          var src = node.getAttribute('data-src');
+          if (!src) return;
+          var s = document.createElement('source');
+          s.src = src;
+          var mime = node.getAttribute('data-mime');
+          if (mime) s.type = mime;
+          videoEl.appendChild(s);
+        });
+        stage.appendChild(videoEl);
+      }
+
+      function open() {
+        buildVideo();
+        if (!dialog.open) dialog.showModal();
+        // Defer play to next frame so the dialog has time to lay out
+        // before we kick the video. Small but noticeable on first open.
+        window.requestAnimationFrame(function () {
+          try { videoEl.play(); } catch (_) {}
+        });
+      }
+      function close() {
+        if (videoEl) {
+          try { videoEl.pause(); } catch (_) {}
+          videoEl.currentTime = 0;
+        }
+        if (dialog.open) dialog.close();
+      }
+
+      // Hijack clicks on any [href="#demo-modal"] inside the PP hero.
+      section.addEventListener('click', function (e) {
+        var link = e.target && e.target.closest && e.target.closest('a[href="#demo-modal"]');
+        if (!link) return;
+        e.preventDefault();
+        open();
+      });
+
+      // Close handlers
+      closeBtn.addEventListener('click', close);
+      dialog.addEventListener('click', function (e) {
+        // Clicked outside the stage (i.e. on the backdrop) → close
+        if (e.target === dialog) close();
+      });
+      // Native dialog close event (Escape key fires this automatically)
+      dialog.addEventListener('close', function () {
+        if (videoEl) {
+          try { videoEl.pause(); } catch (_) {}
+          videoEl.currentTime = 0;
+        }
+      });
+    })();
+  </script>
+{%- endif -%}
+
 {% style %}
+  /* Demo video modal — fullscreen-ish dialog with the video centered.
+     Native <dialog> opens to the top-layer so it sits above any
+     other stacking context (no z-index battle needed). */
+  .ds-demo-modal {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    width: min(94vw, 1280px);
+    max-height: 90vh;
+    background: var(--color-bg-elev);
+    color: var(--color-fg);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+  }
+  .ds-demo-modal::backdrop {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .ds-demo-modal[open] {
+    /* @starting-style for a soft entrance */
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 200ms ease, transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @starting-style {
+    .ds-demo-modal[open] {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-demo-modal[open] {
+      transition: none;
+    }
+    @starting-style {
+      .ds-demo-modal[open] {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+  .ds-demo-modal__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 10, 10, 0.6);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    padding: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: 0;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .ds-demo-modal__close:hover,
+  .ds-demo-modal__close:focus-visible {
+    background: var(--color-accent);
+    outline: 0;
+  }
+  .ds-demo-modal__stage {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ds-demo-modal__video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    background: #000;
+  }
+
   .ds-hero {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -907,6 +1127,26 @@
       "id": "visual",
       "label": "Hero visual (static)",
       "info": "Used when neither the slider nor a video is set. 1200×1200 square render recommended. Falls back to the BACKLIT CSS-art placeholder if empty."
+    },
+    {
+      "type": "header",
+      "content": "Demo video modal"
+    },
+    {
+      "type": "paragraph",
+      "content": "When a video file is set below, a click on any link in this hero with the URL `#demo-modal` will open a fullscreen video overlay instead of navigating away. Set your \"Watch the demo\" button's URL to `#demo-modal` in its block settings to wire it up."
+    },
+    {
+      "type": "video",
+      "id": "demo_video",
+      "label": "Demo video",
+      "info": "Plays in the modal overlay. MP4 recommended, encoded at 1080p or 720p for fast load."
+    },
+    {
+      "type": "image_picker",
+      "id": "demo_video_poster",
+      "label": "Demo video poster (optional)",
+      "info": "Still image shown before the video plays. Defaults to the video's auto-generated first frame."
     }
   ],
   "blocks": [
