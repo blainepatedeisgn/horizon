@@ -1,0 +1,704 @@
+{%- comment -%}
+  sections/ds-newsletter-popup.liquid — First-order discount popup
+
+  Native <dialog> popup that promises a discount code in exchange for
+  an email signup. Triggers on exit-intent (desktop) or after a delay
+  (mobile, since there's no exit-intent on touch). Show-once-per-30-days
+  via localStorage; never shown again after a successful signup.
+
+  Two states inside the dialog:
+    1. Form  — email input + claim button + fine print
+    2. Success — eyebrow, code (big, mono, copyable), follow-up note
+
+  Form posts via fetch to /contact (Shopify's customer-form endpoint).
+  Successful submit adds the email to Shopify Customers with the tags
+  set below — perfect for Klaviyo / Shopify Email segmentation.
+
+  The discount code itself is a static string set in section settings.
+  YOU must create the matching discount code in Shopify admin
+  (Discounts → Create discount → Amount off products / Amount off order).
+  This section only DISPLAYS the code; Shopify validates it at checkout.
+
+  Settings:
+    enabled               — master kill switch
+    eyebrow / title / subhead — form-state copy
+    code                  — the actual discount code string (e.g. WELCOME15)
+    button_label          — submit button text
+    placeholder           — email input placeholder
+    fineprint             — "No spam" line under the form
+    success_eyebrow / success_title / success_subhead — post-submit copy
+    copy_label / copied_label — copy-code button states
+    cooldown_days         — days before re-showing after dismiss (default 30)
+    mobile_delay_seconds  — seconds before showing on touch devices (default 20)
+    desktop_fallback_seconds — fallback delay if exit-intent doesn't fire (default 45)
+    signup_tags           — comma-sep Shopify customer tags applied on submit
+{%- endcomment -%}
+
+{%- liquid
+  unless section.settings.enabled
+    echo ''
+    break
+  endunless
+
+  assign code = section.settings.code | default: 'WELCOME15'
+  assign cooldown_days = section.settings.cooldown_days | default: 30
+  assign mobile_delay = section.settings.mobile_delay_seconds | default: 20
+  assign desktop_fallback = section.settings.desktop_fallback_seconds | default: 45
+  assign signup_tags = section.settings.signup_tags | default: 'newsletter, popup-signup'
+-%}
+
+<dialog
+  class="ds-newsletter-popup"
+  id="ds-newsletter-popup"
+  aria-labelledby="ds-newsletter-popup-title"
+  data-cooldown-days="{{ cooldown_days }}"
+  data-mobile-delay="{{ mobile_delay }}"
+  data-desktop-fallback="{{ desktop_fallback }}"
+>
+  <div class="ds-newsletter-popup__panel">
+    <button
+      type="button"
+      class="ds-newsletter-popup__close"
+      data-action="close"
+      aria-label="Close"
+    >×</button>
+
+    {%- comment -%} FORM STATE {%- endcomment -%}
+    <div class="ds-newsletter-popup__step" data-step="form">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="ds-newsletter-popup__eyebrow">{{ section.settings.eyebrow }}</p>
+      {%- endif -%}
+
+      <h2 class="ds-newsletter-popup__title" id="ds-newsletter-popup-title">
+        {{- section.settings.title | default: 'Get 15% off' -}}
+      </h2>
+
+      {%- if section.settings.subhead != blank -%}
+        <p class="ds-newsletter-popup__subhead">{{ section.settings.subhead }}</p>
+      {%- endif -%}
+
+      {%- form 'customer', class: 'ds-newsletter-popup__form-tag' -%}
+        <input type="hidden" name="contact[tags]" value="{{ signup_tags }}">
+
+        <div class="ds-newsletter-popup__form">
+          <input
+            type="email"
+            name="contact[email]"
+            class="ds-newsletter-popup__input"
+            placeholder="{{ section.settings.placeholder | default: 'your@email.com' }}"
+            aria-label="Email address"
+            autocomplete="email"
+            required
+          >
+          <button type="submit" class="ds-newsletter-popup__submit">
+            {{- section.settings.button_label | default: 'Claim 15% off' -}}
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+
+        <p class="ds-newsletter-popup__error" data-error hidden></p>
+        <p class="ds-newsletter-popup__fineprint">
+          {{- section.settings.fineprint | default: 'No spam. Unsubscribe anytime.' -}}
+        </p>
+      {%- endform -%}
+    </div>
+
+    {%- comment -%} SUCCESS STATE {%- endcomment -%}
+    <div class="ds-newsletter-popup__step" data-step="success" hidden>
+      {%- if section.settings.success_eyebrow != blank -%}
+        <p class="ds-newsletter-popup__eyebrow ds-newsletter-popup__eyebrow--accent">
+          {{ section.settings.success_eyebrow }}
+        </p>
+      {%- endif -%}
+
+      <h2 class="ds-newsletter-popup__title">
+        {{- section.settings.success_title | default: 'Your code:' -}}
+      </h2>
+
+      <div class="ds-newsletter-popup__code" data-code-value="{{ code }}">{{ code }}</div>
+
+      <button type="button" class="ds-newsletter-popup__copy" data-action="copy">
+        <span data-copy-default>{{ section.settings.copy_label | default: 'Copy code' }}</span>
+        <span data-copy-active hidden>{{ section.settings.copied_label | default: 'Copied ✓' }}</span>
+      </button>
+
+      {%- if section.settings.success_subhead != blank -%}
+        <p class="ds-newsletter-popup__fineprint">{{ section.settings.success_subhead }}</p>
+      {%- endif -%}
+    </div>
+  </div>
+</dialog>
+
+{% style %}
+  .ds-newsletter-popup {
+    /* Reset native dialog chrome — same approach as cart drawer + demo modal */
+    inset: 0;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-fg);
+    max-width: none;
+    max-height: none;
+  }
+  .ds-newsletter-popup::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .ds-newsletter-popup:not([open]) { display: none; }
+
+  /* The actual content panel — sits inside the dialog so we can size it
+     independently of the dialog's fullscreen scrim. */
+  .ds-newsletter-popup__panel {
+    position: relative;
+    width: min(92vw, 460px);
+    max-height: 90vh;
+    overflow: auto;
+    background: var(--color-bg-elev, var(--color-bg));
+    color: var(--color-fg);
+    border: 1px solid var(--color-border);
+    padding: clamp(28px, 4vw, 44px) clamp(24px, 4vw, 40px);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    /* Centered in the dialog viewport via the dialog's inset:0 + margin:auto */
+    margin: auto;
+  }
+
+  /* Entrance — opacity + slight scale, gated by @starting-style so it
+     plays once on showModal. Modern browsers (Safari 17.4+, Chrome 117+). */
+  @starting-style {
+    .ds-newsletter-popup[open] .ds-newsletter-popup__panel {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+    .ds-newsletter-popup[open]::backdrop {
+      opacity: 0;
+    }
+  }
+  .ds-newsletter-popup[open] .ds-newsletter-popup__panel {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition:
+      opacity 220ms var(--ease, ease-out),
+      transform 220ms var(--ease, ease-out);
+  }
+  .ds-newsletter-popup[open]::backdrop {
+    opacity: 1;
+    transition: opacity 220ms var(--ease, ease-out);
+  }
+
+  .ds-newsletter-popup__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 0;
+    color: var(--color-fg);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--t-fast, 150ms) var(--ease, ease-out);
+  }
+  .ds-newsletter-popup__close:hover { color: var(--color-accent); }
+  .ds-newsletter-popup__close:focus { outline: 0; }
+  .ds-newsletter-popup__close:focus-visible {
+    outline: 1px solid var(--color-fg);
+    outline-offset: 2px;
+  }
+
+  .ds-newsletter-popup__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    margin: 0 0 var(--space-3);
+  }
+  .ds-newsletter-popup__eyebrow--accent { color: var(--color-accent); }
+
+  .ds-newsletter-popup__title {
+    font-size: clamp(28px, 5vw, 40px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+    margin: 0 0 var(--space-3);
+  }
+  .ds-newsletter-popup__subhead {
+    font-size: var(--fs-small, 14px);
+    color: var(--color-fg-muted);
+    line-height: 1.5;
+    margin: 0 0 var(--space-5);
+    max-width: 38ch;
+  }
+
+  /* Stack input + button on mobile (matches the inline newsletter card pattern) */
+  .ds-newsletter-popup__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .ds-newsletter-popup__input {
+    width: 100%;
+    padding: 14px 16px;
+    background: transparent;
+    border: 1px solid var(--color-border-strong, var(--color-border));
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body, 16px);
+    outline: none;
+    transition: border-color var(--t-fast, 150ms) var(--ease, ease-out);
+  }
+  .ds-newsletter-popup__input::placeholder { color: var(--color-fg-faint, var(--color-fg-muted)); }
+  .ds-newsletter-popup__input:focus { border-color: var(--color-fg); }
+
+  .ds-newsletter-popup__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 14px 20px;
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+    border: 0;
+    font-family: var(--font-sans);
+    font-size: var(--fs-caps, 13px);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background var(--t-fast, 150ms) var(--ease, ease-out),
+      transform var(--t-fast, 150ms) var(--ease, ease-out);
+  }
+  .ds-newsletter-popup__submit:hover { background: var(--color-fg); color: var(--color-bg); }
+  .ds-newsletter-popup__submit:active { transform: translateY(1px); }
+  .ds-newsletter-popup__submit:disabled { opacity: 0.6; cursor: progress; }
+
+  .ds-newsletter-popup__error {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-sale, #ff4d4d);
+    margin: var(--space-3) 0 0;
+  }
+  .ds-newsletter-popup__fineprint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--color-fg-faint, var(--color-fg-muted));
+    margin: var(--space-4) 0 0;
+  }
+
+  /* ----- Success state ----- */
+  .ds-newsletter-popup__code {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 18px 16px;
+    margin: var(--space-4) 0;
+    background: var(--color-bg);
+    border: 1px dashed var(--color-accent);
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    user-select: all;
+  }
+  .ds-newsletter-popup__copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    background: transparent;
+    color: var(--color-fg);
+    border: 1px solid var(--color-border-strong, var(--color-border));
+    font-family: var(--font-sans);
+    font-size: var(--fs-caps, 13px);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background var(--t-fast, 150ms) var(--ease, ease-out),
+      color var(--t-fast, 150ms) var(--ease, ease-out),
+      border-color var(--t-fast, 150ms) var(--ease, ease-out);
+  }
+  .ds-newsletter-popup__copy:hover {
+    background: var(--color-fg);
+    color: var(--color-bg);
+    border-color: var(--color-fg);
+  }
+
+  /* Phone treatment — bottom-sheet style.  Centered modals on small
+     screens are awful (keyboard covers the input, the whole viewport
+     feels stolen).  Bottom sheet keeps the page visible above the
+     popup and feels less intrusive. */
+  @media (max-width: 600px) {
+    .ds-newsletter-popup {
+      align-items: end;
+    }
+    .ds-newsletter-popup__panel {
+      width: 100vw;
+      max-width: none;
+      margin: 0;
+      margin-block-start: auto;     /* push to bottom of dialog viewport */
+      padding: var(--space-6) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 0;
+      max-height: 80vh;
+    }
+    @starting-style {
+      .ds-newsletter-popup[open] .ds-newsletter-popup__panel {
+        opacity: 0;
+        transform: translateY(24px);  /* slide up instead of fade-in-place */
+      }
+    }
+  }
+{% endstyle %}
+
+<script>
+  /* ============================================================
+     DS Newsletter popup controller
+
+     - Reads cooldown / trigger settings from data-* attrs on the
+       <dialog> element.
+     - localStorage gate:
+         ds_newsletter_signedup  -> never show again
+         ds_newsletter_dismissed -> ISO date; reshow after cooldown_days
+     - Trigger:
+         desktop (hover: hover) → mouseleave from top of viewport
+                                  fallback timer (desktop_fallback)
+         mobile (no hover)      → setTimeout(mobile_delay * 1000)
+     - Submit:
+         fetch POST to /contact with FormData.  Shopify returns 302
+         on success; on AJAX, the redirect is followed but the final
+         response.ok will still be true.  We treat any 2xx as success.
+     - Esc and backdrop click close via native <dialog> behavior; we
+       just wire up the close button and listen for the 'close' event
+       to set the dismissed cookie.
+     ============================================================ */
+  (function () {
+    var dialog = document.getElementById('ds-newsletter-popup');
+    if (!dialog) return;
+    if (!dialog.showModal) return; /* graceful no-op on ancient browsers */
+
+    var STORAGE_SIGNUP = 'ds_newsletter_signedup';
+    var STORAGE_DISMISS = 'ds_newsletter_dismissed';
+
+    var cooldownDays = parseInt(dialog.dataset.cooldownDays, 10) || 30;
+    var mobileDelay  = (parseInt(dialog.dataset.mobileDelay, 10) || 20) * 1000;
+    var desktopFallback = (parseInt(dialog.dataset.desktopFallback, 10) || 45) * 1000;
+
+    /* ----- Gate ----- */
+    function shouldSkip() {
+      try {
+        if (localStorage.getItem(STORAGE_SIGNUP) === '1') return true;
+        var dismissedAt = localStorage.getItem(STORAGE_DISMISS);
+        if (dismissedAt) {
+          var ageMs = Date.now() - new Date(dismissedAt).getTime();
+          var cooldownMs = cooldownDays * 24 * 60 * 60 * 1000;
+          if (ageMs < cooldownMs) return true;
+        }
+      } catch (e) { /* localStorage disabled — show anyway */ }
+
+      /* Don't show on Shopify checkout / order-status (different domains
+         usually, but defensively also skip cart and account pages where
+         the user is mid-task). */
+      var path = (window.location.pathname || '').toLowerCase();
+      if (path.indexOf('/cart') === 0) return true;
+      if (path.indexOf('/account') === 0) return true;
+      if (path.indexOf('/challenge') === 0) return true;
+      if (path.indexOf('/checkouts') === 0) return true;
+
+      return false;
+    }
+    if (shouldSkip()) return;
+
+    /* ----- Open / close helpers ----- */
+    var hasOpened = false;
+    function openPopup() {
+      if (hasOpened) return;
+      hasOpened = true;
+      try { dialog.showModal(); } catch (e) { return; }
+      /* Move focus to the email input after opening so the keyboard
+         can pop up on mobile and users can type immediately. */
+      var input = dialog.querySelector('.ds-newsletter-popup__input');
+      if (input) {
+        /* small delay — Safari can refuse to autofocus inside dialog
+           if called synchronously. */
+        setTimeout(function () { input.focus(); }, 50);
+      }
+    }
+
+    function recordDismiss() {
+      try { localStorage.setItem(STORAGE_DISMISS, new Date().toISOString()); }
+      catch (e) {}
+    }
+    function recordSignup() {
+      try { localStorage.setItem(STORAGE_SIGNUP, '1'); }
+      catch (e) {}
+    }
+
+    /* ----- Triggers ----- */
+    var isCoarse = window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
+    if (isCoarse) {
+      /* Mobile / touch: simple delay */
+      setTimeout(openPopup, mobileDelay);
+    } else {
+      /* Desktop: exit-intent + fallback timer */
+      var onLeave = function (e) {
+        /* Only treat as exit-intent if the cursor leaves through the
+           top of the viewport (toward the tab/address bar). */
+        if (e.clientY <= 0) openPopup();
+      };
+      document.addEventListener('mouseleave', onLeave, { once: false });
+      setTimeout(openPopup, desktopFallback);
+      /* Clean up the listener once we've opened */
+      dialog.addEventListener('close', function () {
+        document.removeEventListener('mouseleave', onLeave);
+      }, { once: true });
+    }
+
+    /* ----- Close button ----- */
+    var closeBtn = dialog.querySelector('[data-action="close"]');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () { dialog.close(); });
+    }
+    /* Click backdrop to close — clicks on the <dialog> itself (outside
+       the panel) bubble; the panel stops propagation via its own bounds. */
+    dialog.addEventListener('click', function (e) {
+      if (e.target === dialog) dialog.close();
+    });
+    /* Native close event fires for X click, ESC, dialog.close().
+       Record the dismiss so we don't re-show during cooldown. */
+    dialog.addEventListener('close', function () {
+      /* If they signed up, recordSignup was already called and overrides. */
+      if (localStorage.getItem(STORAGE_SIGNUP) !== '1') recordDismiss();
+    });
+
+    /* ----- Form submit (AJAX) -----
+       Shopify's `{% form 'customer' %}` posts to /contact.  We intercept
+       the submit, post the same FormData via fetch, and on any 2xx
+       response swap to the success state.  Errors show inline. */
+    var formEl = dialog.querySelector('form.ds-newsletter-popup__form-tag');
+    var stepForm = dialog.querySelector('[data-step="form"]');
+    var stepSuccess = dialog.querySelector('[data-step="success"]');
+    var errorEl = dialog.querySelector('[data-error]');
+    var submitBtn = dialog.querySelector('.ds-newsletter-popup__submit');
+
+    function showError(msg) {
+      if (!errorEl) return;
+      errorEl.textContent = msg;
+      errorEl.hidden = false;
+    }
+    function clearError() {
+      if (!errorEl) return;
+      errorEl.textContent = '';
+      errorEl.hidden = true;
+    }
+
+    if (formEl && stepForm && stepSuccess) {
+      formEl.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearError();
+
+        var fd = new FormData(formEl);
+        /* form_type=customer + utf8=✓ are what Shopify expects.
+           The {% form %} tag adds them automatically as hidden inputs. */
+
+        if (submitBtn) submitBtn.disabled = true;
+
+        fetch(formEl.action, {
+          method: 'POST',
+          body: fd,
+          credentials: 'same-origin',
+          redirect: 'follow'
+        })
+        .then(function (response) {
+          if (!response.ok) throw new Error('Signup failed (' + response.status + ')');
+          /* Success — show success state */
+          stepForm.hidden = true;
+          stepSuccess.hidden = false;
+          recordSignup();
+        })
+        .catch(function (err) {
+          showError('Something went wrong. Try again, or email us if it keeps failing.');
+          if (submitBtn) submitBtn.disabled = false;
+          console.error('[ds-newsletter-popup]', err);
+        });
+      });
+    }
+
+    /* ----- Copy code button ----- */
+    var copyBtn = dialog.querySelector('[data-action="copy"]');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function () {
+        var codeEl = dialog.querySelector('[data-code-value]');
+        if (!codeEl) return;
+        var value = codeEl.getAttribute('data-code-value') || codeEl.textContent.trim();
+        var done = function () {
+          var dflt = copyBtn.querySelector('[data-copy-default]');
+          var actv = copyBtn.querySelector('[data-copy-active]');
+          if (dflt && actv) {
+            dflt.hidden = true;
+            actv.hidden = false;
+            setTimeout(function () {
+              dflt.hidden = false;
+              actv.hidden = true;
+            }, 1800);
+          }
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(value).then(done, function () {/* swallow */});
+        } else {
+          /* legacy fallback */
+          var ta = document.createElement('textarea');
+          ta.value = value;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); done(); } catch (e) {}
+          document.body.removeChild(ta);
+        }
+      });
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Newsletter popup",
+  "tag": null,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enabled",
+      "label": "Enable popup",
+      "default": true,
+      "info": "Master kill switch. Turn off to disable the popup site-wide without removing the section."
+    },
+    { "type": "header", "content": "Form copy" },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "EXCLUSIVE OFFER"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Get 15% off"
+    },
+    {
+      "type": "textarea",
+      "id": "subhead",
+      "label": "Subhead",
+      "default": "Your first order of Disrupted Studio assets. Plus first dibs on drops and the occasional behind-the-scenes."
+    },
+    {
+      "type": "text",
+      "id": "placeholder",
+      "label": "Email placeholder",
+      "default": "your@email.com"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Submit button label",
+      "default": "Claim 15% off"
+    },
+    {
+      "type": "text",
+      "id": "fineprint",
+      "label": "Fine print",
+      "default": "No spam. Unsubscribe anytime."
+    },
+    { "type": "header", "content": "Discount code" },
+    {
+      "type": "text",
+      "id": "code",
+      "label": "Code",
+      "default": "WELCOME15",
+      "info": "Must match a discount code you've created in Shopify admin → Discounts. This section only displays the code; Shopify validates it at checkout."
+    },
+    { "type": "header", "content": "Success state" },
+    {
+      "type": "text",
+      "id": "success_eyebrow",
+      "label": "Eyebrow",
+      "default": "YOU'RE IN"
+    },
+    {
+      "type": "text",
+      "id": "success_title",
+      "label": "Title",
+      "default": "Your code:"
+    },
+    {
+      "type": "textarea",
+      "id": "success_subhead",
+      "label": "Subhead",
+      "default": "Enter at checkout for 15% off. We also sent it to your inbox."
+    },
+    {
+      "type": "text",
+      "id": "copy_label",
+      "label": "Copy button — default",
+      "default": "Copy code"
+    },
+    {
+      "type": "text",
+      "id": "copied_label",
+      "label": "Copy button — confirmed",
+      "default": "Copied ✓"
+    },
+    { "type": "header", "content": "Behavior" },
+    {
+      "type": "range",
+      "id": "cooldown_days",
+      "label": "Cooldown (days)",
+      "min": 1,
+      "max": 90,
+      "step": 1,
+      "default": 30,
+      "info": "Days before the popup is shown again to a visitor who dismissed it. Signed-up visitors never see it again."
+    },
+    {
+      "type": "range",
+      "id": "mobile_delay_seconds",
+      "label": "Mobile delay (seconds)",
+      "min": 5,
+      "max": 60,
+      "step": 1,
+      "default": 20,
+      "info": "How long to wait before showing the popup on touch devices (no exit-intent on mobile)."
+    },
+    {
+      "type": "range",
+      "id": "desktop_fallback_seconds",
+      "label": "Desktop fallback (seconds)",
+      "min": 15,
+      "max": 120,
+      "step": 5,
+      "default": 45,
+      "info": "Backup timer on desktop in case exit-intent never fires (e.g., user spends a long time on the page without moving the mouse to the address bar)."
+    },
+    { "type": "header", "content": "Klaviyo / Shopify Email" },
+    {
+      "type": "text",
+      "id": "signup_tags",
+      "label": "Customer tags",
+      "default": "newsletter, popup-signup",
+      "info": "Comma-separated tags applied to the customer record on signup. Use these to segment your list (e.g. trigger a Klaviyo welcome flow on 'popup-signup')."
+    }
+  ],
+  "presets": [
+    { "name": "Newsletter popup" }
+  ]
+}
+{% endschema %}

@@ -72,9 +72,16 @@
         "wordmark_text": "DISRUPTED",
         "show_wordmark_reg": true
       }
+    },
+    "ds_newsletter_popup": {
+      "type": "ds-newsletter-popup",
+      "settings": {
+        "enabled": true
+      }
     }
   },
   "order": [
-    "ds_footer"
+    "ds_footer",
+    "ds_newsletter_popup"
   ]
 }
