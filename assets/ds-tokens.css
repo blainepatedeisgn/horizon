@@ -292,6 +292,14 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  /* min-width: 0 is critical: as a grid item, the card defaults to
+     min-width: auto = content min-width. When a product has a long
+     title (with white-space:nowrap), the title's intrinsic width
+     would push the card past its grid track and overflow the
+     viewport on mobile. Setting min-width: 0 lets the title's
+     overflow:hidden + text-overflow:ellipsis actually clamp the
+     line instead of widening the card. */
+  min-width: 0;
 }
 .ds-product-card__media-link,
 .ds-product-card__meta-link {
@@ -357,6 +365,7 @@ body {
   justify-content: space-between;
   gap: var(--space-3);
   padding-top: var(--space-2);
+  min-width: 0;
 }
 .ds-product-card__title-group {
   display: inline-flex;
