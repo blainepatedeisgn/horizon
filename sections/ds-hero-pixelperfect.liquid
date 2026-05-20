@@ -226,6 +226,7 @@
     class="ds-demo-modal"
     aria-labelledby="ds-pp-demo-modal-title-{{ dv_section_id }}"
     data-ds-demo-modal
+    tabindex="-1"
   >
     <h2 id="ds-pp-demo-modal-title-{{ dv_section_id }}" class="visually-hidden">Pixel Perfect demo video</h2>
     {%- comment -%}
@@ -302,6 +303,14 @@
       function open() {
         buildVideo();
         if (!dialog.open) dialog.showModal();
+        // Move focus to the dialog itself instead of letting
+        // showModal() auto-focus the first tabbable element (the
+        // X close button) — that path was painting a :focus-visible
+        // outline ring on the X every time the modal opened. The
+        // dialog has tabindex="-1" so it's focus-receivable but
+        // skipped during Tab navigation. Keyboard users can still
+        // Tab into the X normally.
+        try { dialog.focus(); } catch (_) {}
         // Defer play to next frame so the dialog has time to lay out
         // before we kick the video. Small but noticeable on first open.
         window.requestAnimationFrame(function () {
@@ -381,6 +390,14 @@
     /* flex column so the header sits above the stage */
     display: flex;
     flex-direction: column;
+  }
+  /* tabindex="-1" on the dialog (so we can focus it on open without
+     marking it tabbable) can paint a default focus outline in some
+     browsers. Suppress it — the dialog isn't an interactive control,
+     it just needs to receive programmatic focus. */
+  .ds-demo-modal:focus,
+  .ds-demo-modal:focus-visible {
+    outline: 0;
   }
   .ds-demo-modal:not([open]) { display: none; }
   @media (max-width: 600px) {
