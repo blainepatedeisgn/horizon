@@ -430,7 +430,9 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    padding: 10px 12px;
+    /* Asymmetric horizontal padding — extra space on the left so
+       the title doesn't sit flush against the modal edge. */
+    padding: 10px 12px 10px 20px;
     background: var(--color-bg-elev);
     border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
@@ -447,9 +449,8 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  /* Smaller, border-less X — just the glyph + a subtle color shift
-     on hover. Reads as a quiet close affordance rather than a big
-     button. */
+  /* Small, border-less X — white at rest, orange on hover. Reads
+     as a quiet close affordance rather than a heavy button. */
   .ds-demo-modal__close {
     width: 28px;
     height: 28px;
@@ -457,7 +458,7 @@
     align-items: center;
     justify-content: center;
     background: transparent;
-    color: var(--color-fg-muted);
+    color: var(--color-fg);
     font-size: 22px;
     line-height: 1;
     border: 0;
