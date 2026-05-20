@@ -348,20 +348,34 @@
 {%- endif -%}
 
 {% style %}
-  /* Demo video modal — fullscreen-ish dialog with the video centered.
-     Native <dialog> opens to the top-layer so it sits above any
-     other stacking context (no z-index battle needed). */
+  /* Demo video modal — dialog with the video centered in the
+     viewport. Native <dialog> opens to the top-layer (sits above
+     any stacking context — no z-index battle needed) and the
+     browser handles vertical/horizontal centering via auto
+     margins, which is why we explicitly use `inset: 0; margin:
+     auto` instead of margin:0 (which would break the centering
+     and left-anchor the modal). */
   .ds-demo-modal {
-    margin: 0;
+    inset: 0;
+    margin: auto;
     padding: 0;
     border: 0;
-    width: min(94vw, 1280px);
+    width: min(92vw, 960px);
     max-height: 90vh;
     background: var(--color-bg-elev);
     color: var(--color-fg);
     border: 1px solid var(--color-border);
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
     overflow: hidden;
+  }
+  @media (max-width: 600px) {
+    .ds-demo-modal {
+      /* Phone-sized — let it span almost the full viewport width
+         since 92vw on a 390px phone is only ~360px, and the close
+         button overlaying the video corner needs a clear tap target. */
+      width: 96vw;
+      max-height: 80vh;
+    }
   }
   .ds-demo-modal::backdrop {
     background: rgba(0, 0, 0, 0.85);
@@ -417,6 +431,15 @@
   .ds-demo-modal__close:focus-visible {
     background: var(--color-accent);
     outline: 0;
+  }
+  @media (max-width: 600px) {
+    .ds-demo-modal__close {
+      /* Bigger touch target on phones */
+      width: 44px;
+      height: 44px;
+      top: 8px;
+      right: 8px;
+    }
   }
   .ds-demo-modal__stage {
     width: 100%;
