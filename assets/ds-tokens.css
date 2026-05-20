@@ -306,6 +306,13 @@ body {
   display: block;
   text-decoration: none;
   color: inherit;
+  /* The nowrap title's intrinsic width was leaking through the
+     <a class="ds-product-card__meta-link"> wrapper because <a> defaults
+     to min-width:auto = min-content. Without breaking the chain here,
+     the title-group's min-content forced the meta-link wider than the
+     grid track, dragging the whole article past the section's --pad-x
+     and out to the viewport edge on mobile. */
+  min-width: 0;
 }
 .ds-product-card__media {
   position: relative;
