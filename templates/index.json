@@ -50,8 +50,8 @@
           "type": "ds-button-row",
           "settings": {
             "primary_label": "BUY PIXEL PERFECT",
-            "primary_url": "",
-            "primary_product": "pixel-perfect-plugin",
+            "primary_url": "shopify://products/pixel-perfect-plugin",
+            "primary_product": "",
             "secondary_label": "Watch the demo",
             "secondary_url": ""
           },
@@ -77,7 +77,8 @@
         "starting_position": 50,
         "visual": "shopify://shop_images/Artboard_3.png",
         "demo_video": "shopify://files/videos/copy_C020634D-2839-4612-947A-1AE7D56B32E0.MOV",
-        "demo_video_poster": "shopify://shop_images/demo_imahe.png"
+        "demo_video_poster": "shopify://shop_images/demo_imahe.png",
+        "demo_modal_title": "Watch the demo"
       }
     },
     "hero": {
