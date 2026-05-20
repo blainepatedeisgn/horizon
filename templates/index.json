@@ -75,7 +75,9 @@
         "before_label": "Before",
         "after_label": "After",
         "starting_position": 50,
-        "visual": "shopify://shop_images/Artboard_3.png"
+        "visual": "shopify://shop_images/Artboard_3.png",
+        "demo_video": "shopify://files/videos/copy_C020634D-2839-4612-947A-1AE7D56B32E0.MOV",
+        "demo_video_poster": "shopify://shop_images/demo_imahe.png"
       }
     },
     "hero": {
