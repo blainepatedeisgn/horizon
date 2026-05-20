@@ -168,7 +168,7 @@
         "heading": "Featured Work",
         "num_label": "06",
         "subhead": "Hand-built plugins, original type, and ready-to-use asset packs — released in small batches.",
-        "collection": "",
+        "collection": "all-products",
         "products_to_show": 6,
         "show_view_all": true,
         "view_all_label": "View all products",
