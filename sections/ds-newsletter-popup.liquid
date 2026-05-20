@@ -482,9 +482,9 @@
     });
 
     /* ----- Form submit (AJAX) -----
-       Shopify's `{% form 'customer' %}` posts to /contact.  We intercept
+       Shopify's customer form tag posts to /contact. We intercept
        the submit, post the same FormData via fetch, and on any 2xx
-       response swap to the success state.  Errors show inline. */
+       response swap to the success state. Errors show inline. */
     var formEl = dialog.querySelector('form.ds-newsletter-popup__form-tag');
     var stepForm = dialog.querySelector('[data-step="form"]');
     var stepSuccess = dialog.querySelector('[data-step="success"]');
@@ -508,8 +508,8 @@
         clearError();
 
         var fd = new FormData(formEl);
-        /* form_type=customer + utf8=✓ are what Shopify expects.
-           The {% form %} tag adds them automatically as hidden inputs. */
+        /* form_type=customer + utf8 are what Shopify expects.
+           Shopify's form tag adds them automatically as hidden inputs. */
 
         if (submitBtn) submitBtn.disabled = true;
 
