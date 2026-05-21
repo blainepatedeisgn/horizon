@@ -133,7 +133,6 @@
   .ds-newsletter-popup {
     /* Reset native dialog chrome — same approach as cart drawer + demo modal */
     inset: 0;
-    margin: auto;
     padding: 0;
     border: 0;
     background: transparent;
@@ -145,6 +144,15 @@
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
+  }
+  /* When open, use flexbox to center the panel both axes. The native
+     dialog's default display:block + margin:auto only centers
+     horizontally, so without this rule the panel falls to the top of
+     the viewport and looks broken (or invisible if you're scrolled). */
+  .ds-newsletter-popup[open] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .ds-newsletter-popup:not([open]) { display: none; }
 
@@ -160,8 +168,7 @@
     border: 1px solid var(--color-border);
     padding: clamp(28px, 4vw, 44px) clamp(24px, 4vw, 40px);
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-    /* Centered in the dialog viewport via the dialog's inset:0 + margin:auto */
-    margin: auto;
+    /* Centered via the dialog's display:flex when [open]. */
   }
 
   /* Entrance — opacity + slight scale, gated by @starting-style so it
@@ -337,14 +344,14 @@
      feels stolen).  Bottom sheet keeps the page visible above the
      popup and feels less intrusive. */
   @media (max-width: 600px) {
-    .ds-newsletter-popup {
+    /* Bottom-sheet alignment — anchor the panel to the bottom of the
+       flex container instead of centering it. */
+    .ds-newsletter-popup[open] {
       align-items: end;
     }
     .ds-newsletter-popup__panel {
       width: 100vw;
       max-width: none;
-      margin: 0;
-      margin-block-start: auto;     /* push to bottom of dialog viewport */
       padding: var(--space-6) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
       border-left: 0;
       border-right: 0;
