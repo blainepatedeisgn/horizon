@@ -43,6 +43,16 @@
   assign mobile_delay = section.settings.mobile_delay_seconds | default: 20
   assign desktop_fallback = section.settings.desktop_fallback_seconds | default: 45
   assign signup_tags = section.settings.signup_tags | default: 'newsletter, popup-signup'
+
+  comment
+    Klaviyo direct-subscription credentials. Both must be set for
+    the JS to also POST to Klaviyo's client subscription API in
+    parallel with the Shopify customer form. If either is blank,
+    the popup falls back to the original Shopify-only iframe path
+    and customers reach Klaviyo via the normal sync (5-15 min lag).
+  endcomment
+  assign klaviyo_company_id = section.settings.klaviyo_company_id
+  assign klaviyo_list_id = section.settings.klaviyo_list_id
 -%}
 
 <dialog
@@ -52,6 +62,8 @@
   data-cooldown-days="{{ cooldown_days }}"
   data-mobile-delay="{{ mobile_delay }}"
   data-desktop-fallback="{{ desktop_fallback }}"
+  data-klaviyo-company-id="{{ klaviyo_company_id | escape }}"
+  data-klaviyo-list-id="{{ klaviyo_list_id | escape }}"
 >
   <div class="ds-newsletter-popup__panel">
     <button
@@ -607,6 +619,67 @@
     var errorEl = dialog.querySelector('[data-error]');
     var submitBtn = dialog.querySelector('.ds-newsletter-popup__submit');
 
+    /* Klaviyo direct-subscription credentials (optional). When both
+       are set in the section settings, we ALSO POST to Klaviyo's
+       client subscription API in parallel with the Shopify form
+       submit. Klaviyo's welcome flow then fires within seconds
+       instead of waiting on the Shopify→Klaviyo sync (5-15 min).
+       The Shopify form still submits normally so the customer
+       record is created in Shopify too. */
+    var klaviyoCompanyId = dialog.dataset.klaviyoCompanyId || '';
+    var klaviyoListId = dialog.dataset.klaviyoListId || '';
+
+    function submitToKlaviyo(email) {
+      if (!klaviyoCompanyId || !klaviyoListId || !email) return;
+      var url = 'https://a.klaviyo.com/client/subscriptions/?company_id=' + encodeURIComponent(klaviyoCompanyId);
+      var body = {
+        data: {
+          type: 'subscription',
+          attributes: {
+            custom_source: 'Newsletter Popup',
+            profile: {
+              data: {
+                type: 'profile',
+                attributes: {
+                  email: email,
+                  subscriptions: {
+                    email: {
+                      marketing: { consent: 'SUBSCRIBED' }
+                    }
+                  },
+                  properties: {
+                    popup_signup: true,
+                    signup_source: 'newsletter_popup'
+                  }
+                }
+              }
+            }
+          },
+          relationships: {
+            list: {
+              data: { type: 'list', id: klaviyoListId }
+            }
+          }
+        }
+      };
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Revision': '2024-10-15'
+        },
+        body: JSON.stringify(body)
+      }).then(function (resp) {
+        if (resp.status !== 202 && resp.status !== 200) {
+          console.warn('[ds-newsletter-popup] Klaviyo returned status', resp.status);
+        }
+      }).catch(function (err) {
+        /* Non-blocking — Shopify iframe submit is still our source
+           of truth. Klaviyo just lets the welcome email fire faster. */
+        console.warn('[ds-newsletter-popup] Klaviyo subscribe failed', err);
+      });
+    }
+
     function clearError() {
       if (!errorEl) return;
       errorEl.textContent = '';
@@ -622,6 +695,13 @@
         clearError();
         hasSubmitted = true;
         if (submitBtn) submitBtn.disabled = true;
+
+        /* Fire-and-forget parallel Klaviyo subscription. Doesn't block
+           or replace the Shopify iframe submission below. */
+        var emailInput = formEl.querySelector('input[name="contact[email]"]');
+        if (emailInput && emailInput.value) {
+          submitToKlaviyo(emailInput.value.trim());
+        }
       });
 
       iframeEl.addEventListener('load', function () {
@@ -764,7 +844,24 @@
       "id": "signup_tags",
       "label": "Customer tags",
       "default": "newsletter, popup-signup",
-      "info": "Comma-separated tags applied to the customer record on signup. Use these to segment your list (e.g. trigger a Klaviyo welcome flow on 'popup-signup')."
+      "info": "Comma-separated tags applied to the Shopify customer record on signup. Use these to segment your list (e.g. trigger a Klaviyo welcome flow on 'popup-signup')."
+    },
+    { "type": "header", "content": "Klaviyo direct API (optional)" },
+    {
+      "type": "paragraph",
+      "content": "If both fields below are set, the popup submits to Klaviyo's subscription API in parallel with the Shopify form so the welcome email fires within seconds instead of waiting for Shopify→Klaviyo sync (5-15 min). Leave blank to use Shopify-only path."
+    },
+    {
+      "type": "text",
+      "id": "klaviyo_company_id",
+      "label": "Klaviyo Public API Key",
+      "info": "Klaviyo → Account → Settings → API Keys → Public API Key. Short alphanumeric (~6 chars). Safe to expose in browser JS."
+    },
+    {
+      "type": "text",
+      "id": "klaviyo_list_id",
+      "label": "Klaviyo List ID",
+      "info": "Klaviyo → Lists & Segments → click your list → the ID appears in the URL (klaviyo.com/list/XYZ123). Create a list called 'Popup Signups' first if you don't have one."
     }
   ],
   "presets": [
