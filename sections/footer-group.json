@@ -11,6 +11,29 @@
   "type": "footer",
   "name": "t:names.footer",
   "sections": {
+    "ds_newsletter_popup_axkKR7": {
+      "type": "ds-newsletter-popup",
+      "name": "Newsletter popup",
+      "settings": {
+        "enabled": true,
+        "eyebrow": "EXCLUSIVE OFFER",
+        "title": "Get 15% off",
+        "subhead": "Your first order of Disrupted Studio assets. Plus first dibs on drops and the occasional behind-the-scenes.",
+        "placeholder": "your@email.com",
+        "button_label": "Claim 15% off",
+        "fineprint": "No spam. Unsubscribe anytime.",
+        "code": "WELCOME15",
+        "success_eyebrow": "YOU'RE IN",
+        "success_title": "Your code:",
+        "success_subhead": "Enter at checkout for 15% off. We also sent it to your inbox.",
+        "copy_label": "Copy code",
+        "copied_label": "Copied ✓",
+        "cooldown_days": 30,
+        "mobile_delay_seconds": 20,
+        "desktop_fallback_seconds": 45,
+        "signup_tags": "newsletter, popup-signup"
+      }
+    },
     "ds_footer": {
       "type": "ds-footer",
       "blocks": {
@@ -72,16 +95,10 @@
         "wordmark_text": "DISRUPTED",
         "show_wordmark_reg": true
       }
-    },
-    "ds_newsletter_popup": {
-      "type": "ds-newsletter-popup",
-      "settings": {
-        "enabled": true
-      }
     }
   },
   "order": [
-    "ds_footer",
-    "ds_newsletter_popup"
+    "ds_newsletter_popup_axkKR7",
+    "ds_footer"
   ]
 }
