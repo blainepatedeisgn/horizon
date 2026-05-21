@@ -393,8 +393,18 @@
     var mobileDelay  = (parseInt(dialog.dataset.mobileDelay, 10) || 20) * 1000;
     var desktopFallback = (parseInt(dialog.dataset.desktopFallback, 10) || 45) * 1000;
 
+    /* Debug bypass — append ?ds-popup=1 to any URL on the site to force
+       the popup open immediately, ignoring localStorage and trigger
+       delays. Useful for previewing in the theme editor or showing
+       collaborators what the popup looks like without having to clear
+       cookies. The bypass also keeps you from being marked as
+       dismissed/signed-up when you close it. */
+    var params = new URLSearchParams(window.location.search || '');
+    var DEBUG_FORCE = params.get('ds-popup') === '1';
+
     /* ----- Gate ----- */
     function shouldSkip() {
+      if (DEBUG_FORCE) return false;
       try {
         if (localStorage.getItem(STORAGE_SIGNUP) === '1') return true;
         var dismissedAt = localStorage.getItem(STORAGE_DISMISS);
@@ -446,7 +456,10 @@
     /* ----- Triggers ----- */
     var isCoarse = window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
-    if (isCoarse) {
+    if (DEBUG_FORCE) {
+      /* Debug bypass — open immediately, no waiting. */
+      openPopup();
+    } else if (isCoarse) {
       /* Mobile / touch: simple delay */
       setTimeout(openPopup, mobileDelay);
     } else {
@@ -475,9 +488,11 @@
       if (e.target === dialog) dialog.close();
     });
     /* Native close event fires for X click, ESC, dialog.close().
-       Record the dismiss so we don't re-show during cooldown. */
+       Record the dismiss so we don't re-show during cooldown.
+       Skip the record when running in DEBUG_FORCE so testing doesn't
+       leave a dismiss cookie behind. */
     dialog.addEventListener('close', function () {
-      /* If they signed up, recordSignup was already called and overrides. */
+      if (DEBUG_FORCE) return;
       if (localStorage.getItem(STORAGE_SIGNUP) !== '1') recordDismiss();
     });
 
