@@ -29,8 +29,8 @@
         "copy_label": "Copy code",
         "copied_label": "Copied ✓",
         "cooldown_days": 30,
-        "mobile_delay_seconds": 20,
-        "desktop_fallback_seconds": 45,
+        "mobile_delay_seconds": 5,
+        "desktop_fallback_seconds": 15,
         "signup_tags": "newsletter, popup-signup"
       }
     },
