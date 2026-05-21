@@ -75,7 +75,7 @@
         <p class="ds-newsletter-popup__subhead">{{ section.settings.subhead }}</p>
       {%- endif -%}
 
-      {%- form 'customer', class: 'ds-newsletter-popup__form-tag' -%}
+      {%- form 'customer', class: 'ds-newsletter-popup__form-tag', target: 'ds-newsletter-popup-target' -%}
         <input type="hidden" name="contact[tags]" value="{{ signup_tags }}">
 
         <div class="ds-newsletter-popup__form">
@@ -89,7 +89,7 @@
             required
           >
           <button type="submit" class="ds-newsletter-popup__submit">
-            {{- section.settings.button_label | default: 'Claim 15% off' -}}
+            {{- section.settings.button_label | default: 'Send me the font' -}}
             <span aria-hidden="true">→</span>
           </button>
         </div>
@@ -99,6 +99,22 @@
           {{- section.settings.fineprint | default: 'No spam. Unsubscribe anytime.' -}}
         </p>
       {%- endform -%}
+
+      {%- comment -%}
+        Hidden iframe acts as the form's POST target so the main page
+        doesn't reload on submit. Shopify accepts a normal multipart
+        form POST to /contact; we just redirect the response into this
+        offscreen iframe instead of replacing the page. The JS listens
+        for the iframe's load event (after the first empty load) and
+        treats that as success.
+      {%- endcomment -%}
+      <iframe
+        name="ds-newsletter-popup-target"
+        class="ds-newsletter-popup__iframe"
+        aria-hidden="true"
+        tabindex="-1"
+        title="newsletter submission"
+      ></iframe>
     </div>
 
     {%- comment -%} SUCCESS STATE {%- endcomment -%}
@@ -272,6 +288,17 @@
   }
   .ds-newsletter-popup__input::placeholder { color: var(--color-fg-faint, var(--color-fg-muted)); }
   .ds-newsletter-popup__input:focus { border-color: var(--color-fg); }
+
+  /* Hidden iframe = form POST target. Zero size, no visibility,
+     no layout impact, no focus-grabbing. */
+  .ds-newsletter-popup__iframe {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
 
   .ds-newsletter-popup__submit {
     /* Dashed-border "coupon ticket" treatment — borrowed visual cue
@@ -519,56 +546,49 @@
       if (localStorage.getItem(STORAGE_SIGNUP) !== '1') recordDismiss();
     });
 
-    /* ----- Form submit (AJAX) -----
-       Shopify's customer form tag posts to /contact. We intercept
-       the submit, post the same FormData via fetch, and on any 2xx
-       response swap to the success state. Errors show inline. */
+    /* ----- Form submit (iframe target) -----
+       The form posts natively to /contact but targets the hidden iframe
+       we added to the markup. The main page never reloads. We listen
+       for the iframe's 'load' event after the first (initial empty)
+       load — that signals the response has come back and we can swap
+       to the success state.
+
+       Why iframe instead of fetch: Shopify's /contact endpoint is
+       not designed for AJAX submission. Our earlier fetch+FormData
+       attempt was throwing in the response chain even when the
+       customer was successfully created — the iframe approach lets
+       the browser handle the POST natively without CORS/redirect
+       quirks. */
     var formEl = dialog.querySelector('form.ds-newsletter-popup__form-tag');
+    var iframeEl = dialog.querySelector('.ds-newsletter-popup__iframe');
     var stepForm = dialog.querySelector('[data-step="form"]');
     var stepSuccess = dialog.querySelector('[data-step="success"]');
     var errorEl = dialog.querySelector('[data-error]');
     var submitBtn = dialog.querySelector('.ds-newsletter-popup__submit');
 
-    function showError(msg) {
-      if (!errorEl) return;
-      errorEl.textContent = msg;
-      errorEl.hidden = false;
-    }
     function clearError() {
       if (!errorEl) return;
       errorEl.textContent = '';
       errorEl.hidden = true;
     }
 
-    if (formEl && stepForm && stepSuccess) {
-      formEl.addEventListener('submit', function (e) {
-        e.preventDefault();
+    if (formEl && iframeEl && stepForm && stepSuccess) {
+      /* iframes fire 'load' once on initial render (about:blank).
+         We only want to react to loads that happen AFTER a submit. */
+      var hasSubmitted = false;
+
+      formEl.addEventListener('submit', function () {
         clearError();
-
-        var fd = new FormData(formEl);
-        /* form_type=customer + utf8 are what Shopify expects.
-           Shopify's form tag adds them automatically as hidden inputs. */
-
+        hasSubmitted = true;
         if (submitBtn) submitBtn.disabled = true;
+      });
 
-        fetch(formEl.action, {
-          method: 'POST',
-          body: fd,
-          credentials: 'same-origin',
-          redirect: 'follow'
-        })
-        .then(function (response) {
-          if (!response.ok) throw new Error('Signup failed (' + response.status + ')');
-          /* Success — show success state */
-          stepForm.hidden = true;
-          stepSuccess.hidden = false;
-          recordSignup();
-        })
-        .catch(function (err) {
-          showError('Something went wrong. Try again, or email us if it keeps failing.');
-          if (submitBtn) submitBtn.disabled = false;
-          console.error('[ds-newsletter-popup]', err);
-        });
+      iframeEl.addEventListener('load', function () {
+        if (!hasSubmitted) return;
+        /* Submitted + iframe loaded = response received. Show success. */
+        stepForm.hidden = true;
+        stepSuccess.hidden = false;
+        recordSignup();
       });
     }
 
