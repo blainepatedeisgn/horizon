@@ -32,15 +32,12 @@
   endunless
 
   comment
-    Freebie URL: prefers the Shopify file picker (file_reference) if set,
-    otherwise falls back to whatever URL is typed into the manual field.
-    Either path produces a public URL that the success-state download
-    button links to.
+    Freebie URL: pasted from Shopify admin → Content → Files after
+    uploading the freebie. Section setting is plain text because
+    Shopify section schemas don't have a generic file picker type
+    (image_picker / video are for media only).
   endcomment
-  assign freebie_url = section.settings.freebie_file
-  if freebie_url == blank
-    assign freebie_url = section.settings.freebie_url_manual
-  endif
+  assign freebie_url = section.settings.freebie_url
 
   assign cooldown_days = section.settings.cooldown_days | default: 30
   assign mobile_delay = section.settings.mobile_delay_seconds | default: 20
@@ -629,18 +626,13 @@
     { "type": "header", "content": "Free pack file" },
     {
       "type": "paragraph",
-      "content": "Upload your freebie to Shopify admin → Content → Files first, then pick it here. Any file type works (zip, mp4, otf, pdf, etc.)."
-    },
-    {
-      "type": "file_reference",
-      "id": "freebie_file",
-      "label": "Freebie file"
+      "content": "1) Upload your freebie to Shopify admin → Content → Files. 2) Click the link icon next to the file to copy its CDN URL. 3) Paste below."
     },
     {
       "type": "text",
-      "id": "freebie_url_manual",
-      "label": "Or paste a URL",
-      "info": "Optional fallback if the file picker above doesn't accept your file type. Use the direct CDN URL from Shopify Files."
+      "id": "freebie_url",
+      "label": "Freebie file URL",
+      "info": "Direct CDN URL from Shopify Files (looks like https://cdn.shopify.com/s/files/1/.../files/your-pack.zip)."
     },
     {
       "type": "text",
