@@ -400,17 +400,19 @@
      popup and feels less intrusive. */
   @media (max-width: 600px) {
     /* Bottom-sheet alignment — anchor the panel to the bottom of the
-       flex container instead of centering it. */
+       flex container, with horizontal + bottom padding so it stops
+       short of the viewport edges and reads as a contained card. */
     .ds-newsletter-popup[open] {
       align-items: end;
+      padding: 0 12px calc(12px + env(safe-area-inset-bottom));
     }
     .ds-newsletter-popup__panel {
-      width: 100vw;
-      max-width: none;
-      padding: calc(var(--space-5) + 8px) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
-      border-left: 0;
-      border-right: 0;
-      border-bottom: 0;
+      width: 100%;
+      max-width: 100%;
+      padding: calc(var(--space-5) + 8px) var(--space-5) var(--space-6);
+      /* Keep the base 1px border on all four sides — the panel now
+         floats inside its dialog with side margins, so the card has
+         visible edges instead of bleeding into the screen edges. */
       /* 85dvh = dynamic viewport height. On modern iOS/Android this
          accounts for the URL bar but NOT the keyboard. Combined with
          overflow:auto on the panel, this means content stays scrollable
