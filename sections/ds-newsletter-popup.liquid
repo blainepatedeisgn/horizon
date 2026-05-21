@@ -224,10 +224,12 @@
 
   .ds-newsletter-popup__close {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 32px;
-    height: 32px;
+    top: 8px;
+    right: 8px;
+    /* 40px tap target — Apple guideline is 44px minimum but a corner
+       X with this glyph reads cluttered at 44px. 40 is the compromise. */
+    width: 40px;
+    height: 40px;
     background: transparent;
     border: 0;
     color: var(--color-fg);
@@ -237,7 +239,13 @@
     padding: 0;
     transition: color var(--t-fast, 150ms) var(--ease, ease-out);
   }
-  .ds-newsletter-popup__close:hover { color: var(--color-accent); }
+  /* Hover only on devices with a real pointer. On iOS / Android the
+     :hover state sticks after a tap until the user taps elsewhere,
+     which means the X stays orange (or buttons stay filled) long
+     after the interaction. (hover: hover) excludes touch devices. */
+  @media (hover: hover) {
+    .ds-newsletter-popup__close:hover { color: var(--color-accent); }
+  }
   .ds-newsletter-popup__close:focus { outline: 0; }
   .ds-newsletter-popup__close:focus-visible {
     outline: 1px solid var(--color-fg);
@@ -325,10 +333,12 @@
       border-color var(--t-fast, 150ms) var(--ease, ease-out),
       transform var(--t-fast, 150ms) var(--ease, ease-out);
   }
-  .ds-newsletter-popup__submit:hover {
-    background: var(--color-accent);
-    color: var(--color-accent-fg);
-    border-color: var(--color-accent);
+  @media (hover: hover) {
+    .ds-newsletter-popup__submit:hover {
+      background: var(--color-accent);
+      color: var(--color-accent-fg);
+      border-color: var(--color-accent);
+    }
   }
   .ds-newsletter-popup__submit:active { transform: translateY(1px); }
   .ds-newsletter-popup__submit:disabled { opacity: 0.6; cursor: progress; }
@@ -377,9 +387,11 @@
       background var(--t-fast, 150ms) var(--ease, ease-out),
       color var(--t-fast, 150ms) var(--ease, ease-out);
   }
-  .ds-newsletter-popup__download:hover {
-    background: var(--color-fg);
-    color: var(--color-bg);
+  @media (hover: hover) {
+    .ds-newsletter-popup__download:hover {
+      background: var(--color-fg);
+      color: var(--color-bg);
+    }
   }
 
   /* Phone treatment — bottom-sheet style.  Centered modals on small
@@ -395,11 +407,38 @@
     .ds-newsletter-popup__panel {
       width: 100vw;
       max-width: none;
-      padding: var(--space-6) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
+      padding: calc(var(--space-5) + 8px) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
       border-left: 0;
       border-right: 0;
       border-bottom: 0;
-      max-height: 80vh;
+      /* 85dvh = dynamic viewport height. On modern iOS/Android this
+         accounts for the URL bar but NOT the keyboard. Combined with
+         overflow:auto on the panel, this means content stays scrollable
+         even when the keyboard is open. */
+      max-height: 85dvh;
+    }
+    /* Bottom-sheet grab handle — small bar at the top of the panel.
+       Modern mobile UI convention (Apple Maps, iOS share sheets,
+       Spotify, etc.) that signals "this sheet can be dismissed."
+       Purely decorative; the X is still the explicit close action. */
+    .ds-newsletter-popup__panel::before {
+      content: "";
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 36px;
+      height: 3px;
+      background: var(--color-border-strong, var(--color-border));
+      border-radius: 2px;
+    }
+    /* Bigger X tap zone on phones (Apple's 44px guideline). The
+       glyph stays the same size — the box grows around it. */
+    .ds-newsletter-popup__close {
+      top: 14px;
+      right: 8px;
+      width: 44px;
+      height: 44px;
     }
     @starting-style {
       .ds-newsletter-popup[open] .ds-newsletter-popup__panel {
