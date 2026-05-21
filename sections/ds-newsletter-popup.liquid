@@ -277,14 +277,18 @@
   .ds-newsletter-popup__input:focus { border-color: var(--color-fg); }
 
   .ds-newsletter-popup__submit {
+    /* Dashed-border "coupon ticket" treatment — borrowed visual cue
+       from print coupons / cut-here lines. Transparent fill at rest
+       so the dashes read clearly against the dark panel; fills with
+       accent orange on hover for the confirm-action shift. */
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    padding: 14px 20px;
-    background: var(--color-accent);
-    color: var(--color-accent-fg);
-    border: 0;
+    padding: 16px 20px;
+    background: transparent;
+    color: var(--color-fg);
+    border: 2px dashed var(--color-fg);
     font-family: var(--font-sans);
     font-size: var(--fs-caps, 13px);
     font-weight: 600;
@@ -293,9 +297,15 @@
     cursor: pointer;
     transition:
       background var(--t-fast, 150ms) var(--ease, ease-out),
+      color var(--t-fast, 150ms) var(--ease, ease-out),
+      border-color var(--t-fast, 150ms) var(--ease, ease-out),
       transform var(--t-fast, 150ms) var(--ease, ease-out);
   }
-  .ds-newsletter-popup__submit:hover { background: var(--color-fg); color: var(--color-bg); }
+  .ds-newsletter-popup__submit:hover {
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+    border-color: var(--color-accent);
+  }
   .ds-newsletter-popup__submit:active { transform: translateY(1px); }
   .ds-newsletter-popup__submit:disabled { opacity: 0.6; cursor: progress; }
 
