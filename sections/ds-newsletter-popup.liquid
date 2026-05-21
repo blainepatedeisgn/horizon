@@ -1,37 +1,28 @@
 {%- comment -%}
-  sections/ds-newsletter-popup.liquid — First-order discount popup (v1)
+  sections/ds-newsletter-popup.liquid — Free download popup (v2)
 
-  Native <dialog> popup that promises a discount code in exchange for
-  an email signup. Triggers on exit-intent (desktop) or after a delay
-  (mobile, since there's no exit-intent on touch). Show-once-per-30-days
-  via localStorage; never shown again after a successful signup.
+  Native <dialog> popup that promises a free downloadable asset in
+  exchange for an email signup. Triggers on exit-intent (desktop) or
+  after a delay (mobile, since there's no exit-intent on touch).
+  Show-once-per-30-days via localStorage; never shown again after a
+  successful signup.
 
   Two states inside the dialog:
-    1. Form  — email input + claim button + fine print
-    2. Success — eyebrow, code (big, mono, copyable), follow-up note
+    1. Form  — email input + submit button + fine print
+    2. Success — eyebrow, file label, big download button, follow-up note
 
   Form posts via fetch to /contact (Shopify's customer-form endpoint).
   Successful submit adds the email to Shopify Customers with the tags
   set below — perfect for Klaviyo / Shopify Email segmentation.
 
-  The discount code itself is a static string set in section settings.
-  YOU must create the matching discount code in Shopify admin
-  (Discounts → Create discount → Amount off products / Amount off order).
-  This section only DISPLAYS the code; Shopify validates it at checkout.
+  The freebie itself is a file you upload to Shopify admin →
+  Content → Files. Pick it via the `freebie_file` setting (or paste
+  a URL into `freebie_url_manual` as a fallback). The popup links
+  the download directly — no $0 product, no checkout, no Digital
+  Downloads app required.
 
-  Settings:
-    enabled               — master kill switch
-    eyebrow / title / subhead — form-state copy
-    code                  — the actual discount code string (e.g. WELCOME15)
-    button_label          — submit button text
-    placeholder           — email input placeholder
-    fineprint             — "No spam" line under the form
-    success_eyebrow / success_title / success_subhead — post-submit copy
-    copy_label / copied_label — copy-code button states
-    cooldown_days         — days before re-showing after dismiss (default 30)
-    mobile_delay_seconds  — seconds before showing on touch devices (default 20)
-    desktop_fallback_seconds — fallback delay if exit-intent doesn't fire (default 45)
-    signup_tags           — comma-sep Shopify customer tags applied on submit
+  Append `?ds-popup=1` to any URL on the site to force the popup
+  open for testing (bypasses localStorage + delays).
 {%- endcomment -%}
 
 {%- liquid
@@ -40,7 +31,17 @@
     break
   endunless
 
-  assign code = section.settings.code | default: 'WELCOME15'
+  comment
+    Freebie URL: prefers the Shopify file picker (file_reference) if set,
+    otherwise falls back to whatever URL is typed into the manual field.
+    Either path produces a public URL that the success-state download
+    button links to.
+  endcomment
+  assign freebie_url = section.settings.freebie_file
+  if freebie_url == blank
+    assign freebie_url = section.settings.freebie_url_manual
+  endif
+
   assign cooldown_days = section.settings.cooldown_days | default: 30
   assign mobile_delay = section.settings.mobile_delay_seconds | default: 20
   assign desktop_fallback = section.settings.desktop_fallback_seconds | default: 45
@@ -112,15 +113,29 @@
       {%- endif -%}
 
       <h2 class="ds-newsletter-popup__title">
-        {{- section.settings.success_title | default: 'Your code:' -}}
+        {{- section.settings.success_title | default: 'Your free pack is ready.' -}}
       </h2>
 
-      <div class="ds-newsletter-popup__code" data-code-value="{{ code }}">{{ code }}</div>
+      {%- if section.settings.freebie_label != blank -%}
+        <p class="ds-newsletter-popup__filename">{{ section.settings.freebie_label }}</p>
+      {%- endif -%}
 
-      <button type="button" class="ds-newsletter-popup__copy" data-action="copy">
-        <span data-copy-default>{{ section.settings.copy_label | default: 'Copy code' }}</span>
-        <span data-copy-active hidden>{{ section.settings.copied_label | default: 'Copied ✓' }}</span>
-      </button>
+      {%- if freebie_url != blank -%}
+        <a
+          href="{{ freebie_url }}"
+          class="ds-newsletter-popup__download"
+          download
+          target="_blank"
+          rel="noopener"
+        >
+          {{- section.settings.download_label | default: 'Download free pack' -}}
+          <span aria-hidden="true">↓</span>
+        </a>
+      {%- else -%}
+        <p class="ds-newsletter-popup__error">
+          The freebie file hasn't been set up yet. Add it in Theme editor → Newsletter popup → Freebie file.
+        </p>
+      {%- endif -%}
 
       {%- if section.settings.success_subhead != blank -%}
         <p class="ds-newsletter-popup__fineprint">{{ section.settings.success_subhead }}</p>
@@ -299,44 +314,38 @@
   }
 
   /* ----- Success state ----- */
-  .ds-newsletter-popup__code {
-    display: block;
-    width: 100%;
-    text-align: center;
-    padding: 18px 16px;
-    margin: var(--space-4) 0;
-    background: var(--color-bg);
-    border: 1px dashed var(--color-accent);
-    color: var(--color-accent);
+  .ds-newsletter-popup__filename {
     font-family: var(--font-mono);
-    font-size: clamp(20px, 4vw, 28px);
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    user-select: all;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--color-fg-muted);
+    margin: var(--space-3) 0 var(--space-4);
+    text-transform: uppercase;
   }
-  .ds-newsletter-popup__copy {
+  .ds-newsletter-popup__download {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 20px;
-    background: transparent;
-    color: var(--color-fg);
-    border: 1px solid var(--color-border-strong, var(--color-border));
+    gap: var(--space-2);
+    width: 100%;
+    padding: 16px 20px;
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+    border: 0;
+    text-decoration: none;
     font-family: var(--font-sans);
     font-size: var(--fs-caps, 13px);
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     cursor: pointer;
     transition:
       background var(--t-fast, 150ms) var(--ease, ease-out),
-      color var(--t-fast, 150ms) var(--ease, ease-out),
-      border-color var(--t-fast, 150ms) var(--ease, ease-out);
+      color var(--t-fast, 150ms) var(--ease, ease-out);
   }
-  .ds-newsletter-popup__copy:hover {
+  .ds-newsletter-popup__download:hover {
     background: var(--color-fg);
     color: var(--color-bg);
-    border-color: var(--color-fg);
   }
 
   /* Phone treatment — bottom-sheet style.  Centered modals on small
@@ -556,38 +565,6 @@
       });
     }
 
-    /* ----- Copy code button ----- */
-    var copyBtn = dialog.querySelector('[data-action="copy"]');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', function () {
-        var codeEl = dialog.querySelector('[data-code-value]');
-        if (!codeEl) return;
-        var value = codeEl.getAttribute('data-code-value') || codeEl.textContent.trim();
-        var done = function () {
-          var dflt = copyBtn.querySelector('[data-copy-default]');
-          var actv = copyBtn.querySelector('[data-copy-active]');
-          if (dflt && actv) {
-            dflt.hidden = true;
-            actv.hidden = false;
-            setTimeout(function () {
-              dflt.hidden = false;
-              actv.hidden = true;
-            }, 1800);
-          }
-        };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(value).then(done, function () {/* swallow */});
-        } else {
-          /* legacy fallback */
-          var ta = document.createElement('textarea');
-          ta.value = value;
-          document.body.appendChild(ta);
-          ta.select();
-          try { document.execCommand('copy'); done(); } catch (e) {}
-          document.body.removeChild(ta);
-        }
-      });
-    }
   })();
 </script>
 
@@ -607,19 +584,19 @@
       "type": "text",
       "id": "eyebrow",
       "label": "Eyebrow",
-      "default": "EXCLUSIVE OFFER"
+      "default": "FREE PACK"
     },
     {
       "type": "text",
       "id": "title",
       "label": "Title",
-      "default": "Get 15% off"
+      "default": "Get a free pack."
     },
     {
       "type": "textarea",
       "id": "subhead",
       "label": "Subhead",
-      "default": "Your first order of Disrupted Studio assets. Plus first dibs on drops and the occasional behind-the-scenes."
+      "default": "Drop your email and we'll send you a Disrupted Studio starter pack. Plus first dibs on drops and behind-the-scenes."
     },
     {
       "type": "text",
@@ -631,7 +608,7 @@
       "type": "text",
       "id": "button_label",
       "label": "Submit button label",
-      "default": "Claim 15% off"
+      "default": "Send me the pack"
     },
     {
       "type": "text",
@@ -639,13 +616,34 @@
       "label": "Fine print",
       "default": "No spam. Unsubscribe anytime."
     },
-    { "type": "header", "content": "Discount code" },
+    { "type": "header", "content": "Free pack file" },
+    {
+      "type": "paragraph",
+      "content": "Upload your freebie to Shopify admin → Content → Files first, then pick it here. Any file type works (zip, mp4, otf, pdf, etc.)."
+    },
+    {
+      "type": "file_reference",
+      "id": "freebie_file",
+      "label": "Freebie file"
+    },
     {
       "type": "text",
-      "id": "code",
-      "label": "Code",
-      "default": "WELCOME15",
-      "info": "Must match a discount code you've created in Shopify admin → Discounts. This section only displays the code; Shopify validates it at checkout."
+      "id": "freebie_url_manual",
+      "label": "Or paste a URL",
+      "info": "Optional fallback if the file picker above doesn't accept your file type. Use the direct CDN URL from Shopify Files."
+    },
+    {
+      "type": "text",
+      "id": "freebie_label",
+      "label": "File label",
+      "default": "Disrupted Studio Starter Pack",
+      "info": "Shown above the download button in the success state. Tells the user what they're getting."
+    },
+    {
+      "type": "text",
+      "id": "download_label",
+      "label": "Download button label",
+      "default": "Download free pack"
     },
     { "type": "header", "content": "Success state" },
     {
@@ -658,25 +656,13 @@
       "type": "text",
       "id": "success_title",
       "label": "Title",
-      "default": "Your code:"
+      "default": "Your free pack is ready."
     },
     {
       "type": "textarea",
       "id": "success_subhead",
       "label": "Subhead",
-      "default": "Enter at checkout for 15% off. We also sent it to your inbox."
-    },
-    {
-      "type": "text",
-      "id": "copy_label",
-      "label": "Copy button — default",
-      "default": "Copy code"
-    },
-    {
-      "type": "text",
-      "id": "copied_label",
-      "label": "Copy button — confirmed",
-      "default": "Copied ✓"
+      "default": "We also sent the link to your inbox so you can grab it later. Welcome to the studio."
     },
     { "type": "header", "content": "Behavior" },
     {
