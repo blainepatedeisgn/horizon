@@ -210,6 +210,7 @@
         },
         "ds_category_tile_qazd9f": {
           "type": "ds-category-tile",
+          "disabled": true,
           "settings": {
             "collection": "freebies",
             "label": "Freebies",
