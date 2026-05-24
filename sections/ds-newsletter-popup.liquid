@@ -1,28 +1,35 @@
 {%- comment -%}
-  sections/ds-newsletter-popup.liquid — Free download popup (v2)
+  sections/ds-newsletter-popup.liquid — Two-step Yes/No popup (v3)
 
-  Native <dialog> popup that promises a free downloadable asset in
-  exchange for an email signup. Triggers on exit-intent (desktop) or
-  after a delay (mobile, since there's no exit-intent on touch).
-  Show-once-per-30-days via localStorage; never shown again after a
-  successful signup.
+  Why two-step:
+    Single-step popups (email field immediately) convert ~3-5% on
+    average; two-step Yes/No popups convert 8-12%+ (Mott & Bow case
+    study: 100K subs in 6 months at 10%+). The mechanism: clicking
+    "YES, SEND IT" creates a tiny commitment ("foot in the door").
+    When the email field then appears, abandoning feels like
+    reversing your own choice. Compound that with first-person CTA
+    copy ("Send me the font" beats "Subscribe" by ~90% CTR in
+    Unbounce tests) and a dollar-value anchor (Obscura Gothic is
+    framed as "normally $39") and the popup punches well above
+    a generic newsletter signup.
 
-  Two states inside the dialog:
-    1. Form  — email input + submit button + fine print
-    2. Success — eyebrow, file label, big download button, follow-up note
+  Three steps inside the dialog:
+    1. ask     — Yes/No question with value anchor (no email field yet)
+    2. form    — email capture, revealed only after Yes
+    3. success — download button + confirmation copy
 
-  Form posts via fetch to /contact (Shopify's customer-form endpoint).
-  Successful submit adds the email to Shopify Customers with the tags
-  set below — perfect for Klaviyo / Shopify Email segmentation.
+  Submission paths (parallel, both fire on form submit):
+    - Shopify customer form via hidden iframe → creates the customer
+      record with tags (popup-signup) for segmentation
+    - Klaviyo client subscription API → instant welcome-email trigger
+      (skips the 5-15 min Shopify→Klaviyo sync delay). Optional —
+      only fires when klaviyo_company_id + klaviyo_list_id are set.
 
-  The freebie itself is a file you upload to Shopify admin →
-  Content → Files. Pick it via the `freebie_file` setting (or paste
-  a URL into `freebie_url_manual` as a fallback). The popup links
-  the download directly — no $0 product, no checkout, no Digital
-  Downloads app required.
+  Localstorage gate:
+    ds_newsletter_signedup   — set on success; never show again
+    ds_newsletter_dismissed  — set on close / No-thanks; cooldown_days
 
-  Append `?ds-popup=1` to any URL on the site to force the popup
-  open for testing (bypasses localStorage + delays).
+  Append ?ds-popup=1 to any URL to force-open for testing.
 {%- endcomment -%}
 
 {%- liquid
@@ -31,26 +38,11 @@
     break
   endunless
 
-  comment
-    Freebie URL: pasted from Shopify admin → Content → Files after
-    uploading the freebie. Section setting is plain text because
-    Shopify section schemas don't have a generic file picker type
-    (image_picker / video are for media only).
-  endcomment
   assign freebie_url = section.settings.freebie_url
-
   assign cooldown_days = section.settings.cooldown_days | default: 30
   assign mobile_delay = section.settings.mobile_delay_seconds | default: 20
   assign desktop_fallback = section.settings.desktop_fallback_seconds | default: 45
   assign signup_tags = section.settings.signup_tags | default: 'newsletter, popup-signup'
-
-  comment
-    Klaviyo direct-subscription credentials. Both must be set for
-    the JS to also POST to Klaviyo's client subscription API in
-    parallel with the Shopify customer form. If either is blank,
-    the popup falls back to the original Shopify-only iframe path
-    and customers reach Klaviyo via the normal sync (5-15 min lag).
-  endcomment
   assign klaviyo_company_id = section.settings.klaviyo_company_id
   assign klaviyo_list_id = section.settings.klaviyo_list_id
 -%}
@@ -73,18 +65,52 @@
       aria-label="Close"
     >×</button>
 
-    {%- comment -%} FORM STATE {%- endcomment -%}
-    <div class="ds-newsletter-popup__step" data-step="form">
-      {%- if section.settings.eyebrow != blank -%}
-        <p class="ds-newsletter-popup__eyebrow">{{ section.settings.eyebrow }}</p>
+    {%- comment -%} ============= STEP 1: ASK (Yes/No, no email field) ============= {%- endcomment -%}
+    <div class="ds-newsletter-popup__step" data-step="ask">
+      {%- if section.settings.ask_eyebrow != blank -%}
+        <p class="ds-newsletter-popup__eyebrow">{{ section.settings.ask_eyebrow }}</p>
       {%- endif -%}
 
       <h2 class="ds-newsletter-popup__title" id="ds-newsletter-popup-title">
-        {{- section.settings.title | default: 'Get 15% off' -}}
+        {{- section.settings.ask_title | default: 'Want Obscura Gothic, free?' -}}
       </h2>
 
-      {%- if section.settings.subhead != blank -%}
-        <p class="ds-newsletter-popup__subhead">{{ section.settings.subhead }}</p>
+      {%- if section.settings.ask_subhead != blank -%}
+        <p class="ds-newsletter-popup__subhead">{{ section.settings.ask_subhead }}</p>
+      {%- endif -%}
+
+      <button
+        type="button"
+        class="ds-newsletter-popup__yes"
+        data-action="advance"
+      >
+        {{- section.settings.ask_yes_label | default: 'Yes, send it' -}}
+        <span aria-hidden="true">&rarr;</span>
+      </button>
+
+      <button
+        type="button"
+        class="ds-newsletter-popup__no"
+        data-action="close"
+      >
+        {{- section.settings.ask_no_label | default: 'No thanks, I have enough fonts' -}}
+      </button>
+    </div>
+
+    {%- comment -%} ============= STEP 2: FORM (email capture) ============= {%- endcomment -%}
+    <div class="ds-newsletter-popup__step" data-step="form" hidden>
+      {%- if section.settings.form_eyebrow != blank -%}
+        <p class="ds-newsletter-popup__eyebrow ds-newsletter-popup__eyebrow--accent">
+          {{ section.settings.form_eyebrow }}
+        </p>
+      {%- endif -%}
+
+      <h2 class="ds-newsletter-popup__title">
+        {{- section.settings.form_title | default: 'Where should we send it?' -}}
+      </h2>
+
+      {%- if section.settings.form_subhead != blank -%}
+        <p class="ds-newsletter-popup__subhead">{{ section.settings.form_subhead }}</p>
       {%- endif -%}
 
       {%- form 'customer', class: 'ds-newsletter-popup__form-tag', target: 'ds-newsletter-popup-target' -%}
@@ -102,23 +128,20 @@
           >
           <button type="submit" class="ds-newsletter-popup__submit">
             {{- section.settings.button_label | default: 'Send me the font' -}}
-            <span aria-hidden="true">→</span>
+            <span aria-hidden="true">&rarr;</span>
           </button>
         </div>
 
         <p class="ds-newsletter-popup__error" data-error hidden></p>
         <p class="ds-newsletter-popup__fineprint">
-          {{- section.settings.fineprint | default: 'No spam. Unsubscribe anytime.' -}}
+          {{- section.settings.fineprint | default: 'One font + one process note per month. Unsubscribe anytime.' -}}
         </p>
       {%- endform -%}
 
       {%- comment -%}
         Hidden iframe acts as the form's POST target so the main page
-        doesn't reload on submit. Shopify accepts a normal multipart
-        form POST to /contact; we just redirect the response into this
-        offscreen iframe instead of replacing the page. The JS listens
-        for the iframe's load event (after the first empty load) and
-        treats that as success.
+        doesn't reload on submit. JS listens for its load event to
+        treat that as "Shopify response received → show success."
       {%- endcomment -%}
       <iframe
         name="ds-newsletter-popup-target"
@@ -129,7 +152,7 @@
       ></iframe>
     </div>
 
-    {%- comment -%} SUCCESS STATE {%- endcomment -%}
+    {%- comment -%} ============= STEP 3: SUCCESS (download) ============= {%- endcomment -%}
     <div class="ds-newsletter-popup__step" data-step="success" hidden>
       {%- if section.settings.success_eyebrow != blank -%}
         <p class="ds-newsletter-popup__eyebrow ds-newsletter-popup__eyebrow--accent">
@@ -138,7 +161,7 @@
       {%- endif -%}
 
       <h2 class="ds-newsletter-popup__title">
-        {{- section.settings.success_title | default: 'Your free pack is ready.' -}}
+        {{- section.settings.success_title | default: 'Obscura Gothic is yours.' -}}
       </h2>
 
       {%- if section.settings.freebie_label != blank -%}
@@ -153,12 +176,12 @@
           target="_blank"
           rel="noopener"
         >
-          {{- section.settings.download_label | default: 'Download free pack' -}}
-          <span aria-hidden="true">↓</span>
+          {{- section.settings.download_label | default: 'Download Obscura Gothic' -}}
+          <span aria-hidden="true">&darr;</span>
         </a>
       {%- else -%}
         <p class="ds-newsletter-popup__error">
-          The freebie file hasn't been set up yet. Add it in Theme editor → Newsletter popup → Freebie file.
+          The freebie file hasn't been set up yet. Add it in Theme editor → Newsletter popup → Freebie file URL.
         </p>
       {%- endif -%}
 
@@ -171,7 +194,6 @@
 
 {% style %}
   .ds-newsletter-popup {
-    /* Reset native dialog chrome — same approach as cart drawer + demo modal */
     inset: 0;
     padding: 0;
     border: 0;
@@ -185,10 +207,8 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
   }
-  /* When open, use flexbox to center the panel both axes. The native
-     dialog's default display:block + margin:auto only centers
-     horizontally, so without this rule the panel falls to the top of
-     the viewport and looks broken (or invisible if you're scrolled). */
+  /* Flex on [open] so the panel centers both axes — native dialog
+     defaults to display:block which only centers horizontally. */
   .ds-newsletter-popup[open] {
     display: flex;
     align-items: center;
@@ -196,8 +216,6 @@
   }
   .ds-newsletter-popup:not([open]) { display: none; }
 
-  /* The actual content panel — sits inside the dialog so we can size it
-     independently of the dialog's fullscreen scrim. */
   .ds-newsletter-popup__panel {
     position: relative;
     width: min(92vw, 460px);
@@ -208,11 +226,9 @@
     border: 1px solid var(--color-border);
     padding: clamp(28px, 4vw, 44px) clamp(24px, 4vw, 40px);
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-    /* Centered via the dialog's display:flex when [open]. */
   }
 
-  /* Entrance — opacity + slight scale, gated by @starting-style so it
-     plays once on showModal. Modern browsers (Safari 17.4+, Chrome 117+). */
+  /* Entrance animation — opacity + slight scale, gated by @starting-style. */
   @starting-style {
     .ds-newsletter-popup[open] .ds-newsletter-popup__panel {
       opacity: 0;
@@ -238,8 +254,6 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    /* 40px tap target — Apple guideline is 44px minimum but a corner
-       X with this glyph reads cluttered at 44px. 40 is the compromise. */
     width: 40px;
     height: 40px;
     background: transparent;
@@ -251,10 +265,6 @@
     padding: 0;
     transition: color var(--t-fast, 150ms) var(--ease, ease-out);
   }
-  /* Hover only on devices with a real pointer. On iOS / Android the
-     :hover state sticks after a tap until the user taps elsewhere,
-     which means the X stays orange (or buttons stay filled) long
-     after the interaction. (hover: hover) excludes touch devices. */
   @media (hover: hover) {
     .ds-newsletter-popup__close:hover { color: var(--color-accent); }
   }
@@ -289,7 +299,66 @@
     max-width: 38ch;
   }
 
-  /* Stack input + button on mobile (matches the inline newsletter card pattern) */
+  /* ----- STEP 1: Yes button (primary, dashed-border coupon) ----- */
+  .ds-newsletter-popup__yes {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: 18px 20px;
+    background: transparent;
+    color: var(--color-fg);
+    border: 2px dashed var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: var(--fs-caps, 13px);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background var(--t-fast, 150ms) var(--ease, ease-out),
+      color var(--t-fast, 150ms) var(--ease, ease-out),
+      border-color var(--t-fast, 150ms) var(--ease, ease-out),
+      transform var(--t-fast, 150ms) var(--ease, ease-out);
+  }
+  @media (hover: hover) {
+    .ds-newsletter-popup__yes:hover {
+      background: var(--color-accent);
+      color: var(--color-accent-fg);
+      border-color: var(--color-accent);
+    }
+  }
+  .ds-newsletter-popup__yes:active { transform: translateY(1px); }
+
+  /* ----- STEP 1: No-thanks link (text, muted, no border) ----- */
+  .ds-newsletter-popup__no {
+    display: block;
+    width: 100%;
+    margin: var(--space-4) auto 0;
+    padding: 6px 10px;
+    background: transparent;
+    border: 0;
+    color: var(--color-fg-faint, var(--color-fg-muted));
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color var(--t-fast, 150ms) var(--ease, ease-out);
+  }
+  @media (hover: hover) {
+    .ds-newsletter-popup__no:hover { color: var(--color-fg); }
+  }
+  .ds-newsletter-popup__no:focus { outline: 0; }
+  .ds-newsletter-popup__no:focus-visible {
+    outline: 1px solid var(--color-fg);
+    outline-offset: 2px;
+  }
+
+  /* ----- STEP 2: form (email + submit) ----- */
   .ds-newsletter-popup__form {
     display: flex;
     flex-direction: column;
@@ -309,8 +378,7 @@
   .ds-newsletter-popup__input::placeholder { color: var(--color-fg-faint, var(--color-fg-muted)); }
   .ds-newsletter-popup__input:focus { border-color: var(--color-fg); }
 
-  /* Hidden iframe = form POST target. Zero size, no visibility,
-     no layout impact, no focus-grabbing. */
+  /* Hidden iframe = form POST target. Zero size, no layout impact. */
   .ds-newsletter-popup__iframe {
     position: absolute;
     width: 0;
@@ -321,10 +389,6 @@
   }
 
   .ds-newsletter-popup__submit {
-    /* Dashed-border "coupon ticket" treatment — borrowed visual cue
-       from print coupons / cut-here lines. Transparent fill at rest
-       so the dashes read clearly against the dark panel; fills with
-       accent orange on hover for the confirm-action shift. */
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -369,7 +433,7 @@
     margin: var(--space-4) 0 0;
   }
 
-  /* ----- Success state ----- */
+  /* ----- STEP 3: success ----- */
   .ds-newsletter-popup__filename {
     font-family: var(--font-mono);
     font-size: 12px;
@@ -406,14 +470,8 @@
     }
   }
 
-  /* Phone treatment — bottom-sheet style.  Centered modals on small
-     screens are awful (keyboard covers the input, the whole viewport
-     feels stolen).  Bottom sheet keeps the page visible above the
-     popup and feels less intrusive. */
+  /* ----- Mobile bottom-sheet treatment ----- */
   @media (max-width: 600px) {
-    /* Bottom-sheet alignment — anchor the panel to the bottom of the
-       flex container, with horizontal + bottom padding so it stops
-       short of the viewport edges and reads as a contained card. */
     .ds-newsletter-popup[open] {
       align-items: end;
       padding: 0 12px calc(12px + env(safe-area-inset-bottom));
@@ -422,19 +480,8 @@
       width: 100%;
       max-width: 100%;
       padding: calc(var(--space-5) + 8px) var(--space-5) var(--space-6);
-      /* Keep the base 1px border on all four sides — the panel now
-         floats inside its dialog with side margins, so the card has
-         visible edges instead of bleeding into the screen edges. */
-      /* 85dvh = dynamic viewport height. On modern iOS/Android this
-         accounts for the URL bar but NOT the keyboard. Combined with
-         overflow:auto on the panel, this means content stays scrollable
-         even when the keyboard is open. */
       max-height: 85dvh;
     }
-    /* Bottom-sheet grab handle — small bar at the top of the panel.
-       Modern mobile UI convention (Apple Maps, iOS share sheets,
-       Spotify, etc.) that signals "this sheet can be dismissed."
-       Purely decorative; the X is still the explicit close action. */
     .ds-newsletter-popup__panel::before {
       content: "";
       position: absolute;
@@ -446,8 +493,6 @@
       background: var(--color-border-strong, var(--color-border));
       border-radius: 2px;
     }
-    /* Bigger X tap zone on phones (Apple's 44px guideline). The
-       glyph stays the same size — the box grows around it. */
     .ds-newsletter-popup__close {
       top: 14px;
       right: 8px;
@@ -457,7 +502,7 @@
     @starting-style {
       .ds-newsletter-popup[open] .ds-newsletter-popup__panel {
         opacity: 0;
-        transform: translateY(24px);  /* slide up instead of fade-in-place */
+        transform: translateY(24px);
       }
     }
   }
@@ -465,24 +510,24 @@
 
 <script>
   /* ============================================================
-     DS Newsletter popup controller
+     DS Newsletter popup controller — two-step
 
-     - Reads cooldown / trigger settings from data-* attrs on the
-       <dialog> element.
-     - localStorage gate:
-         ds_newsletter_signedup  -> never show again
-         ds_newsletter_dismissed -> ISO date; reshow after cooldown_days
-     - Trigger:
-         desktop (hover: hover) → mouseleave from top of viewport
-                                  fallback timer (desktop_fallback)
-         mobile (no hover)      → setTimeout(mobile_delay * 1000)
-     - Submit:
-         fetch POST to /contact with FormData.  Shopify returns 302
-         on success; on AJAX, the redirect is followed but the final
-         response.ok will still be true.  We treat any 2xx as success.
-     - Esc and backdrop click close via native <dialog> behavior; we
-       just wire up the close button and listen for the 'close' event
-       to set the dismissed cookie.
+     States:
+       ask     → user sees Yes/No question (initial)
+       form    → email capture (revealed after Yes click)
+       success → download button (revealed after submit)
+
+     Trigger logic same as v2: exit-intent + fallback timer on
+     desktop; pure delay on touch devices. Localstorage gates
+     re-show via dismissed timestamp + permanent signedup flag.
+
+     Submission paths fire in parallel:
+       1. Shopify customer form → iframe → creates customer record
+       2. Klaviyo subscription API → instant welcome flow trigger
+          (only when company_id + list_id are configured)
+
+     Append ?ds-popup=1 to any URL to force-open for testing
+     (bypasses gates + delays).
      ============================================================ */
   (function () {
     var dialog = document.getElementById('ds-newsletter-popup');
@@ -493,17 +538,15 @@
     var STORAGE_DISMISS = 'ds_newsletter_dismissed';
 
     var cooldownDays = parseInt(dialog.dataset.cooldownDays, 10) || 30;
-    var mobileDelay  = (parseInt(dialog.dataset.mobileDelay, 10) || 20) * 1000;
+    var mobileDelay = (parseInt(dialog.dataset.mobileDelay, 10) || 20) * 1000;
     var desktopFallback = (parseInt(dialog.dataset.desktopFallback, 10) || 45) * 1000;
 
-    /* Debug bypass — append ?ds-popup=1 to any URL on the site to force
-       the popup open immediately, ignoring localStorage and trigger
-       delays. Useful for previewing in the theme editor or showing
-       collaborators what the popup looks like without having to clear
-       cookies. The bypass also keeps you from being marked as
-       dismissed/signed-up when you close it. */
-    var params = new URLSearchParams(window.location.search || '');
-    var DEBUG_FORCE = params.get('ds-popup') === '1';
+    /* ?ds-popup=1 force-open bypass (for testing) */
+    var DEBUG_FORCE = false;
+    try {
+      var params = new URLSearchParams(window.location.search);
+      DEBUG_FORCE = params.get('ds-popup') === '1';
+    } catch (e) {}
 
     /* ----- Gate ----- */
     function shouldSkip() {
@@ -518,9 +561,6 @@
         }
       } catch (e) { /* localStorage disabled — show anyway */ }
 
-      /* Don't show on Shopify checkout / order-status (different domains
-         usually, but defensively also skip cart and account pages where
-         the user is mid-task). */
       var path = (window.location.pathname || '').toLowerCase();
       if (path.indexOf('/cart') === 0) return true;
       if (path.indexOf('/account') === 0) return true;
@@ -531,19 +571,16 @@
     }
     if (shouldSkip()) return;
 
-    /* ----- Open / close helpers ----- */
+    /* ----- Open helper. Focus the Yes button on open so keyboard
+             users can advance with Enter immediately. ----- */
     var hasOpened = false;
     function openPopup() {
       if (hasOpened) return;
       hasOpened = true;
       try { dialog.showModal(); } catch (e) { return; }
-      /* Move focus to the email input after opening so the keyboard
-         can pop up on mobile and users can type immediately. */
-      var input = dialog.querySelector('.ds-newsletter-popup__input');
-      if (input) {
-        /* small delay — Safari can refuse to autofocus inside dialog
-           if called synchronously. */
-        setTimeout(function () { input.focus(); }, 50);
+      var yesBtn = dialog.querySelector('[data-action="advance"]');
+      if (yesBtn) {
+        setTimeout(function () { yesBtn.focus(); }, 50);
       }
     }
 
@@ -560,72 +597,62 @@
     var isCoarse = window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
     if (DEBUG_FORCE) {
-      /* Debug bypass — open immediately, no waiting. */
+      /* Force-open immediately for testing */
       openPopup();
     } else if (isCoarse) {
-      /* Mobile / touch: simple delay */
       setTimeout(openPopup, mobileDelay);
     } else {
-      /* Desktop: exit-intent + fallback timer */
       var onLeave = function (e) {
-        /* Only treat as exit-intent if the cursor leaves through the
-           top of the viewport (toward the tab/address bar). */
         if (e.clientY <= 0) openPopup();
       };
       document.addEventListener('mouseleave', onLeave, { once: false });
       setTimeout(openPopup, desktopFallback);
-      /* Clean up the listener once we've opened */
       dialog.addEventListener('close', function () {
         document.removeEventListener('mouseleave', onLeave);
       }, { once: true });
     }
 
-    /* ----- Close button ----- */
-    var closeBtn = dialog.querySelector('[data-action="close"]');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', function () { dialog.close(); });
+    /* ----- Step refs ----- */
+    var stepAsk = dialog.querySelector('[data-step="ask"]');
+    var stepForm = dialog.querySelector('[data-step="form"]');
+    var stepSuccess = dialog.querySelector('[data-step="success"]');
+    var formEl = dialog.querySelector('form.ds-newsletter-popup__form-tag');
+    var iframeEl = dialog.querySelector('.ds-newsletter-popup__iframe');
+    var errorEl = dialog.querySelector('[data-error]');
+    var submitBtn = dialog.querySelector('.ds-newsletter-popup__submit');
+
+    /* ----- Step 1 → Step 2 advance (Yes button) ----- */
+    var advanceBtn = dialog.querySelector('[data-action="advance"]');
+    if (advanceBtn && stepAsk && stepForm) {
+      advanceBtn.addEventListener('click', function () {
+        stepAsk.hidden = true;
+        stepForm.hidden = false;
+        /* Focus the email input so users can start typing immediately.
+           Small delay to let mobile keyboards behave. */
+        var emailInput = stepForm.querySelector('input[type="email"]');
+        if (emailInput) {
+          setTimeout(function () { emailInput.focus(); }, 50);
+        }
+      });
     }
-    /* Click backdrop to close — clicks on the <dialog> itself (outside
-       the panel) bubble; the panel stops propagation via its own bounds. */
+
+    /* ----- Close buttons (X in corner + "No thanks" link) ----- */
+    var closeBtns = dialog.querySelectorAll('[data-action="close"]');
+    closeBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () { dialog.close(); });
+    });
+
+    /* Click backdrop (the dialog itself outside the panel) to close */
     dialog.addEventListener('click', function (e) {
       if (e.target === dialog) dialog.close();
     });
-    /* Native close event fires for X click, ESC, dialog.close().
-       Record the dismiss so we don't re-show during cooldown.
-       Skip the record when running in DEBUG_FORCE so testing doesn't
-       leave a dismiss cookie behind. */
+
     dialog.addEventListener('close', function () {
       if (DEBUG_FORCE) return;
       if (localStorage.getItem(STORAGE_SIGNUP) !== '1') recordDismiss();
     });
 
-    /* ----- Form submit (iframe target) -----
-       The form posts natively to /contact but targets the hidden iframe
-       we added to the markup. The main page never reloads. We listen
-       for the iframe's 'load' event after the first (initial empty)
-       load — that signals the response has come back and we can swap
-       to the success state.
-
-       Why iframe instead of fetch: Shopify's /contact endpoint is
-       not designed for AJAX submission. Our earlier fetch+FormData
-       attempt was throwing in the response chain even when the
-       customer was successfully created — the iframe approach lets
-       the browser handle the POST natively without CORS/redirect
-       quirks. */
-    var formEl = dialog.querySelector('form.ds-newsletter-popup__form-tag');
-    var iframeEl = dialog.querySelector('.ds-newsletter-popup__iframe');
-    var stepForm = dialog.querySelector('[data-step="form"]');
-    var stepSuccess = dialog.querySelector('[data-step="success"]');
-    var errorEl = dialog.querySelector('[data-error]');
-    var submitBtn = dialog.querySelector('.ds-newsletter-popup__submit');
-
-    /* Klaviyo direct-subscription credentials (optional). When both
-       are set in the section settings, we ALSO POST to Klaviyo's
-       client subscription API in parallel with the Shopify form
-       submit. Klaviyo's welcome flow then fires within seconds
-       instead of waiting on the Shopify→Klaviyo sync (5-15 min).
-       The Shopify form still submits normally so the customer
-       record is created in Shopify too. */
+    /* ----- Klaviyo direct-API submission (optional) ----- */
     var klaviyoCompanyId = dialog.dataset.klaviyoCompanyId || '';
     var klaviyoListId = dialog.dataset.klaviyoListId || '';
 
@@ -674,8 +701,6 @@
           console.warn('[ds-newsletter-popup] Klaviyo returned status', resp.status);
         }
       }).catch(function (err) {
-        /* Non-blocking — Shopify iframe submit is still our source
-           of truth. Klaviyo just lets the welcome email fire faster. */
         console.warn('[ds-newsletter-popup] Klaviyo subscribe failed', err);
       });
     }
@@ -686,9 +711,8 @@
       errorEl.hidden = true;
     }
 
+    /* ----- Step 2 form submit ----- */
     if (formEl && iframeEl && stepForm && stepSuccess) {
-      /* iframes fire 'load' once on initial render (about:blank).
-         We only want to react to loads that happen AFTER a submit. */
       var hasSubmitted = false;
 
       formEl.addEventListener('submit', function () {
@@ -696,8 +720,8 @@
         hasSubmitted = true;
         if (submitBtn) submitBtn.disabled = true;
 
-        /* Fire-and-forget parallel Klaviyo subscription. Doesn't block
-           or replace the Shopify iframe submission below. */
+        /* Fire-and-forget Klaviyo subscription. Shopify iframe
+           submission is the source of truth for success. */
         var emailInput = formEl.querySelector('input[name="contact[email]"]');
         if (emailInput && emailInput.value) {
           submitToKlaviyo(emailInput.value.trim());
@@ -706,7 +730,6 @@
 
       iframeEl.addEventListener('load', function () {
         if (!hasSubmitted) return;
-        /* Submitted + iframe loaded = response received. Show success. */
         stepForm.hidden = true;
         stepSuccess.hidden = false;
         recordSignup();
@@ -727,24 +750,62 @@
       "default": true,
       "info": "Master kill switch. Turn off to disable the popup site-wide without removing the section."
     },
-    { "type": "header", "content": "Form copy" },
+
+    { "type": "header", "content": "Step 1 — Yes/No question" },
     {
-      "type": "text",
-      "id": "eyebrow",
-      "label": "Eyebrow",
-      "default": "FREE FONT"
+      "type": "paragraph",
+      "content": "The first thing visitors see. A value-anchored question with two choices. Clicking 'Yes' reveals the email field; clicking 'No' closes the popup."
     },
     {
       "type": "text",
-      "id": "title",
+      "id": "ask_eyebrow",
+      "label": "Eyebrow",
+      "default": "FREE FONT · NORMALLY $39",
+      "info": "Small mono caps line above the question. The dollar-value anchor triggers loss aversion in designers who know what fonts cost."
+    },
+    {
+      "type": "text",
+      "id": "ask_title",
       "label": "Title",
-      "default": "Get Obscura Gothic — free."
+      "default": "Want Obscura Gothic, free?"
     },
     {
       "type": "textarea",
-      "id": "subhead",
+      "id": "ask_subhead",
       "label": "Subhead",
-      "default": "Drop your email and we'll send you the full font, free. Plus first dibs on new drops."
+      "default": "A brutalist display face for posters, editorial, and identity work."
+    },
+    {
+      "type": "text",
+      "id": "ask_yes_label",
+      "label": "Yes button label",
+      "default": "Yes, send it"
+    },
+    {
+      "type": "text",
+      "id": "ask_no_label",
+      "label": "No-thanks link label",
+      "default": "No thanks, I have enough fonts"
+    },
+
+    { "type": "header", "content": "Step 2 — Email capture" },
+    {
+      "type": "text",
+      "id": "form_eyebrow",
+      "label": "Eyebrow",
+      "default": "ALMOST YOURS"
+    },
+    {
+      "type": "text",
+      "id": "form_title",
+      "label": "Title",
+      "default": "Where should we send it?"
+    },
+    {
+      "type": "textarea",
+      "id": "form_subhead",
+      "label": "Subhead",
+      "default": "We'll email the font + one process note per month. No spam."
     },
     {
       "type": "text",
@@ -756,39 +817,17 @@
       "type": "text",
       "id": "button_label",
       "label": "Submit button label",
-      "default": "Send me the font"
+      "default": "Send me the font",
+      "info": "First-person CTA ('Send me' vs 'Subscribe') tested ~90% higher CTR in Unbounce studies."
     },
     {
       "type": "text",
       "id": "fineprint",
-      "label": "Fine print",
-      "default": "No spam. Unsubscribe anytime."
+      "label": "Fine print under form",
+      "default": "One font + one process note per month. Unsubscribe anytime."
     },
-    { "type": "header", "content": "Free pack file" },
-    {
-      "type": "paragraph",
-      "content": "1) Upload your freebie to Shopify admin → Content → Files. 2) Click the link icon next to the file to copy its CDN URL. 3) Paste below."
-    },
-    {
-      "type": "text",
-      "id": "freebie_url",
-      "label": "Freebie file URL",
-      "info": "Direct CDN URL from Shopify Files (looks like https://cdn.shopify.com/s/files/1/.../files/your-pack.zip)."
-    },
-    {
-      "type": "text",
-      "id": "freebie_label",
-      "label": "File label",
-      "default": "Obscura Gothic — Display Font",
-      "info": "Shown above the download button in the success state. Tells the user what they're getting."
-    },
-    {
-      "type": "text",
-      "id": "download_label",
-      "label": "Download button label",
-      "default": "Download Obscura Gothic"
-    },
-    { "type": "header", "content": "Success state" },
+
+    { "type": "header", "content": "Step 3 — Success state" },
     {
       "type": "text",
       "id": "success_eyebrow",
@@ -802,11 +841,36 @@
       "default": "Obscura Gothic is yours."
     },
     {
+      "type": "text",
+      "id": "freebie_label",
+      "label": "File label (above download button)",
+      "default": "Obscura Gothic — Display Font"
+    },
+    {
+      "type": "text",
+      "id": "download_label",
+      "label": "Download button label",
+      "default": "Download Obscura Gothic"
+    },
+    {
       "type": "textarea",
       "id": "success_subhead",
       "label": "Subhead",
       "default": "We also sent the link to your inbox so you can grab it later. Welcome to the studio."
     },
+
+    { "type": "header", "content": "Freebie file URL" },
+    {
+      "type": "paragraph",
+      "content": "1) Upload your freebie to Shopify admin → Content → Files. 2) Click the link icon next to the file to copy its CDN URL. 3) Paste below."
+    },
+    {
+      "type": "text",
+      "id": "freebie_url",
+      "label": "Freebie file URL",
+      "info": "Direct CDN URL from Shopify Files (looks like https://cdn.shopify.com/s/files/1/.../files/your-pack.zip)."
+    },
+
     { "type": "header", "content": "Behavior" },
     {
       "type": "range",
@@ -836,16 +900,18 @@
       "max": 120,
       "step": 5,
       "default": 45,
-      "info": "Backup timer on desktop in case exit-intent never fires (e.g., user spends a long time on the page without moving the mouse to the address bar)."
+      "info": "Backup timer on desktop in case exit-intent never fires."
     },
+
     { "type": "header", "content": "Klaviyo / Shopify Email" },
     {
       "type": "text",
       "id": "signup_tags",
       "label": "Customer tags",
       "default": "newsletter, popup-signup",
-      "info": "Comma-separated tags applied to the Shopify customer record on signup. Use these to segment your list (e.g. trigger a Klaviyo welcome flow on 'popup-signup')."
+      "info": "Comma-separated tags applied to the Shopify customer record on signup."
     },
+
     { "type": "header", "content": "Klaviyo direct API (optional)" },
     {
       "type": "paragraph",
@@ -861,7 +927,7 @@
       "type": "text",
       "id": "klaviyo_list_id",
       "label": "Klaviyo List ID",
-      "info": "Klaviyo → Lists & Segments → click your list → the ID appears in the URL (klaviyo.com/list/XYZ123). Create a list called 'Popup Signups' first if you don't have one."
+      "info": "Klaviyo → Lists & Segments → click your list → ID is in the URL (klaviyo.com/list/XYZ123)."
     }
   ],
   "presets": [
