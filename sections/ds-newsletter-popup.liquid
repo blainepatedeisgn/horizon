@@ -733,6 +733,17 @@
         stepForm.hidden = true;
         stepSuccess.hidden = false;
         recordSignup();
+
+        /* Meta Pixel — fire CompleteRegistration (aka Lead) so Meta
+           treats popup signups as warm prospects for retargeting.
+           Guarded with typeof check in case the pixel snippet isn't
+           loaded (e.g. ad-blockers, consent gating). */
+        if (typeof fbq === 'function') {
+          fbq('track', 'CompleteRegistration', {
+            content_name: 'Newsletter popup signup',
+            status: 'submitted'
+          });
+        }
       });
     }
 

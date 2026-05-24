@@ -1,0 +1,155 @@
+{%- comment -%}
+  snippets/ds-meta-pixel.liquid — Meta Pixel + ecommerce events
+
+  Rendered in <head> via layout/theme.liquid so the base pixel loads
+  on every page before any event tags fire.
+
+  Events:
+    PageView              — Meta's base pixel, every page
+    ViewContent           — product pages, with product data
+    Search                — search results pages, with query
+    AddToCart             — listens for Horizon's CartAddEvent
+                            (filters out CartUpdateEvent + error cases)
+    InitiateCheckout      — clicks on the checkout form button
+    CompleteRegistration  — fired separately from the newsletter
+                            popup section after successful submit
+
+  Purchase event lives OUTSIDE the theme:
+    Shopify admin → Settings → Checkout → 'Additional scripts' for
+    the order status page. See the snippet at the bottom of this
+    file (in the {% comment %} block) for what to paste there.
+
+  Pixel ID is exposed as a theme setting so you can change it without
+  editing code. Default falls back to the value set at install time.
+{%- endcomment -%}
+
+{%- liquid
+  assign pixel_id = settings.meta_pixel_id | default: '4779147402348380'
+  if pixel_id == blank
+    assign pixel_id = '4779147402348380'
+  endif
+-%}
+
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '{{ pixel_id }}');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id={{ pixel_id }}&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+
+{%- comment -%} === ViewContent on product pages === {%- endcomment -%}
+{%- if template contains 'product' and product -%}
+<script>
+  fbq('track', 'ViewContent', {
+    content_ids: [{{ product.id | json }}],
+    content_name: {{ product.title | json }},
+    content_type: 'product',
+    content_category: {{ product.type | default: '' | json }},
+    value: {{ product.price | divided_by: 100.0 }},
+    currency: {{ shop.currency | json }}
+  });
+</script>
+{%- endif -%}
+
+{%- comment -%} === Search on search results === {%- endcomment -%}
+{%- if template contains 'search' and search.performed -%}
+<script>
+  fbq('track', 'Search', {
+    search_string: {{ search.terms | json }}
+  });
+</script>
+{%- endif -%}
+
+{%- comment -%} === AddToCart — listen for Horizon's CartAddEvent ===
+  Horizon dispatches CartAddEvent and CartUpdateEvent on the same
+  'cart:update' event name. Filter by detail.data.source (set by
+  CartAddEvent, absent on CartUpdateEvent) + skip error cases.
+{%- endcomment -%}
+<script>
+(function () {
+  document.addEventListener('cart:update', function (event) {
+    if (typeof fbq !== 'function') return;
+    var data = event && event.detail && event.detail.data;
+    if (!data) return;
+    if (!data.source) return;          // CartUpdateEvent, not Add — ignore
+    if (data.didError) return;         // Add attempted but failed — ignore
+    if (!data.productId) return;       // No product info — can't track
+
+    fbq('track', 'AddToCart', {
+      content_type: 'product',
+      content_ids: [String(data.productId)],
+      contents: [{
+        id: String(data.productId),
+        quantity: data.itemCount || 1
+      }],
+      currency: {{ shop.currency | json }}
+      // Note: value omitted because the event payload doesn't include
+      // line price. Adding it would require a fetch to /cart.js. Most
+      // Meta value-based bidding works on Purchase events anyway.
+    });
+  });
+})();
+</script>
+
+{%- comment -%} === InitiateCheckout — click on checkout buttons ===
+  Catches clicks on Shopify's standard cart-form submit (which has
+  name="checkout"), any explicit /checkout link, and the cart drawer
+  checkout button. Loose selector — false positives are harmless
+  because Meta dedupes.
+{%- endcomment -%}
+<script>
+(function () {
+  document.addEventListener('click', function (event) {
+    if (typeof fbq !== 'function') return;
+    var target = event.target;
+    if (!target || !target.closest) return;
+    var hit = target.closest(
+      'button[name="checkout"], button[name="checkout-button"], ' +
+      'a[href="/checkout"], a[href^="/checkouts/"], ' +
+      '[data-ds-checkout]'
+    );
+    if (!hit) return;
+    fbq('track', 'InitiateCheckout', {
+      currency: {{ shop.currency | json }}
+    });
+  }, { capture: true });
+})();
+</script>
+
+{%- comment -%}
+  ============================================================
+  PURCHASE EVENT — paste this in Shopify admin, NOT here:
+  Settings → Checkout → Order status page → Additional scripts
+
+  <!-- Meta Pixel Purchase Event -->
+  <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '4779147402348380');
+    fbq('track', 'Purchase', {
+      value: {{ checkout.total_price | divided_by: 100.0 }},
+      currency: '{{ shop.currency }}',
+      content_type: 'product',
+      content_ids: [{% for line in checkout.line_items %}'{{ line.product_id }}'{% unless forloop.last %},{% endunless %}{% endfor %}],
+      contents: [{% for line in checkout.line_items %}{id:'{{ line.product_id }}',quantity:{{ line.quantity }}}{% unless forloop.last %},{% endunless %}{% endfor %}]
+    });
+  </script>
+  ============================================================
+{%- endcomment -%}

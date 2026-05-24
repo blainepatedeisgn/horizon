@@ -55,6 +55,14 @@
     <link rel="modulepreload" href="{{ 'cart-drawer.js' | asset_url }}" as="script">
     <link rel="modulepreload" href="{{ 'product-form.js' | asset_url }}" as="script">
     <link rel="modulepreload" href="{{ 'component-cart-items.js' | asset_url }}" as="script">
+
+    {%- comment -%}
+      Meta Pixel + ecommerce events (PageView, ViewContent, Search,
+      AddToCart, InitiateCheckout). Purchase event lives separately in
+      Shopify admin → Settings → Checkout → Order status page scripts.
+      See snippets/ds-meta-pixel.liquid for details.
+    {%- endcomment -%}
+    {%- render 'ds-meta-pixel' -%}
   </head>
 
   <body class="page-width-{{ settings.page_width }} card-hover-effect-{{ settings.card_hover_effect }}">
