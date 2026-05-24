@@ -2300,25 +2300,5 @@
         "default": "equal-width-buttons"
       }
     ]
-  },
-  {
-    "name": "Tracking",
-    "settings": [
-      {
-        "type": "header",
-        "content": "Meta Pixel (Facebook / Instagram)"
-      },
-      {
-        "type": "paragraph",
-        "content": "Browser-side event tracking for Meta ads. Wired by snippets/ds-meta-pixel.liquid in <head>. Fires PageView, ViewContent, Search, AddToCart, InitiateCheckout, and CompleteRegistration (popup signup). The Purchase event is set up separately in Shopify admin → Settings → Checkout → Order status page additional scripts."
-      },
-      {
-        "type": "text",
-        "id": "meta_pixel_id",
-        "label": "Meta Pixel ID (Dataset ID)",
-        "default": "4779147402348380",
-        "info": "Find this in Meta Events Manager → Data Sources → your dataset. 15-16 digit number. Leave default to use the current Disrupted Studio dataset."
-      }
-    ]
   }
 ]
