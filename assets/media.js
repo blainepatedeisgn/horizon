@@ -22,6 +22,15 @@ class DeferredMedia extends Component {
     // If we're to use deferred media for images, we will need to run this only when it's not an image type media
     document.addEventListener(ThemeEvents.mediaStartedPlaying, this.pauseMedia.bind(this), { signal });
     window.addEventListener(DialogCloseEvent.eventName, this.pauseMedia.bind(this), { signal });
+
+    // If the wrapper has the `autoplay` attribute (set via the video.liquid
+    // snippet when video_autoplay is true), auto-trigger showDeferredMedia
+    // so the video loads + plays on page load instead of sitting at the
+    // poster waiting for a click. Without this, autoplay on the wrapper
+    // was a no-op — the inner <video> never got cloned into the DOM.
+    if (this.hasAttribute('autoplay')) {
+      requestAnimationFrame(() => this.showDeferredMedia());
+    }
   }
 
   disconnectedCallback() {
