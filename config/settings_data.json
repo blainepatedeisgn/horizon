@@ -9,8 +9,11 @@
  */
 {
   "current": {
+    "logo": "shopify://shop_images/Artboard_3_7ecadf7d-a4e8-46c9-9577-6796e5b1a581.png",
+    "logo_inverse": "shopify://shop_images/Artboard_2_85b7fbd2-480f-473e-932e-0b988eb30562.png",
     "logo_height": 36,
     "logo_height_mobile": 28,
+    "favicon": "shopify://shop_images/logo_mark.png",
     "type_body_font": "inter_n4",
     "type_subheading_font": "inter_n5",
     "type_heading_font": "inter_n6",
