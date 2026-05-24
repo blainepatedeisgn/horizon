@@ -125,9 +125,17 @@
           </script>
         {%- endif -%}
       {% when 'video', 'external_video' %}
+        {%- comment -%}
+          video_autoplay was missing from the render call, so videos
+          rendered as static poster images with no play affordance.
+          Pulling it from block settings now (default true). Controls
+          stay off to keep the gallery feeling clean — autoplay
+          muted-loop is the typical product-demo pattern.
+        {%- endcomment -%}
         {%- render 'video',
           video: media,
           video_loop: block.settings.video_loop,
+          video_autoplay: block.settings.video_autoplay,
           widths: widths,
           sizes: sizes,
           loading: loading,
