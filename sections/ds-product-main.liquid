@@ -1715,6 +1715,48 @@
         });
       }
 
+      // ----- Mobile swipe — touch left/right on the main media area
+      // cycles to the prev/next thumbnail. ~50px horizontal threshold
+      // filters accidental taps. Vertical drags (dy > dx) cancel the
+      // gesture so the page can still scroll naturally if a finger
+      // happens to land on the gallery while scrolling.
+      //
+      // All listeners are passive — we never preventDefault, so iOS
+      // doesn't downgrade scroll performance. Mouse devices don't fire
+      // touch events, so desktop UX is unaffected (arrows + thumb
+      // click stay as the only desktop affordance).
+      var touchStartX = 0;
+      var touchStartY = 0;
+      var isTracking = false;
+      var SWIPE_PX = 50;
+
+      mainSlot.addEventListener('touchstart', function (e) {
+        if (e.touches.length !== 1) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        isTracking = true;
+      }, { passive: true });
+
+      mainSlot.addEventListener('touchmove', function (e) {
+        if (!isTracking) return;
+        var dx = e.touches[0].clientX - touchStartX;
+        var dy = e.touches[0].clientY - touchStartY;
+        // If the gesture is dominantly vertical, abandon swipe-tracking
+        // so the user can scroll the page through the gallery.
+        if (Math.abs(dy) > Math.abs(dx)) {
+          isTracking = false;
+        }
+      }, { passive: true });
+
+      mainSlot.addEventListener('touchend', function (e) {
+        if (!isTracking) return;
+        isTracking = false;
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) < SWIPE_PX) return;
+        // Swipe right (positive dx) → previous; swipe left → next
+        step(dx > 0 ? -1 : 1);
+      }, { passive: true });
+
       // Eager-preload every non-active thumb's full-size image into the
       // browser cache so switching between gallery images is instant
       // instead of triggering a fresh network request on every click.
