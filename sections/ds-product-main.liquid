@@ -879,6 +879,19 @@
     object-fit: cover;
     display: block;
   }
+  /* Belt-and-suspenders: even without the `controls` attribute, iOS
+     Safari sometimes paints a big "tap to play" disc on top of the
+     video before it autoplays. These selectors suppress that overlay
+     plus any native controls Chrome/Firefox might leak in. */
+  .ds-pdp__gallery-main-video::-webkit-media-controls,
+  .ds-pdp__gallery-main-video::-webkit-media-controls-start-playback-button,
+  .ds-pdp__gallery-main-video::-webkit-media-controls-overlay-play-button {
+    display: none !important;
+    -webkit-appearance: none !important;
+  }
+  .ds-pdp__gallery-main-video::-internal-media-controls-overlay-cast-button {
+    display: none !important;
+  }
   .ds-pdp__gallery-main .placeholder-svg {
     object-fit: contain;
     padding: var(--space-7);
@@ -1642,7 +1655,10 @@
           video.setAttribute('muted', '');
           video.setAttribute('loop', '');
           video.setAttribute('playsinline', '');
-          video.setAttribute('controls', 'controls');
+          // Native controls intentionally omitted — gallery video is an
+          // ambient autoplay loop, not a media player. Use the hero
+          // pixel-perfect demo button if you want a click-to-play
+          // experience with controls in a modal.
           video.setAttribute('preload', 'auto');
           video.muted = true; // explicit JS prop — required for autoplay in Chrome/Safari
           var poster = btn.getAttribute('data-video-poster');
