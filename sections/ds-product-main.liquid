@@ -238,11 +238,34 @@
         {%- if product.media.size > 1 -%}
           <div class="ds-pdp__gallery-thumbs">
             {%- for media in product.media limit: 8 -%}
+              {%- comment -%}
+                Detect video media so JS can swap the main element to
+                a <video> on click (instead of just swapping <img src>,
+                which only worked for images). Pull the MP4 source
+                because it's universally supported; Shopify always
+                provides one alongside the HLS .m3u8 stream.
+              {%- endcomment -%}
+              {%- assign is_video = false -%}
+              {%- assign video_src = '' -%}
+              {%- if media.media_type == 'video' -%}
+                {%- assign is_video = true -%}
+                {%- for source in media.sources -%}
+                  {%- if source.format == 'mp4' -%}
+                    {%- assign video_src = source.url -%}
+                  {%- endif -%}
+                {%- endfor -%}
+              {%- endif -%}
+
               <button
                 type="button"
-                class="ds-pdp__gallery-thumb{% if forloop.first %} is-active{% endif %}"
+                class="ds-pdp__gallery-thumb{% if forloop.first %} is-active{% endif %}{% if is_video %} ds-pdp__gallery-thumb--video{% endif %}"
                 data-src="{{ media | image_url: width: 1600 }}"
-                aria-label="View image {{ forloop.index }}"
+                data-media-type="{% if is_video %}video{% else %}image{% endif %}"
+                {%- if is_video %}
+                  data-video-src="{{ video_src }}"
+                  data-video-poster="{{ media.preview_image | image_url: width: 1600 }}"
+                {%- endif %}
+                aria-label="View {% if is_video %}video{% else %}image{% endif %} {{ forloop.index }}"
               >
                 {{
                   media.preview_image
@@ -252,6 +275,9 @@
                     alt: '',
                     class: 'ds-pdp__gallery-thumb-img'
                 }}
+                {%- if is_video -%}
+                  <span class="ds-pdp__gallery-thumb-play" aria-hidden="true">&#9654;</span>
+                {%- endif -%}
               </button>
             {%- endfor -%}
           </div>
@@ -948,6 +974,27 @@
     object-fit: cover;
     display: block;
   }
+  /* Play-icon overlay on video thumbnails — signals "this is a video,
+     clicking will load the player." White triangle inside a dark
+     translucent disc, centered. Pure CSS, no SVG dependency. */
+  .ds-pdp__gallery-thumb-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-size: 12px;
+    line-height: 1;
+    border-radius: 999px;
+    pointer-events: none;
+    text-indent: 2px; /* nudge glyph right of optical center */
+  }
 
   /* Info column — sticky on desktop */
   .ds-pdp__info {
@@ -1562,24 +1609,77 @@
   // next from the last image jumps back to 0).
   (function () {
     document.querySelectorAll('.ds-pdp__gallery').forEach(function (gallery) {
-      var mainImg = gallery.querySelector('.ds-pdp__gallery-main-img');
-      var thumbs  = gallery.querySelector('.ds-pdp__gallery-thumbs');
-      if (!mainImg || !thumbs) return;
+      var mainSlot = gallery.querySelector('.ds-pdp__gallery-main');
+      var thumbs   = gallery.querySelector('.ds-pdp__gallery-thumbs');
+      if (!mainSlot || !thumbs) return;
 
       var thumbList = Array.prototype.slice.call(
         thumbs.querySelectorAll('.ds-pdp__gallery-thumb'));
 
+      // Current main element (img or video) — re-queried each activate so
+      // we can swap between element types.
+      function getCurrentMain() {
+        return mainSlot.querySelector('.ds-pdp__gallery-main-img, .ds-pdp__gallery-main-video');
+      }
+
       function activate(btn) {
         if (!btn) return;
-        var src = btn.getAttribute('data-src');
-        if (!src) return;
         thumbList.forEach(function (b) { b.classList.remove('is-active'); });
         btn.classList.add('is-active');
-        // Wipe responsive attrs so the browser actually loads our explicit src
-        // (otherwise srcset can win and you see the original featured image)
-        mainImg.removeAttribute('srcset');
-        mainImg.removeAttribute('sizes');
-        mainImg.src = src;
+
+        var mediaType = btn.getAttribute('data-media-type') || 'image';
+        var current = getCurrentMain();
+
+        if (mediaType === 'video') {
+          // Build a fresh <video> element with autoplay/muted/loop/controls.
+          // The current main (image or stale video) gets replaced wholesale.
+          var vsrc = btn.getAttribute('data-video-src');
+          if (!vsrc) return; // graceful no-op — Liquid didn't find an mp4 source
+
+          var video = document.createElement('video');
+          video.className = 'ds-pdp__gallery-main-img ds-pdp__gallery-main-video';
+          video.setAttribute('autoplay', '');
+          video.setAttribute('muted', '');
+          video.setAttribute('loop', '');
+          video.setAttribute('playsinline', '');
+          video.setAttribute('controls', 'controls');
+          video.setAttribute('preload', 'auto');
+          video.muted = true; // explicit JS prop — required for autoplay in Chrome/Safari
+          var poster = btn.getAttribute('data-video-poster');
+          if (poster) video.poster = poster;
+          video.src = vsrc;
+
+          if (current) {
+            current.replaceWith(video);
+          } else {
+            mainSlot.insertBefore(video, mainSlot.firstChild);
+          }
+          // Autoplay can be rejected by the browser even with muted —
+          // most commonly when no user gesture yet. Catch swallowed.
+          var p = video.play();
+          if (p && p.catch) p.catch(function () {});
+        } else {
+          var src = btn.getAttribute('data-src');
+          if (!src) return;
+
+          if (current && current.tagName === 'IMG') {
+            // Same element, just swap src. Wipe srcset so our src wins.
+            current.removeAttribute('srcset');
+            current.removeAttribute('sizes');
+            current.src = src;
+          } else {
+            // Replacing a video with an image — build a new <img>.
+            var img = document.createElement('img');
+            img.className = 'ds-pdp__gallery-main-img';
+            img.src = src;
+            img.alt = '';
+            if (current) {
+              current.replaceWith(img);
+            } else {
+              mainSlot.insertBefore(img, mainSlot.firstChild);
+            }
+          }
+        }
       }
 
       // Thumbnail click — direct activation.
