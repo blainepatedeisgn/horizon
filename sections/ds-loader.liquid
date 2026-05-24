@@ -127,6 +127,18 @@
 
       position: fixed;
       inset: 0;
+      /* iOS Safari quirk: `inset: 0` only covers the *visual* viewport
+         (which excludes the area underneath the URL bar). When the
+         URL bar is visible there's a sliver at the bottom where the
+         page bg shows through. min-height: 100lvh (large viewport
+         height) forces the overlay to extend through the full largest
+         possible viewport, so it stays under the URL bar instead of
+         butting up against it. Safari 15.4+ / Chrome 108+ / Firefox
+         101+ support lvh; older browsers fall back to inset:0 sizing. */
+      min-height: 100lvh;
+      /* Belt-and-suspenders width — same idea on the horizontal axis
+         (rare, but iPad rotation transitions can leave a sliver). */
+      min-width: 100vw;
       z-index: 9999;
       background: #000;
       display: flex;
