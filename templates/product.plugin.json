@@ -7,26 +7,6 @@
  * made to this file may be overwritten.
  * ------------------------------------------------------------
  */
-/*
- * ------------------------------------------------------------
- * Disrupted Studio — PLUGIN product template (BACKLIT, FLUX, etc.)
- *
- * Used for products like BACKLIT, FLUX, etc. Assigned per-product
- * in admin via the "Theme template" dropdown.
- *
- * Section order:
- *   main → features → cta → video → faq → related
- *
- * Per-product content sources (all optional, hide sections gracefully):
- *   features  → product.metafields.disrupted.features (list of Feature)
- *   cta       → product.metafields.disrupted.ctas (list of CTA inset)
- *   video     → product.metafields.disrupted.video (single Video)
- *   faq       → product.metafields.disrupted.faq (list of FAQ item)
- *   related   → product.collections.first (auto)
- *
- * See docs/changes.md for metaobject + metafield definition setup.
- * ------------------------------------------------------------
- */
 {
   "sections": {
     "main": {
@@ -34,7 +14,8 @@
       "settings": {
         "color_scheme": "scheme-1",
         "sub_cta_label": "Watch the demo",
-        "sub_cta_url": "#video"
+        "sub_cta_url": "#video",
+        "auto_advance_to_second": true
       }
     },
     "features": {
@@ -57,11 +38,6 @@
     },
     "faq": {
       "type": "ds-pdp-faq",
-      "settings": {
-        "color_scheme": "scheme-1",
-        "heading": "Common questions",
-        "num_label": "06"
-      },
       "blocks": {
         "faq_compat": {
           "type": "faq_item",
@@ -106,7 +82,20 @@
           }
         }
       },
-      "block_order": ["faq_compat", "faq_install", "faq_seats", "faq_commercial", "faq_updates", "faq_refund"]
+      "block_order": [
+        "faq_compat",
+        "faq_install",
+        "faq_seats",
+        "faq_commercial",
+        "faq_updates",
+        "faq_refund"
+      ],
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Common questions",
+        "num_label": "06",
+        "subhead": ""
+      }
     },
     "related": {
       "type": "ds-pdp-related",
@@ -114,9 +103,20 @@
         "color_scheme": "scheme-1",
         "heading": "More tools",
         "num_label": "03",
-        "products_to_show": 3
+        "subhead": "",
+        "products_to_show": 3,
+        "collection_source": "",
+        "view_all_label": "View all products",
+        "view_all_url": ""
       }
     }
   },
-  "order": ["main", "features", "cta", "video", "faq", "related"]
+  "order": [
+    "main",
+    "features",
+    "cta",
+    "video",
+    "faq",
+    "related"
+  ]
 }
