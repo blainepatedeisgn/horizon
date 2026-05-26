@@ -192,7 +192,8 @@
     <div class="ds-pdp__hero">
 
       {%- comment -%} ----- GALLERY ----- {%- endcomment -%}
-      <div class="ds-pdp__gallery">
+      <div class="ds-pdp__gallery"
+           {%- if section.settings.auto_advance_to_second and product.media.size > 1 %} data-auto-advance="1"{% endif -%}>
         <div class="ds-pdp__gallery-main">
           {%- if product.featured_media -%}
             {{
@@ -1599,6 +1600,14 @@
       "label": "Link or anchor",
       "default": "#video",
       "info": "Use an in-page anchor (#video, #specimen, #features, #includes) to smooth-scroll to that section, OR a full https:// URL for an external link. Hardcoded per template — each product type's template ships with the right defaults."
+    },
+    { "type": "header", "content": "Gallery behavior" },
+    {
+      "type": "checkbox",
+      "id": "auto_advance_to_second",
+      "label": "Auto-advance to 2nd media on load",
+      "default": false,
+      "info": "Keeps the cover image as media position 1 (so it stays the collection-grid thumbnail), but the PDP main view swaps to media position 2 on load. Useful for plugin templates where you want the demo video to play immediately while still using a static thumbnail elsewhere."
     }
   ],
   "presets": [
@@ -1772,6 +1781,20 @@
         // Swipe right (positive dx) → previous; swipe left → next
         step(dx > 0 ? -1 : 1);
       }, { passive: true });
+
+      // ----- Auto-advance to the 2nd media on load -----
+      // Some product templates (e.g. plugins) want the demo video to
+      // be the default main view instead of the featured/cover image
+      // — but we still want the cover image to be the FIRST media so
+      // it stays the thumbnail on collection grids. So: keep the
+      // featured image at position 0, and have JS swap the main view
+      // to position 1 (the video) immediately on page load. The user
+      // toggles this per-section via the 'auto_advance_to_second'
+      // setting on ds-product-main; only renders the data attribute
+      // when both enabled AND there are 2+ media items.
+      if (gallery.getAttribute('data-auto-advance') === '1' && thumbList.length > 1) {
+        activate(thumbList[1]);
+      }
 
       // Eager-preload every non-active thumb's full-size image into the
       // browser cache so switching between gallery images is instant
