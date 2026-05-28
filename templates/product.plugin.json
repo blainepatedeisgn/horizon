@@ -15,7 +15,8 @@
         "color_scheme": "scheme-1",
         "sub_cta_label": "Watch the demo",
         "sub_cta_url": "#video",
-        "auto_advance_to_second": true
+        "auto_advance_to_second": true,
+        "gallery_pagination_style": "dots"
       }
     },
     "features": {
