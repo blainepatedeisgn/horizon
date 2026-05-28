@@ -194,6 +194,22 @@
     border: 1px solid var(--color-border);
     background: var(--color-bg-elev);
   }
+  /* Make the card's content fill its height so we can push the
+     product-link row to the bottom — keeps all three cards' product
+     rows aligned along the same horizontal line regardless of how
+     long the individual quotes are. */
+  .ds-testimonials--grid .ds-testimonials__content {
+    flex: 1;
+    height: 100%;
+  }
+  /* Push the product link to the bottom of the card (grid mode only).
+     The auto-margin pulls all flexible space above it, leaving the
+     attribution row to sit right under the quote and the product link
+     to anchor at the floor of the card. Stacked layout doesn't need
+     this — there's no side-by-side alignment to maintain. */
+  .ds-testimonials--grid .ds-testimonials__product {
+    margin-top: auto;
+  }
   .ds-testimonials--grid .ds-testimonials__num {
     margin-bottom: var(--space-2);
   }
