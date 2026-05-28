@@ -734,10 +734,41 @@
           </div>
         {%- endif -%}
 
-        {%- comment -%} LONG DESCRIPTION {%- endcomment -%}
+        {%- comment -%}
+          LONG DESCRIPTION.
+
+          Clamped to a few lines by default with a "Read more" toggle
+          appended underneath. Clamp height is controlled by a CSS
+          custom property so it's easy to tune. The button auto-hides
+          on load if the description is short enough not to need it
+          — see JS at bottom of the section.
+        {%- endcomment -%}
         {%- if product.description != blank -%}
-          <div class="ds-pdp__info-description">
-            {{ product.description }}
+          <div
+            class="ds-pdp__info-description-wrap"
+            data-ds-desc
+            data-clamp-lines="{{ section.settings.description_clamp_lines | default: 4 }}"
+          >
+            <div class="ds-pdp__info-description" data-ds-desc-body>
+              {{ product.description }}
+            </div>
+            {%- comment -%}
+              Toggle button. Starts hidden via attribute; JS reveals it
+              only if the description actually overflows the clamp. No
+              JS = no toggle = full description shown, which is the
+              correct graceful degradation.
+            {%- endcomment -%}
+            <button
+              type="button"
+              class="ds-pdp__info-description-toggle"
+              data-ds-desc-toggle
+              aria-expanded="false"
+              hidden
+            >
+              <span data-ds-desc-toggle-label-more>Read more</span>
+              <span data-ds-desc-toggle-label-less hidden>Read less</span>
+              <span class="ds-pdp__info-description-toggle-arrow" aria-hidden="true">&darr;</span>
+            </button>
           </div>
         {%- endif -%}
       </div>
@@ -1456,12 +1487,69 @@
     color: var(--color-accent);
   }
 
-  /* Long description */
+  /* Long description — clamped wrapper.
+     The wrapper holds margin so it doesn't jump when clamp toggles. */
+  .ds-pdp__info-description-wrap {
+    margin-top: var(--space-4);
+  }
+  /* Body — line-clamps via -webkit-box. The clamp count is set
+     dynamically on the wrapper via JS reading data-clamp-lines. */
   .ds-pdp__info-description {
     font-size: 14px;
     color: var(--color-fg-muted);
     line-height: 1.6;
-    margin-top: var(--space-4);
+    /* Clamp lives on the BODY (so the toggle button sits below the
+       clipped content, not inside it). is-expanded removes it. */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--ds-desc-clamp, 4);
+    line-clamp: var(--ds-desc-clamp, 4);
+    overflow: hidden;
+    /* Fade the last visible line so the truncation reads as
+       intentional rather than abruptly cropped. */
+    mask-image: linear-gradient(to bottom, #000 70%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  }
+  .ds-pdp__info-description-wrap.is-expanded .ds-pdp__info-description {
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    overflow: visible;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  /* Toggle button — minimal, mono caps, accent on hover. Sits below
+     the clipped body with a small top margin. Hidden by default
+     (rendered with [hidden] in Liquid); JS reveals it only when the
+     body actually overflows. */
+  .ds-pdp__info-description-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: var(--space-3);
+    padding: 4px 0;
+    background: transparent;
+    border: 0;
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-underline-offset: 4px;
+    text-decoration: underline;
+    transition: color var(--t-fast) var(--ease);
+  }
+  @media (hover: hover) {
+    .ds-pdp__info-description-toggle:hover {
+      color: var(--color-accent);
+    }
+  }
+  .ds-pdp__info-description-toggle-arrow {
+    display: inline-block;
+    transition: transform var(--t-base) var(--ease);
+  }
+  .ds-pdp__info-description-wrap.is-expanded .ds-pdp__info-description-toggle-arrow {
+    transform: rotate(180deg);
   }
   .ds-pdp__info-description p { margin: 0 0 var(--space-3); }
   .ds-pdp__info-description p:last-child { margin-bottom: 0; }
@@ -1717,6 +1805,17 @@
       ],
       "default": "thumbnails",
       "info": "Thumbnails show every media as a small preview; better for fonts / graphics where each item sells differently. Dots are minimal pills below the main; better for plugins where one demo video does the selling. Both modes always show the X / N counter overlay in the bottom-right of the main."
+    },
+    { "type": "header", "content": "Description" },
+    {
+      "type": "range",
+      "id": "description_clamp_lines",
+      "label": "Read more — clamp to N lines",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 4,
+      "info": "Description clips after this many lines and shows a 'Read more' toggle. Set higher (8-12) for templates where you want most of the description visible by default. The toggle auto-hides if the description is short enough not to need clipping."
     }
   ],
   "presets": [
@@ -1948,6 +2047,63 @@
       } else {
         setTimeout(preloadGalleryImages, 500);
       }
+    });
+  })();
+
+  // ----- Description "Read more" toggle -----
+  // Auto-hides itself when the description fits inside the clamp
+  // (short descriptions don't need a toggle). Reads the clamp line
+  // count from data-clamp-lines on the wrapper so it can be tuned
+  // per-section via the description_clamp_lines setting without
+  // touching CSS.
+  (function () {
+    document.querySelectorAll('[data-ds-desc]').forEach(function (wrap) {
+      var body = wrap.querySelector('[data-ds-desc-body]');
+      var toggle = wrap.querySelector('[data-ds-desc-toggle]');
+      if (!body || !toggle) return;
+
+      // Apply the clamp value from data-* to a CSS var the body reads.
+      var clampLines = parseInt(wrap.getAttribute('data-clamp-lines'), 10) || 4;
+      body.style.setProperty('--ds-desc-clamp', clampLines);
+
+      var labelMore = toggle.querySelector('[data-ds-desc-toggle-label-more]');
+      var labelLess = toggle.querySelector('[data-ds-desc-toggle-label-less]');
+
+      function refreshOverflowState() {
+        // Temporarily un-clamp to measure the unclipped scroll height.
+        var wasClamped = !wrap.classList.contains('is-expanded');
+        if (wasClamped) {
+          // Compare full content height (scrollHeight) to the clipped
+          // height (clientHeight). If they match, no overflow — hide
+          // the toggle entirely. Add a 2px fudge factor for sub-pixel
+          // rounding differences across browsers.
+          var overflows = body.scrollHeight > body.clientHeight + 2;
+          toggle.hidden = !overflows;
+        }
+      }
+
+      // Initial measurement after layout / fonts settle. Fonts can
+      // re-layout text after first paint and change overflow state,
+      // so check once on DOMContentLoaded and once after fonts load.
+      refreshOverflowState();
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(refreshOverflowState);
+      }
+      // Recheck on resize because viewport width changes wrap-points
+      // and can flip overflow state.
+      var resizeTimer;
+      window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(refreshOverflowState, 150);
+      }, { passive: true });
+
+      toggle.addEventListener('click', function () {
+        var nowExpanded = !wrap.classList.contains('is-expanded');
+        wrap.classList.toggle('is-expanded', nowExpanded);
+        toggle.setAttribute('aria-expanded', nowExpanded ? 'true' : 'false');
+        if (labelMore) labelMore.hidden = nowExpanded;
+        if (labelLess) labelLess.hidden = !nowExpanded;
+      });
     });
   })();
 
