@@ -23,6 +23,52 @@
         "color_scheme": "scheme-1"
       }
     },
+    "reviews": {
+      "type": "ds-testimonials",
+      "blocks": {
+        "testimonial_CPWm8J": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Quality images. Easy to work with and budget friendly. I would recommend this to anyone!",
+            "name": "Caleb R.",
+            "source": "Studio 2am",
+            "rating": 5
+          }
+        },
+        "testimonial_8PYrjA": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "High quality, huge variety, and easy to use.",
+            "name": "Brett A.",
+            "source": "Studio 2am",
+            "rating": 5
+          }
+        },
+        "testimonial_L64rnJ": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Incredibly fast effects and great variety of style options.",
+            "name": "Maya Singh",
+            "source": "Instagram",
+            "rating": 5
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_CPWm8J",
+        "testimonial_8PYrjA",
+        "testimonial_L64rnJ"
+      ],
+      "name": "Disrupted testimonials",
+      "settings": {
+        "color_scheme": "",
+        "eyebrow": "",
+        "heading": "Reviews",
+        "num_label": "03",
+        "subhead": "",
+        "layout": "grid"
+      }
+    },
     "specimen": {
       "type": "ds-pdp-typespecimen",
       "settings": {
@@ -107,6 +153,7 @@
   "order": [
     "main",
     "features",
+    "reviews",
     "specimen",
     "faq",
     "related"
