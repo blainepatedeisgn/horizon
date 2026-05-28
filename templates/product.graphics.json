@@ -52,7 +52,8 @@
             "quote": "Quality images. Easy to work with and budget friendly. I would recommend this to anyone!",
             "name": "Caleb R.",
             "source": "Studio 2am",
-            "rating": 5
+            "rating": 5,
+            "product": "afterlife"
           }
         },
         "testimonial_8PYrjA": {
@@ -61,7 +62,8 @@
             "quote": "High quality, huge variety, and easy to use.",
             "name": "Brett A.",
             "source": "Studio 2am",
-            "rating": 5
+            "rating": 5,
+            "product": "stargazer"
           }
         },
         "testimonial_L64rnJ": {
@@ -70,7 +72,8 @@
             "quote": "Incredibly fast effects and great variety of style options.",
             "name": "Maya Singh",
             "source": "Instagram",
-            "rating": 5
+            "rating": 5,
+            "product": "pixel-perfect-plugin"
           }
         }
       },
