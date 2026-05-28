@@ -61,8 +61,23 @@
           {%- liquid
             assign num_str = forloop.index | prepend: '0' | slice: -2, 2
             assign rating = block.settings.rating | plus: 0
+
+            comment
+              Detect whether this testimonial is for the product the
+              visitor is currently looking at. When true, the card
+              gets an accent border + the bottom row swaps from a
+              link-out 'PURCHASED: <other product>' line to a
+              non-link 'REVIEW OF THIS PRODUCT' callout (no thumb,
+              no arrow — they're already on it). Strongest possible
+              social proof on a PDP.
+            endcomment
+            assign t_product_check = block.settings.product
+            assign is_current_product = false
+            if t_product_check != blank and t_product_check.handle != blank and template contains 'product' and product != blank and product.handle == t_product_check.handle
+              assign is_current_product = true
+            endif
           -%}
-          <li class="ds-testimonials__item" {{ block.shopify_attributes }}>
+          <li class="ds-testimonials__item{% if is_current_product %} ds-testimonials__item--current{% endif %}" {{ block.shopify_attributes }}>
             <div class="ds-testimonials__num" aria-hidden="true">{{ num_str }}</div>
             <div class="ds-testimonials__content">
               {%- if rating > 0 -%}
@@ -101,29 +116,44 @@
               {%- endcomment -%}
               {%- assign t_product = block.settings.product -%}
               {%- if t_product != blank and t_product.handle != blank -%}
-                <a
-                  class="ds-testimonials__product"
-                  href="{{ t_product.url }}"
-                  aria-label="View {{ t_product.title | escape }}"
-                >
-                  {%- if t_product.featured_image != blank -%}
-                    {{
-                      t_product.featured_image
-                      | image_url: width: 96
-                      | image_tag:
-                        widths: '48, 96, 144',
-                        sizes: '48px',
-                        loading: 'lazy',
-                        alt: t_product.title,
-                        class: 'ds-testimonials__product-img'
-                    }}
-                  {%- endif -%}
-                  <span class="ds-testimonials__product-meta">
-                    <span class="ds-testimonials__product-label">Purchased</span>
-                    <span class="ds-testimonials__product-title">{{ t_product.title }}</span>
-                  </span>
-                  <span class="ds-testimonials__product-arrow" aria-hidden="true">&rarr;</span>
-                </a>
+                {%- if is_current_product -%}
+                  {%- comment -%}
+                    Visitor is already on this product's PDP — no point
+                    linking to the same page or showing the thumbnail.
+                    Render a non-link callout that the testimonial is
+                    specifically about the product they're considering.
+                  {%- endcomment -%}
+                  <div class="ds-testimonials__product ds-testimonials__product--current">
+                    <span class="ds-testimonials__product-meta">
+                      <span class="ds-testimonials__product-label">Review of</span>
+                      <span class="ds-testimonials__product-title">this product</span>
+                    </span>
+                  </div>
+                {%- else -%}
+                  <a
+                    class="ds-testimonials__product"
+                    href="{{ t_product.url }}"
+                    aria-label="View {{ t_product.title | escape }}"
+                  >
+                    {%- if t_product.featured_image != blank -%}
+                      {{
+                        t_product.featured_image
+                        | image_url: width: 96
+                        | image_tag:
+                          widths: '48, 96, 144',
+                          sizes: '48px',
+                          loading: 'lazy',
+                          alt: t_product.title,
+                          class: 'ds-testimonials__product-img'
+                      }}
+                    {%- endif -%}
+                    <span class="ds-testimonials__product-meta">
+                      <span class="ds-testimonials__product-label">Purchased</span>
+                      <span class="ds-testimonials__product-title">{{ t_product.title }}</span>
+                    </span>
+                    <span class="ds-testimonials__product-arrow" aria-hidden="true">&rarr;</span>
+                  </a>
+                {%- endif -%}
               {%- endif -%}
             </div>
           </li>
@@ -201,6 +231,30 @@
   .ds-testimonials--grid .ds-testimonials__content {
     flex: 1;
     height: 100%;
+  }
+  /* Highlight: testimonial card flagged as 'for this PDP' gets an
+     accent border so visitors can clock at a glance which review is
+     specifically about the product they're considering. Inner shadow
+     adds depth without changing layout. */
+  .ds-testimonials--grid .ds-testimonials__item--current {
+    border-color: var(--color-accent);
+    box-shadow: inset 0 0 0 1px var(--color-accent);
+  }
+  /* Bottom-row 'Review of this product' callout (non-link). Uses the
+     same flex layout as the linked version so it sits at the same
+     vertical position, but the meta text reads in accent color to
+     reinforce relevance. */
+  .ds-testimonials__product--current {
+    color: var(--color-accent);
+  }
+  .ds-testimonials__product--current .ds-testimonials__product-label,
+  .ds-testimonials__product--current .ds-testimonials__product-title {
+    color: var(--color-accent);
+  }
+  .ds-testimonials__product--current .ds-testimonials__product-title {
+    /* Slightly larger so the "this product" callout reads more
+       prominently than the normal product-title link. */
+    font-size: 14px;
   }
   /* Push the product link to the bottom of the card (grid mode only).
      The auto-margin pulls all flexible space above it, leaving the
