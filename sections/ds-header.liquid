@@ -1376,6 +1376,14 @@
     overflow: hidden;
     background: var(--color-bg);
     width: 100%;
+    /* Cap the image height so it doesn't dominate the empty cart on
+       wider drawers (440px wide ÷ 1:1 aspect = ~390px tall, which
+       pushed the category nav + footer dock below the fold on
+       desktop). The aspect-ratio + width:100% rules still keep the
+       image square on narrow viewports (under ~260px wide); past
+       that point max-height takes over and the inner <img> crops
+       via object-fit: cover, which still reads well visually. */
+    max-height: 220px;
   }
   .ds-cart__empty-feature-img,
   .ds-cart__empty-feature-img-placeholder {
