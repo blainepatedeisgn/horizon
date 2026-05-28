@@ -332,6 +332,28 @@
         {%- comment -%} TITLE — product.title is sanitised by Shopify, no escape needed {%- endcomment -%}
         <h1 class="ds-pdp__info-title">{{ product.title }}</h1>
 
+        {%- comment -%}
+          AGGREGATE STAR RATING. Auto-computed from any testimonials
+          on the page that JS detects as linked to this product
+          (i.e. cards with .ds-testimonials__item--current). Hidden by
+          default; JS reveals + fills it after the testimonials section
+          renders. Falls back to invisible (graceful degradation) if
+          there are no linked testimonials or JS doesn't run.
+
+          Placement: directly under the title, above the tagline. This
+          is the slot Yotpo / Judge.me / Stamped / every review app
+          uses by convention — visitors expect it here.
+        {%- endcomment -%}
+        <div
+          class="ds-pdp__info-rating"
+          data-ds-rating
+          hidden
+          aria-live="polite"
+        >
+          <span class="ds-pdp__info-rating-stars" data-ds-rating-stars aria-hidden="true"></span>
+          <span class="ds-pdp__info-rating-text" data-ds-rating-text></span>
+        </div>
+
         {%- comment -%} TAGLINE (metafield) {%- endcomment -%}
         {%- if tagline != blank -%}
           <p class="ds-pdp__info-tagline">{{ tagline | escape }}</p>
@@ -1214,6 +1236,31 @@
     letter-spacing: -0.04em;
     line-height: 0.9;
     margin: 0;
+  }
+
+  /* Aggregate star rating — small horizontal row under the title. */
+  .ds-pdp__info-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    /* Negative top margin pulls it closer to the title without a
+       custom gap on the parent flex column (which would affect the
+       title→tagline distance too). */
+    margin-top: calc(var(--space-2) * -1);
+  }
+  .ds-pdp__info-rating-stars {
+    font-size: 15px;
+    line-height: 1;
+    color: var(--color-accent);
+    letter-spacing: 1px;
+  }
+  .ds-pdp__info-rating-text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
   }
 
   /* Tagline */
@@ -2126,6 +2173,62 @@
         setTimeout(preloadGalleryImages, 500);
       }
     });
+  })();
+
+  // ----- Aggregate star rating under the product title -----
+  // Auto-populates the [data-ds-rating] placeholder by scanning the
+  // page for testimonials flagged as linked to this product (cards
+  // with .ds-testimonials__item--current — added by the Liquid in
+  // ds-testimonials.liquid). For each matching card, reads its
+  // [aria-label="Rated N out of 5"] to get the rating, averages
+  // across all cards, and renders stars + review count.
+  //
+  // If no matching cards are on the page, the placeholder stays
+  // [hidden] and nothing renders. Same for the no-JS / blocked-JS
+  // fallback case — the buy box reads exactly as it did before.
+  (function () {
+    function init() {
+      var display = document.querySelector('[data-ds-rating]');
+      if (!display) return;
+
+      var cards = document.querySelectorAll('.ds-testimonials__item--current');
+      if (cards.length === 0) return;
+
+      var total = 0;
+      var counted = 0;
+      cards.forEach(function (card) {
+        var ratingEl = card.querySelector('.ds-testimonials__rating');
+        if (!ratingEl) return;
+        var label = ratingEl.getAttribute('aria-label') || '';
+        var match = label.match(/(\d+(?:\.\d+)?)\s*out\s*of/i);
+        if (!match) return;
+        total += parseFloat(match[1]);
+        counted++;
+      });
+
+      if (counted === 0) return;
+
+      var avg = total / counted;
+      var rounded = Math.round(avg);
+      var stars = '';
+      for (var i = 0; i < 5; i++) stars += i < rounded ? '★' : '☆';
+
+      var starsEl = display.querySelector('[data-ds-rating-stars]');
+      var textEl = display.querySelector('[data-ds-rating-text]');
+      if (starsEl) starsEl.textContent = stars;
+      if (textEl) {
+        textEl.textContent = '(' + counted + ' review' + (counted === 1 ? '' : 's') + ')';
+      }
+      display.hidden = false;
+    }
+
+    // Run after DOMContentLoaded so the testimonials section markup
+    // is in place (it's lower in the document order).
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
   })();
 
   // ----- Description "Read more" toggle -----
