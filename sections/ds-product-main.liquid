@@ -898,10 +898,13 @@
   .ds-pdp__crumb-sep { opacity: 0.4; }
   .ds-pdp__crumb-current { color: var(--color-fg); }
 
-  /* Hero grid: 7fr gallery, 5fr info */
+  /* Hero grid: balanced columns. Gallery + info each get an equal
+     half. Was 7fr / 5fr which made the gallery dominate the screen
+     on wide desktops — pushed the buy box into a cramped corner
+     and the gallery image read as oversized. */
   .ds-pdp__hero {
     display: grid;
-    grid-template-columns: 7fr 5fr;
+    grid-template-columns: 1fr 1fr;
     gap: var(--space-7);
     padding-bottom: var(--space-9);
     align-items: start;
@@ -914,11 +917,30 @@
     }
   }
 
-  /* Gallery */
+  /* Gallery — sticky on desktop so the image stays in view while
+     the right column scrolls. Reverses the previous setup where
+     info was sticky and gallery scrolled — that pattern lets long
+     descriptions push the image off-screen, which is the worst
+     possible thing on a software/visual product like Pixel Perfect.
+
+     max-width caps the image at a sensible size on ultra-wide
+     screens (otherwise 1fr 1fr at 1900px = 900px-wide gallery,
+     way too dominant). */
   .ds-pdp__gallery {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
+    max-width: 560px;
+    width: 100%;
+    position: sticky;
+    top: calc(var(--header-height, 64px) + var(--space-4));
+    align-self: start;
+  }
+  @media (max-width: 900px) {
+    .ds-pdp__gallery {
+      max-width: 100%;
+      position: static;
+    }
   }
   .ds-pdp__gallery-main {
     position: relative;
@@ -1139,16 +1161,20 @@
     text-indent: 2px; /* nudge glyph right of optical center */
   }
 
-  /* Info column — sticky on desktop */
+  /* Info column — scrolls naturally now (was sticky). The gallery
+     is sticky instead, so the image stays in view as the visitor
+     reads through the buy box → specs → description. When they
+     reach the bottom of the info column, the gallery releases and
+     the whole page scrolls to the next section. */
   .ds-pdp__info {
-    position: sticky;
-    top: calc(var(--header-height, 64px) + var(--space-4));
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-  }
-  @media (max-width: 900px) {
-    .ds-pdp__info { position: static; }
+    /* Cap width on ultra-wide screens so the buy-box text doesn't
+       balloon into a 900px-wide reading line — keeps everything
+       proportional next to the 560px-capped gallery. */
+    max-width: 560px;
+    width: 100%;
   }
 
   /* Eyebrow + NEW badge row */
