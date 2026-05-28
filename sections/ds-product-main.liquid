@@ -234,18 +234,35 @@
             >
               <span aria-hidden="true">&rarr;</span>
             </button>
+
+            {%- comment -%}
+              Counter overlay — small mono-caps "1 / N" pill in the
+              bottom-right of the main media. Editorial gallery convention
+              (Aimé Leon Dore, Telfar, Apple). Helps visitors realize
+              there's more media to scroll through.
+            {%- endcomment -%}
+            <div class="ds-pdp__gallery-counter" aria-hidden="true">
+              <span data-counter-current>1</span>
+              <span class="ds-pdp__gallery-counter-sep">/</span>
+              <span data-counter-total>{%- assign max_render = 12 -%}{%- if product.media.size > max_render -%}{{ max_render }}{%- else -%}{{ product.media.size }}{%- endif -%}</span>
+            </div>
           {%- endif -%}
         </div>
         {%- if product.media.size > 1 -%}
-          <div class="ds-pdp__gallery-thumbs">
-            {%- for media in product.media limit: 8 -%}
-              {%- comment -%}
-                Detect video media so JS can swap the main element to
-                a <video> on click (instead of just swapping <img src>,
-                which only worked for images). Pull the MP4 source
-                because it's universally supported; Shopify always
-                provides one alongside the HLS .m3u8 stream.
-              {%- endcomment -%}
+          {%- comment -%}
+            Pagination row — renders either thumbnail grid (utility
+            ecommerce style) or dot row (editorial / luxury style)
+            based on the gallery_pagination_style section setting.
+            Both modes share the same data attributes so the JS
+            (activate / step / swipe) is identical — only visuals
+            change.
+          {%- endcomment -%}
+          {%- assign pagination_style = section.settings.gallery_pagination_style | default: 'thumbnails' -%}
+          {%- assign render_limit = 12 -%}
+          {%- if pagination_style == 'thumbnails' -%}{%- assign render_limit = 8 -%}{%- endif -%}
+
+          <div class="ds-pdp__gallery-thumbs ds-pdp__gallery-thumbs--{{ pagination_style }}">
+            {%- for media in product.media limit: render_limit -%}
               {%- assign is_video = false -%}
               {%- assign video_src = '' -%}
               {%- if media.media_type == 'video' -%}
@@ -268,16 +285,22 @@
                 {%- endif %}
                 aria-label="View {% if is_video %}video{% else %}image{% endif %} {{ forloop.index }}"
               >
-                {{
-                  media.preview_image
-                  | image_url: width: 200
-                  | image_tag:
-                    loading: 'lazy',
-                    alt: '',
-                    class: 'ds-pdp__gallery-thumb-img'
-                }}
-                {%- if is_video -%}
-                  <span class="ds-pdp__gallery-thumb-play" aria-hidden="true">&#9654;</span>
+                {%- comment -%}
+                  Thumb preview image — only rendered in 'thumbnails'
+                  mode. Dots are pure CSS circles with no image.
+                {%- endcomment -%}
+                {%- if pagination_style == 'thumbnails' -%}
+                  {{
+                    media.preview_image
+                    | image_url: width: 200
+                    | image_tag:
+                      loading: 'lazy',
+                      alt: '',
+                      class: 'ds-pdp__gallery-thumb-img'
+                  }}
+                  {%- if is_video -%}
+                    <span class="ds-pdp__gallery-thumb-play" aria-hidden="true">&#9654;</span>
+                  {%- endif -%}
                 {%- endif -%}
               </button>
             {%- endfor -%}
@@ -962,12 +985,40 @@
     .ds-pdp__gallery-nav--next { right: 8px; }
   }
 
-  .ds-pdp__gallery-thumbs {
+  /* Counter pill — bottom-right of the main media. Editorial gallery
+     convention. Mono caps, dark translucent bg so it reads against
+     any image. Hidden when product has ≤1 media (no overlay rendered). */
+  .ds-pdp__gallery-counter {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 2;
+    line-height: 1;
+  }
+  .ds-pdp__gallery-counter-sep {
+    opacity: 0.5;
+  }
+
+  /* Base: thumbnail grid (default mode, used by font / graphics / bundle
+     product templates where the merchant wants to show each media at a
+     glance). */
+  .ds-pdp__gallery-thumbs--thumbnails {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--space-3);
   }
-  .ds-pdp__gallery-thumb {
+  .ds-pdp__gallery-thumbs--thumbnails .ds-pdp__gallery-thumb {
     aspect-ratio: 1 / 1;
     border: 1px solid var(--color-border);
     background: var(--color-bg-elev);
@@ -978,9 +1029,56 @@
     padding: 0;
     border-radius: 0;
   }
-  .ds-pdp__gallery-thumb:hover,
-  .ds-pdp__gallery-thumb.is-active {
+  .ds-pdp__gallery-thumbs--thumbnails .ds-pdp__gallery-thumb:hover,
+  .ds-pdp__gallery-thumbs--thumbnails .ds-pdp__gallery-thumb.is-active {
     border-color: var(--color-fg);
+  }
+
+  /* Dot pagination — editorial mode. Small horizontal row of muted
+     pills (rectangle for brutalist edge, not perfect circles), active
+     pill fills with accent. Used on plugin templates where the
+     demo video carries the whole story and a thumb grid would
+     visually crowd it. */
+  .ds-pdp__gallery-thumbs--dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: 18px 0 4px;
+  }
+  .ds-pdp__gallery-thumbs--dots .ds-pdp__gallery-thumb {
+    width: 18px;
+    height: 4px;
+    border: 0;
+    border-radius: 0;
+    background: var(--color-border-strong, var(--color-border));
+    padding: 0;
+    cursor: pointer;
+    transition:
+      background var(--t-fast) var(--ease),
+      width var(--t-base) var(--ease);
+  }
+  .ds-pdp__gallery-thumbs--dots .ds-pdp__gallery-thumb:hover {
+    background: var(--color-fg-muted);
+  }
+  .ds-pdp__gallery-thumbs--dots .ds-pdp__gallery-thumb.is-active {
+    background: var(--color-fg);
+    width: 32px;
+  }
+  /* Larger tap target on mobile — visible size stays small but the
+     hit area grows via a transparent ::before that sits on top. */
+  @media (max-width: 600px) {
+    .ds-pdp__gallery-thumbs--dots {
+      padding: 14px 0 2px;
+    }
+    .ds-pdp__gallery-thumbs--dots .ds-pdp__gallery-thumb {
+      position: relative;
+    }
+    .ds-pdp__gallery-thumbs--dots .ds-pdp__gallery-thumb::before {
+      content: "";
+      position: absolute;
+      inset: -12px -3px;
+    }
   }
   .ds-pdp__gallery-thumb-img {
     width: 100%;
@@ -1608,6 +1706,17 @@
       "label": "Auto-advance to 2nd media on load",
       "default": false,
       "info": "Keeps the cover image as media position 1 (so it stays the collection-grid thumbnail), but the PDP main view swaps to media position 2 on load. Useful for plugin templates where you want the demo video to play immediately while still using a static thumbnail elsewhere."
+    },
+    {
+      "type": "select",
+      "id": "gallery_pagination_style",
+      "label": "Pagination style",
+      "options": [
+        { "value": "thumbnails", "label": "Thumbnail grid (4-column)" },
+        { "value": "dots", "label": "Dot pagination (editorial)" }
+      ],
+      "default": "thumbnails",
+      "info": "Thumbnails show every media as a small preview; better for fonts / graphics where each item sells differently. Dots are minimal pills below the main; better for plugins where one demo video does the selling. Both modes always show the X / N counter overlay in the bottom-right of the main."
     }
   ],
   "presets": [
@@ -1644,10 +1753,20 @@
         return mainSlot.querySelector('.ds-pdp__gallery-main-img, .ds-pdp__gallery-main-video');
       }
 
+      // Cache the counter element once — referenced on every activate()
+      // to keep the "X / N" overlay in sync with the visible media.
+      var counterCurrentEl = gallery.querySelector('[data-counter-current]');
+
       function activate(btn) {
         if (!btn) return;
         thumbList.forEach(function (b) { b.classList.remove('is-active'); });
         btn.classList.add('is-active');
+
+        // Update the counter pill, if it's rendered (only when media > 1).
+        if (counterCurrentEl) {
+          var idx = thumbList.indexOf(btn);
+          if (idx >= 0) counterCurrentEl.textContent = (idx + 1);
+        }
 
         var mediaType = btn.getAttribute('data-media-type') || 'image';
         var current = getCurrentMain();
