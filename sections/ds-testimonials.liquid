@@ -86,6 +86,45 @@
                   {%- endif -%}
                 </div>
               {%- endif -%}
+
+              {%- comment -%}
+                Product link — when the merchant picks a product on this
+                testimonial block, render a small thumb + product name
+                anchor at the bottom of the card. Makes review→product
+                context obvious (closes the loop visitors mentally
+                start asking: 'okay but a review of what?').
+
+                Defensive checks: only render if a product picker value
+                is set AND the product still exists in the store (a
+                merchant might delete a product, leaving a stale id).
+                The product. handle exists check covers both.
+              {%- endcomment -%}
+              {%- assign t_product = block.settings.product -%}
+              {%- if t_product != blank and t_product.handle != blank -%}
+                <a
+                  class="ds-testimonials__product"
+                  href="{{ t_product.url }}"
+                  aria-label="View {{ t_product.title | escape }}"
+                >
+                  {%- if t_product.featured_image != blank -%}
+                    {{
+                      t_product.featured_image
+                      | image_url: width: 96
+                      | image_tag:
+                        widths: '48, 96, 144',
+                        sizes: '48px',
+                        loading: 'lazy',
+                        alt: t_product.title,
+                        class: 'ds-testimonials__product-img'
+                    }}
+                  {%- endif -%}
+                  <span class="ds-testimonials__product-meta">
+                    <span class="ds-testimonials__product-label">On</span>
+                    <span class="ds-testimonials__product-title">{{ t_product.title }}</span>
+                  </span>
+                  <span class="ds-testimonials__product-arrow" aria-hidden="true">&rarr;</span>
+                </a>
+              {%- endif -%}
             </div>
           </li>
         {%- endif -%}
@@ -215,6 +254,80 @@
     color: var(--color-fg-muted);
   }
 
+  /* Product link — small thumb + product title at the bottom of the
+     card. Bordered top hairline visually separates it from the
+     attribution row so the link reads as a "footer / origin" detail
+     rather than part of the quote attribution. */
+  .ds-testimonials__product {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: var(--space-4);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    text-decoration: none;
+    color: var(--color-fg);
+    transition: color var(--t-fast) var(--ease);
+    /* Push the link onto its own row (don't let the parent flex
+       layout collapse it inline with the quote/attribution). */
+    width: 100%;
+  }
+  @media (hover: hover) {
+    .ds-testimonials__product:hover {
+      color: var(--color-accent);
+    }
+    .ds-testimonials__product:hover .ds-testimonials__product-img {
+      border-color: var(--color-fg);
+    }
+  }
+  .ds-testimonials__product-img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    display: block;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+    flex-shrink: 0;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  .ds-testimonials__product-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+  .ds-testimonials__product-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-testimonials__product-title {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ds-testimonials__product-arrow {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--color-fg-muted);
+    flex-shrink: 0;
+    transition: color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+  }
+  @media (hover: hover) {
+    .ds-testimonials__product:hover .ds-testimonials__product-arrow {
+      color: var(--color-accent);
+      transform: translateX(2px);
+    }
+  }
+
   /* Mobile — stacked layout collapses num + content to one column */
   @media (max-width: 700px) {
     .ds-testimonials--stacked .ds-testimonials__item {
@@ -309,6 +422,12 @@
           "default": 5,
           "unit": "★",
           "info": "0 hides the rating row."
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Linked product",
+          "info": "Optional. When set, a small product thumbnail + title appears at the bottom of the testimonial linking to the product page. Helps visitors connect the review to a specific item."
         }
       ]
     }
