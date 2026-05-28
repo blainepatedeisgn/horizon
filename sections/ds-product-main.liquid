@@ -1238,27 +1238,33 @@
     margin: 0;
   }
 
-  /* Aggregate star rating — small horizontal row under the title. */
+  /* Aggregate star rating — small horizontal row under the title.
+     Sits inside the parent flex column so its top/bottom spacing
+     comes from the parent's gap setting (var(--space-4) ~16px),
+     which puts it a comfortable distance from both the title above
+     and the tagline below. No custom margins needed — earlier
+     versions pulled it tight against the title descender via a
+     negative top margin, which read as cramped. */
   .ds-pdp__info-rating {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     margin: 0;
-    /* Negative top margin pulls it closer to the title without a
-       custom gap on the parent flex column (which would affect the
-       title→tagline distance too). */
-    margin-top: calc(var(--space-2) * -1);
+    padding: 4px 0;
   }
   .ds-pdp__info-rating-stars {
-    font-size: 15px;
+    /* Slightly larger than the testimonial-card stars so they read
+       as a primary signal rather than an afterthought. Letter-spacing
+       gives the row a more deliberate, rhythmic feel. */
+    font-size: 18px;
     line-height: 1;
     color: var(--color-accent);
-    letter-spacing: 1px;
+    letter-spacing: 2px;
   }
   .ds-pdp__info-rating-text {
     font-family: var(--font-mono);
     font-size: 11px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--color-fg-muted);
   }
