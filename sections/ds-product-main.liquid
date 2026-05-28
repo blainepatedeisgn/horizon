@@ -1896,6 +1896,15 @@
         var mediaType = btn.getAttribute('data-media-type') || 'image';
         var current = getCurrentMain();
 
+        // If the currently-displayed main is a video, run its cleanup
+        // handler before replacing it. The cleanup detaches the
+        // visibility-change listener that the previous video attached
+        // to document — without this, every video-thumbnail click
+        // leaks a listener that survives the video element being GC'd.
+        if (current && current.tagName === 'VIDEO' && typeof current._dsCleanup === 'function') {
+          current._dsCleanup();
+        }
+
         if (mediaType === 'video') {
           // Build a fresh <video> element with autoplay/muted/loop/controls.
           // The current main (image or stale video) gets replaced wholesale.
@@ -1913,6 +1922,9 @@
           // pixel-perfect demo button if you want a click-to-play
           // experience with controls in a modal.
           video.setAttribute('preload', 'auto');
+          // disableRemotePlayback prevents iOS AirPlay icon from appearing
+          // and reduces edge-case autoplay rejections.
+          video.setAttribute('disableRemotePlayback', '');
           video.muted = true; // explicit JS prop — required for autoplay in Chrome/Safari
           var poster = btn.getAttribute('data-video-poster');
           if (poster) video.poster = poster;
@@ -1923,10 +1935,50 @@
           } else {
             mainSlot.insertBefore(video, mainSlot.firstChild);
           }
-          // Autoplay can be rejected by the browser even with muted —
-          // most commonly when no user gesture yet. Catch swallowed.
-          var p = video.play();
-          if (p && p.catch) p.catch(function () {});
+
+          // Robust autoplay with retries.
+          //
+          // The intermittent mobile-autoplay-failure case: video element
+          // is created + inserted, then play() is called synchronously
+          // — but the video has no data yet. The play() promise rejects
+          // silently (commonly NotAllowedError on iOS, AbortError on
+          // Chrome), and no further play() is ever attempted, so the
+          // video sits frozen on its poster until the user taps it.
+          //
+          // Fix: retry play() at three escalating readiness moments —
+          // 'loadedmetadata' (we know the duration/dimensions), 'canplay'
+          // (we have enough data to start), and 'canplaythrough' (we
+          // can play start-to-finish without buffering). Any of them
+          // succeeding kicks autoplay on. attemptPlay short-circuits if
+          // the video is already playing so the retries are no-ops.
+          function attemptPlay() {
+            if (!video.paused) return; // already running
+            var p = video.play();
+            if (p && p.catch) {
+              p.catch(function (err) {
+                console.warn('[ds-pdp-gallery] video.play() rejected:', err.name, err.message);
+              });
+            }
+          }
+          video.addEventListener('loadedmetadata', attemptPlay);
+          video.addEventListener('canplay', attemptPlay);
+          video.addEventListener('canplaythrough', attemptPlay);
+          // Also retry when the page becomes visible again — covers the
+          // case where the user backgrounded the tab during initial load
+          // and play() got rejected because the tab wasn't focused.
+          var onVisibilityChange = function () {
+            if (document.visibilityState === 'visible') attemptPlay();
+          };
+          document.addEventListener('visibilitychange', onVisibilityChange);
+          // Clean up the visibility listener if this video element is
+          // ever replaced (e.g. user clicks a different thumbnail).
+          // We use a custom property because there's no clean
+          // "video removed" event.
+          video._dsCleanup = function () {
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+          };
+
+          attemptPlay();
         } else {
           var src = btn.getAttribute('data-src');
           if (!src) return;
