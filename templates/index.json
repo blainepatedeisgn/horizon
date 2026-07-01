@@ -24,7 +24,7 @@
         "ds_rich_text_NRfAN8": {
           "type": "ds-rich-text",
           "settings": {
-            "text": "<p>Carefully crafted plugins, fonts, graphics and more, made in small batches for modern designers who sweat the details.</p>"
+            "text": "<p><strong>Carefully crafted plugins, fonts, graphics and more, made in small batches for modern designers who sweat the details.</strong></p>"
           },
           "blocks": {}
         },
@@ -47,25 +47,25 @@
       ],
       "name": "Hero — Studio",
       "settings": {
-        "align": "left",
+        "align": "center",
         "height": "full",
         "content_width": 1180,
         "bg_color": "#000000",
         "gradient_style": "band_top",
-        "glow_color": "#46FF64",
-        "gradient_strength": 60,
-        "gradient_reach": 46,
+        "glow_color": "#FF4C20",
+        "gradient_strength": 100,
+        "gradient_reach": 100,
         "show_grain": true,
-        "grain_strength": 14,
-        "show_meta_strip": true,
+        "grain_strength": 20,
+        "show_meta_strip": false,
         "meta_left": "Disrupted Studio © 2026",
         "meta_right": "Plugins / Fonts / Graphics / Bundles",
-        "heading_font": "inter_n7",
+        "heading_font": "mono",
         "body_font": "inter_n4",
         "heading_glow": false,
-        "text_color": "#F2F0EC",
-        "muted_color": "#8C8A85",
-        "accent_color": "#46FF64"
+        "text_color": "#f2f0ec",
+        "muted_color": "#8c8a85",
+        "accent_color": "#46ff64"
       }
     },
     "ds_hero_pixelperfect_KLC9fz": {
