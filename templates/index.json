@@ -12,14 +12,6 @@
     "ds_hero_studio_VAJ8Kc": {
       "type": "ds-hero-studio",
       "blocks": {
-        "ds_eyebrow_st": {
-          "type": "ds-eyebrow",
-          "settings": {
-            "text": "",
-            "accent": "Independent design studio"
-          },
-          "blocks": {}
-        },
         "ds_hero_title_nBxfYi": {
           "type": "ds-hero-title",
           "settings": {
@@ -49,7 +41,6 @@
         }
       },
       "block_order": [
-        "ds_eyebrow_st",
         "ds_hero_title_nBxfYi",
         "ds_rich_text_NRfAN8",
         "ds_button_row_mqd3zt"
