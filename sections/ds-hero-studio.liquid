@@ -1,31 +1,30 @@
 {%- comment -%}
   sections/ds-hero-studio.liquid
 
-  Studio hero. Centered content over an editable gradient wash with
-  optional film grain. Content is built from reorderable blocks
-  (eyebrow, title, rich text, button row). All visuals are section
-  settings: background, gradient type + strength + spread, glow color,
-  grain, fonts, text colors, alignment, height and width.
+  Brutalist studio hero. Pure black, left aligned, with the gradient as a
+  top edge band (not a full page glow). Optional film grain and a bottom
+  mono meta strip. Content is reorderable blocks (eyebrow, title, rich
+  text, button row). Gradient, grain, colors, fonts, layout and the meta
+  strip are all section settings.
 {%- endcomment -%}
 
 {%- liquid
   assign s = section.settings
 
-  assign ga = s.gradient_strength | times: 0.01
-  assign gb = ga | times: 0.3
+  assign ga = s.gradient_strength | times: 0.006
+  assign gm = s.gradient_strength | times: 0.004
+  assign gb = s.gradient_strength | times: 0.002
   assign glow_a = s.glow_color | color_modify: 'alpha', ga
+  assign glow_m = s.glow_color | color_modify: 'alpha', gm
   assign glow_b = s.glow_color | color_modify: 'alpha', gb
-  assign spread = s.gradient_spread
 
-  case s.gradient_type
-    when 'radial_top'
-      assign gradient = 'radial-gradient(125% ' | append: spread | append: '% at 50% -10%, ' | append: glow_a | append: ', ' | append: glow_b | append: ' 32%, transparent 62%)'
-    when 'linear_down'
-      assign gradient = 'linear-gradient(180deg, ' | append: glow_a | append: ' 0%, ' | append: glow_b | append: ' 30%, transparent 70%)'
-    when 'radial_center'
-      assign gradient = 'radial-gradient(62% 55% at 50% 45%, ' | append: glow_a | append: ', ' | append: glow_b | append: ' 40%, transparent 74%)'
-    when 'radial_topleft'
-      assign gradient = 'radial-gradient(95% 95% at 12% -10%, ' | append: glow_a | append: ', ' | append: glow_b | append: ' 34%, transparent 64%)'
+  case s.gradient_style
+    when 'band_top'
+      assign gradient = 'linear-gradient(180deg, ' | append: glow_a | append: ' 0%, ' | append: glow_b | append: ' 22%, transparent 62%), radial-gradient(140% 100% at 82% -30%, ' | append: glow_m | append: ', transparent 55%)'
+    when 'corner_tr'
+      assign gradient = 'radial-gradient(140% 110% at 85% -25%, ' | append: glow_a | append: ', ' | append: glow_b | append: ' 42%, transparent 62%)'
+    when 'fade_down'
+      assign gradient = 'linear-gradient(180deg, ' | append: glow_a | append: ' 0%, ' | append: glow_b | append: ' 30%, transparent 72%)'
     else
       assign gradient = 'none'
   endcase
@@ -41,12 +40,14 @@
       assign min_h = 'auto'
   endcase
 
-  if s.align == 'left'
-    assign align_text = 'left'
-    assign align_items = 'flex-start'
-  else
+  if s.align == 'center'
     assign align_text = 'center'
     assign align_items = 'center'
+    assign inner_margin = '0 auto'
+  else
+    assign align_text = 'left'
+    assign align_items = 'flex-start'
+    assign inner_margin = '0'
   endif
 
   assign grain_a = s.grain_strength | times: 0.01
@@ -65,20 +66,32 @@
     --hs-muted: {{ s.muted_color }};
     --hs-accent: {{ s.accent_color }};
     --hs-gradient: {{ gradient }};
+    --hs-reach: {{ s.gradient_reach }}%;
     --hs-minh: {{ min_h }};
     --hs-cw: {{ s.content_width }}px;
     --hs-align: {{ align_text }};
     --hs-items: {{ align_items }};
+    --hs-margin: {{ inner_margin }};
     --hs-grain: {{ grain_a }};
     --hs-hfont: {{ s.heading_font.family }}, {{ s.heading_font.fallback_families }};
     --hs-bfont: {{ s.body_font.family }}, {{ s.body_font.fallback_families }};
-    --fs-display: clamp(40px, 7vw, 92px);
+    --fs-display: clamp(46px, 8.4vw, 116px);
   "
   {{ section.shopify_attributes }}
 >
+  <div class="ds-hero-studio__band" aria-hidden="true"></div>
+  {%- if s.show_grain -%}<div class="ds-hero-studio__grain" aria-hidden="true"></div>{%- endif -%}
+
   <div class="ds-hero-studio__inner">
     {%- content_for 'blocks' -%}
   </div>
+
+  {%- if s.show_meta_strip -%}
+    <div class="ds-hero-studio__meta">
+      <span>{{ s.meta_left }}</span>
+      <span>{{ s.meta_right }}</span>
+    </div>
+  {%- endif -%}
 </section>
 
 {% style %}
@@ -87,23 +100,24 @@
     isolation: isolate;
     overflow: hidden;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     min-height: var(--hs-minh);
+    padding: clamp(48px, 8vh, 110px) var(--pad-x) 0;
     background: var(--hs-bg);
     color: var(--hs-text);
     font-family: var(--hs-bfont);
   }
-  .ds-hero-studio::before {
-    content: "";
+  .ds-hero-studio__band {
     position: absolute;
-    inset: 0;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: var(--hs-reach);
     z-index: 0;
     pointer-events: none;
     background: var(--hs-gradient);
   }
-  {% if section.settings.show_grain %}
-  .ds-hero-studio::after {
-    content: "";
+  .ds-hero-studio__grain {
     position: absolute;
     inset: 0;
     z-index: 1;
@@ -112,36 +126,46 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 150px 150px;
   }
-  {% endif %}
 
   .ds-hero-studio__inner {
     position: relative;
     z-index: 2;
-    width: 100%;
-    max-width: var(--hs-cw);
-    margin: 0 auto;
-    padding: clamp(48px, 9vh, 120px) var(--pad-x);
+    flex: 1;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    max-width: var(--hs-cw);
+    margin: var(--hs-margin);
     gap: var(--space-5);
     text-align: var(--hs-align);
     align-items: var(--hs-items);
   }
 
   .ds-hero-studio .ds-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-family: var(--font-mono);
     font-size: 12px;
-    letter-spacing: 0.28em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--hs-accent);
+  }
+  .ds-hero-studio .ds-eyebrow::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: var(--hs-accent);
+    box-shadow: 0 0 10px var(--hs-accent);
   }
   .ds-hero-studio .ds-eyebrow .ds-mono { color: var(--hs-accent); }
 
   .ds-hero-studio .ds-hero-title {
     font-family: var(--hs-hfont);
     font-size: var(--fs-display);
-    font-weight: 700;
-    line-height: 1.02;
+    font-weight: 800;
+    line-height: 0.94;
     letter-spacing: -0.035em;
     margin: 0;
     color: var(--hs-text);
@@ -150,7 +174,7 @@
     {% if section.settings.heading_glow %}
     filter: blur(34px);
     color: {{ section.settings.glow_color }};
-    opacity: 0.55;
+    opacity: 0.5;
     {% else %}
     display: none;
     {% endif %}
@@ -158,15 +182,51 @@
 
   .ds-hero-studio .ds-rich-text {
     color: var(--hs-muted);
-    max-width: 44ch;
-    font-size: clamp(16px, 1.7vw, 20px);
+    max-width: 46ch;
+    font-size: clamp(15px, 1.5vw, 20px);
     line-height: 1.5;
   }
 
   .ds-hero-studio .ds-button-row { justify-content: var(--hs-items); }
+  .ds-hero-studio .ds-btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    background: var(--hs-text);
+    color: var(--hs-bg);
+  }
+  .ds-hero-studio .ds-btn:hover { background: var(--hs-accent); color: var(--hs-bg); }
+  .ds-hero-studio .ds-text-link {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--hs-text);
+  }
+  .ds-hero-studio .ds-text-link:hover { color: var(--hs-accent); border-color: var(--hs-accent); }
+
+  .ds-hero-studio__meta {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 40px;
+    padding: 16px 0;
+    border-top: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--hs-muted);
+  }
 
   @media (max-width: 640px) {
-    .ds-hero-studio { --fs-display: clamp(36px, 11vw, 58px); }
+    .ds-hero-studio { --fs-display: clamp(40px, 12vw, 64px); }
   }
 {% endstyle %}
 
@@ -181,10 +241,10 @@
       "type": "select",
       "id": "align",
       "label": "Text alignment",
-      "default": "center",
+      "default": "left",
       "options": [
-        { "value": "center", "label": "Center" },
-        { "value": "left", "label": "Left" }
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" }
       ]
     },
     {
@@ -204,10 +264,10 @@
       "id": "content_width",
       "label": "Content width",
       "min": 480,
-      "max": 1100,
+      "max": 1200,
       "step": 20,
       "unit": "px",
-      "default": 900
+      "default": 1180
     },
 
     { "type": "header", "content": "Background and gradient" },
@@ -215,18 +275,17 @@
       "type": "color",
       "id": "bg_color",
       "label": "Background",
-      "default": "#0D100E"
+      "default": "#000000"
     },
     {
       "type": "select",
-      "id": "gradient_type",
-      "label": "Gradient type",
-      "default": "radial_top",
+      "id": "gradient_style",
+      "label": "Gradient style",
+      "default": "band_top",
       "options": [
-        { "value": "radial_top", "label": "Glow from top" },
-        { "value": "linear_down", "label": "Fade top to bottom" },
-        { "value": "radial_center", "label": "Glow from center" },
-        { "value": "radial_topleft", "label": "Glow from top left" },
+        { "value": "band_top", "label": "Top band" },
+        { "value": "corner_tr", "label": "Top-right corner" },
+        { "value": "fade_down", "label": "Fade down" },
         { "value": "none", "label": "None" }
       ]
     },
@@ -248,13 +307,13 @@
     },
     {
       "type": "range",
-      "id": "gradient_spread",
-      "label": "Gradient spread",
+      "id": "gradient_reach",
+      "label": "Gradient reach down",
       "min": 20,
       "max": 100,
-      "step": 5,
+      "step": 2,
       "unit": "%",
-      "default": 80
+      "default": 46
     },
 
     { "type": "header", "content": "Film grain" },
@@ -275,12 +334,32 @@
       "default": 14
     },
 
+    { "type": "header", "content": "Meta strip" },
+    {
+      "type": "checkbox",
+      "id": "show_meta_strip",
+      "label": "Show bottom meta strip",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "meta_left",
+      "label": "Meta left",
+      "default": "Disrupted Studio © 2026"
+    },
+    {
+      "type": "text",
+      "id": "meta_right",
+      "label": "Meta right",
+      "default": "Plugins / Fonts / Graphics / Bundles"
+    },
+
     { "type": "header", "content": "Typography" },
     {
       "type": "font_picker",
       "id": "heading_font",
       "label": "Heading font",
-      "default": "inter_n6"
+      "default": "inter_n7"
     },
     {
       "type": "font_picker",
@@ -300,13 +379,13 @@
       "type": "color",
       "id": "text_color",
       "label": "Text",
-      "default": "#F5F4EF"
+      "default": "#F2F0EC"
     },
     {
       "type": "color",
       "id": "muted_color",
       "label": "Subtext",
-      "default": "#A1A29B"
+      "default": "#8C8A85"
     },
     {
       "type": "color",
@@ -326,9 +405,10 @@
     {
       "name": "Hero — Studio",
       "blocks": [
+        { "type": "ds-eyebrow", "settings": { "text": "", "accent": "Independent design studio" } },
         { "type": "ds-hero-title", "settings": { "text": "Make work worth stealing.", "spotlight": false } },
         { "type": "ds-rich-text", "settings": { "text": "<p>Obsessively crafted plugins, fonts and graphics for the next wave of designers.</p>" } },
-        { "type": "ds-button-row", "settings": { "primary_label": "Shop everything", "secondary_label": "See what's new" } }
+        { "type": "ds-button-row", "settings": { "primary_label": "Shop everything", "secondary_label": "What's new" } }
       ]
     }
   ]

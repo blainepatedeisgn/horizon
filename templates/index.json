@@ -12,6 +12,14 @@
     "ds_hero_studio_VAJ8Kc": {
       "type": "ds-hero-studio",
       "blocks": {
+        "ds_eyebrow_st": {
+          "type": "ds-eyebrow",
+          "settings": {
+            "text": "",
+            "accent": "Independent design studio"
+          },
+          "blocks": {}
+        },
         "ds_hero_title_nBxfYi": {
           "type": "ds-hero-title",
           "settings": {
@@ -41,28 +49,32 @@
         }
       },
       "block_order": [
+        "ds_eyebrow_st",
         "ds_hero_title_nBxfYi",
         "ds_rich_text_NRfAN8",
         "ds_button_row_mqd3zt"
       ],
       "name": "Hero — Studio",
       "settings": {
-        "align": "center",
+        "align": "left",
         "height": "full",
-        "content_width": 700,
-        "bg_color": "#0d100e",
-        "gradient_type": "radial_top",
-        "glow_color": "#FF4C20",
-        "gradient_strength": 100,
-        "gradient_spread": 100,
-        "show_grain": false,
-        "grain_strength": 10,
-        "heading_font": "inter_n6",
+        "content_width": 1180,
+        "bg_color": "#000000",
+        "gradient_style": "band_top",
+        "glow_color": "#46FF64",
+        "gradient_strength": 60,
+        "gradient_reach": 46,
+        "show_grain": true,
+        "grain_strength": 14,
+        "show_meta_strip": true,
+        "meta_left": "Disrupted Studio © 2026",
+        "meta_right": "Plugins / Fonts / Graphics / Bundles",
+        "heading_font": "inter_n7",
         "body_font": "inter_n4",
         "heading_glow": false,
-        "text_color": "#f5f4ef",
-        "muted_color": "#a1a29b",
-        "accent_color": "#46ff64"
+        "text_color": "#F2F0EC",
+        "muted_color": "#8C8A85",
+        "accent_color": "#46FF64"
       }
     },
     "ds_hero_pixelperfect_KLC9fz": {
