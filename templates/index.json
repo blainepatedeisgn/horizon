@@ -142,6 +142,40 @@
         "color_scheme": ""
       }
     },
+    "ds_hero_studio": {
+      "type": "ds-hero-studio",
+      "name": "Hero — Studio",
+      "blocks": {
+        "title": {
+          "type": "ds-hero-title",
+          "settings": {
+            "text": "Make work worth stealing.",
+            "spotlight": false
+          }
+        },
+        "sub": {
+          "type": "ds-rich-text",
+          "settings": {
+            "text": "<p>Obsessively crafted plugins, fonts and graphics for the next wave of designers.</p>"
+          }
+        },
+        "buttons": {
+          "type": "ds-button-row",
+          "settings": {
+            "primary_label": "Shop everything",
+            "primary_url": "/collections/all",
+            "secondary_label": "See what's new",
+            "secondary_url": "/collections/all"
+          }
+        }
+      },
+      "block_order": [
+        "title",
+        "sub",
+        "buttons"
+      ],
+      "settings": {}
+    },
     "ds_product_scroller_QHJ8rQ": {
       "type": "ds-product-scroller",
       "name": "Product scroller",
@@ -296,12 +330,13 @@
     }
   },
   "order": [
-    "ds_hero_pixelperfect_KLC9fz",
-    "hero",
+    "ds_hero_studio",
     "ds_product_scroller_QHJ8rQ",
     "product_grid",
     "category_teasers",
+    "ds_hero_pixelperfect_KLC9fz",
     "ds_testimonials_rnM6fR",
-    "newsletter"
+    "newsletter",
+    "hero"
   ]
 }

@@ -1,0 +1,334 @@
+{%- comment -%}
+  sections/ds-hero-studio.liquid
+
+  Studio hero. Centered content over an editable gradient wash with
+  optional film grain. Content is built from reorderable blocks
+  (eyebrow, title, rich text, button row). All visuals are section
+  settings: background, gradient type + strength + spread, glow color,
+  grain, fonts, text colors, alignment, height and width.
+{%- endcomment -%}
+
+{%- liquid
+  assign s = section.settings
+
+  assign ga = s.gradient_strength | times: 0.01
+  assign gb = ga | times: 0.3
+  assign glow_a = s.glow_color | color_modify: 'alpha', ga
+  assign glow_b = s.glow_color | color_modify: 'alpha', gb
+  assign spread = s.gradient_spread
+
+  case s.gradient_type
+    when 'radial_top'
+      assign gradient = 'radial-gradient(125% ' | append: spread | append: '% at 50% -10%, ' | append: glow_a | append: ', ' | append: glow_b | append: ' 32%, transparent 62%)'
+    when 'linear_down'
+      assign gradient = 'linear-gradient(180deg, ' | append: glow_a | append: ' 0%, ' | append: glow_b | append: ' 30%, transparent 70%)'
+    when 'radial_center'
+      assign gradient = 'radial-gradient(62% 55% at 50% 45%, ' | append: glow_a | append: ', ' | append: glow_b | append: ' 40%, transparent 74%)'
+    when 'radial_topleft'
+      assign gradient = 'radial-gradient(95% 95% at 12% -10%, ' | append: glow_a | append: ', ' | append: glow_b | append: ' 34%, transparent 64%)'
+    else
+      assign gradient = 'none'
+  endcase
+
+  case s.height
+    when 'full'
+      assign min_h = '100svh'
+    when 'tall'
+      assign min_h = '82svh'
+    when 'medium'
+      assign min_h = '62svh'
+    else
+      assign min_h = 'auto'
+  endcase
+
+  if s.align == 'left'
+    assign align_text = 'left'
+    assign align_items = 'flex-start'
+  else
+    assign align_text = 'center'
+    assign align_items = 'center'
+  endif
+
+  assign grain_a = s.grain_strength | times: 0.01
+-%}
+
+{{ s.heading_font | font_face: font_display: 'swap' }}
+{{ s.body_font | font_face: font_display: 'swap' }}
+
+<section
+  class="ds-hero-studio"
+  style="
+    --hs-bg: {{ s.bg_color }};
+    --hs-text: {{ s.text_color }};
+    --hs-muted: {{ s.muted_color }};
+    --hs-accent: {{ s.accent_color }};
+    --hs-gradient: {{ gradient }};
+    --hs-minh: {{ min_h }};
+    --hs-cw: {{ s.content_width }}px;
+    --hs-align: {{ align_text }};
+    --hs-items: {{ align_items }};
+    --hs-grain: {{ grain_a }};
+    --hs-hfont: {{ s.heading_font.family }}, {{ s.heading_font.fallback_families }};
+    --hs-bfont: {{ s.body_font.family }}, {{ s.body_font.fallback_families }};
+    --fs-display: clamp(40px, 7vw, 92px);
+  "
+  {{ section.shopify_attributes }}
+>
+  <div class="ds-hero-studio__inner">
+    {%- content_for 'blocks' -%}
+  </div>
+</section>
+
+{% style %}
+  .ds-hero-studio {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    min-height: var(--hs-minh);
+    background: var(--hs-bg);
+    color: var(--hs-text);
+    font-family: var(--hs-bfont);
+  }
+  .ds-hero-studio::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: var(--hs-gradient);
+  }
+  {% if section.settings.show_grain %}
+  .ds-hero-studio::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: var(--hs-grain);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 150px 150px;
+  }
+  {% endif %}
+
+  .ds-hero-studio__inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: var(--hs-cw);
+    margin: 0 auto;
+    padding: clamp(48px, 9vh, 120px) var(--pad-x);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    text-align: var(--hs-align);
+    align-items: var(--hs-items);
+  }
+
+  .ds-hero-studio .ds-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--hs-accent);
+  }
+  .ds-hero-studio .ds-eyebrow .ds-mono { color: var(--hs-accent); }
+
+  .ds-hero-studio .ds-hero-title {
+    font-family: var(--hs-hfont);
+    font-size: var(--fs-display);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    margin: 0;
+    color: var(--hs-text);
+  }
+  .ds-hero-studio .ds-hero-title__glow {
+    {% if section.settings.heading_glow %}
+    filter: blur(34px);
+    color: {{ section.settings.glow_color }};
+    opacity: 0.55;
+    {% else %}
+    display: none;
+    {% endif %}
+  }
+
+  .ds-hero-studio .ds-rich-text {
+    color: var(--hs-muted);
+    max-width: 44ch;
+    font-size: clamp(16px, 1.7vw, 20px);
+    line-height: 1.5;
+  }
+
+  .ds-hero-studio .ds-button-row { justify-content: var(--hs-items); }
+
+  @media (max-width: 640px) {
+    .ds-hero-studio { --fs-display: clamp(36px, 11vw, 58px); }
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Hero — Studio",
+  "tag": "section",
+  "class": "ds-section ds-section--hero-studio",
+  "settings": [
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "select",
+      "id": "align",
+      "label": "Text alignment",
+      "default": "center",
+      "options": [
+        { "value": "center", "label": "Center" },
+        { "value": "left", "label": "Left" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "height",
+      "label": "Height",
+      "default": "full",
+      "options": [
+        { "value": "full", "label": "Full screen" },
+        { "value": "tall", "label": "Tall" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "auto", "label": "Fit content" }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "content_width",
+      "label": "Content width",
+      "min": 480,
+      "max": 1100,
+      "step": 20,
+      "unit": "px",
+      "default": 900
+    },
+
+    { "type": "header", "content": "Background and gradient" },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background",
+      "default": "#0D100E"
+    },
+    {
+      "type": "select",
+      "id": "gradient_type",
+      "label": "Gradient type",
+      "default": "radial_top",
+      "options": [
+        { "value": "radial_top", "label": "Glow from top" },
+        { "value": "linear_down", "label": "Fade top to bottom" },
+        { "value": "radial_center", "label": "Glow from center" },
+        { "value": "radial_topleft", "label": "Glow from top left" },
+        { "value": "none", "label": "None" }
+      ]
+    },
+    {
+      "type": "color",
+      "id": "glow_color",
+      "label": "Gradient color",
+      "default": "#46FF64"
+    },
+    {
+      "type": "range",
+      "id": "gradient_strength",
+      "label": "Gradient strength",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "gradient_spread",
+      "label": "Gradient spread",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 78
+    },
+
+    { "type": "header", "content": "Film grain" },
+    {
+      "type": "checkbox",
+      "id": "show_grain",
+      "label": "Show grain",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "grain_strength",
+      "label": "Grain strength",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "%",
+      "default": 14
+    },
+
+    { "type": "header", "content": "Typography" },
+    {
+      "type": "font_picker",
+      "id": "heading_font",
+      "label": "Heading font",
+      "default": "inter_n6"
+    },
+    {
+      "type": "font_picker",
+      "id": "body_font",
+      "label": "Body font",
+      "default": "inter_n4"
+    },
+    {
+      "type": "checkbox",
+      "id": "heading_glow",
+      "label": "Glow behind heading",
+      "default": false
+    },
+
+    { "type": "header", "content": "Colors" },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#F5F4EF"
+    },
+    {
+      "type": "color",
+      "id": "muted_color",
+      "label": "Subtext",
+      "default": "#A1A29B"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent",
+      "default": "#46FF64"
+    }
+  ],
+  "blocks": [
+    { "type": "ds-eyebrow" },
+    { "type": "ds-hero-title" },
+    { "type": "ds-meta-strip" },
+    { "type": "ds-rich-text" },
+    { "type": "ds-button-row" }
+  ],
+  "presets": [
+    {
+      "name": "Hero — Studio",
+      "blocks": [
+        { "type": "ds-hero-title", "settings": { "text": "Make work worth stealing.", "spotlight": false } },
+        { "type": "ds-rich-text", "settings": { "text": "<p>Obsessively crafted plugins, fonts and graphics for the next wave of designers.</p>" } },
+        { "type": "ds-button-row", "settings": { "primary_label": "Shop everything", "secondary_label": "See what's new" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
