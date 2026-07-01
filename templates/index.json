@@ -9,6 +9,62 @@
  */
 {
   "sections": {
+    "ds_hero_studio_VAJ8Kc": {
+      "type": "ds-hero-studio",
+      "blocks": {
+        "ds_hero_title_nBxfYi": {
+          "type": "ds-hero-title",
+          "settings": {
+            "text": "Make work worth stealing.",
+            "spotlight": false,
+            "size_pct": 100
+          },
+          "blocks": {}
+        },
+        "ds_rich_text_NRfAN8": {
+          "type": "ds-rich-text",
+          "settings": {
+            "text": "<p>Obsessively crafted plugins, fonts and graphics for the next wave of designers.</p>"
+          },
+          "blocks": {}
+        },
+        "ds_button_row_mqd3zt": {
+          "type": "ds-button-row",
+          "settings": {
+            "primary_label": "Shop everything",
+            "primary_url": "",
+            "primary_product": "",
+            "secondary_label": "See what's new",
+            "secondary_url": ""
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ds_hero_title_nBxfYi",
+        "ds_rich_text_NRfAN8",
+        "ds_button_row_mqd3zt"
+      ],
+      "name": "Hero — Studio",
+      "settings": {
+        "align": "center",
+        "height": "full",
+        "content_width": 700,
+        "bg_color": "#0D100E",
+        "gradient_type": "radial_top",
+        "glow_color": "#46FF64",
+        "gradient_strength": 100,
+        "gradient_spread": 100,
+        "show_grain": true,
+        "grain_strength": 10,
+        "heading_font": "inter_n6",
+        "body_font": "inter_n4",
+        "heading_glow": false,
+        "text_color": "#F5F4EF",
+        "muted_color": "#A1A29B",
+        "accent_color": "#46FF64"
+      }
+    },
     "ds_hero_pixelperfect_KLC9fz": {
       "type": "ds-hero-pixelperfect",
       "blocks": {
@@ -141,40 +197,6 @@
       "settings": {
         "color_scheme": ""
       }
-    },
-    "ds_hero_studio": {
-      "type": "ds-hero-studio",
-      "name": "Hero — Studio",
-      "blocks": {
-        "title": {
-          "type": "ds-hero-title",
-          "settings": {
-            "text": "Make work worth stealing.",
-            "spotlight": false
-          }
-        },
-        "sub": {
-          "type": "ds-rich-text",
-          "settings": {
-            "text": "<p>Obsessively crafted plugins, fonts and graphics for the next wave of designers.</p>"
-          }
-        },
-        "buttons": {
-          "type": "ds-button-row",
-          "settings": {
-            "primary_label": "Shop everything",
-            "primary_url": "/collections/all",
-            "secondary_label": "See what's new",
-            "secondary_url": "/collections/all"
-          }
-        }
-      },
-      "block_order": [
-        "title",
-        "sub",
-        "buttons"
-      ],
-      "settings": {}
     },
     "ds_product_scroller_QHJ8rQ": {
       "type": "ds-product-scroller",
@@ -330,13 +352,13 @@
     }
   },
   "order": [
-    "ds_hero_studio",
+    "ds_hero_studio_VAJ8Kc",
+    "ds_hero_pixelperfect_KLC9fz",
+    "hero",
     "ds_product_scroller_QHJ8rQ",
     "product_grid",
     "category_teasers",
-    "ds_hero_pixelperfect_KLC9fz",
     "ds_testimonials_rnM6fR",
-    "newsletter",
-    "hero"
+    "newsletter"
   ]
 }
