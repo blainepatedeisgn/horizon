@@ -237,11 +237,13 @@
       "type": "ds-product-grid",
       "settings": {
         "color_scheme": "",
-        "heading": "Featured Work",
+        "heading": "Featured products",
         "num_label": "06",
-        "subhead": "Hand-built plugins, original type, and ready-to-use asset packs — released in small batches.",
+        "subhead": "Hand-built plugins, original type, and ready-to-use asset packs, released in small batches.",
         "collection": "all-products",
         "products_to_show": 6,
+        "mobile_products": 3,
+        "grid_lines": true,
         "show_view_all": true,
         "view_all_label": "View all products",
         "view_all_url": ""

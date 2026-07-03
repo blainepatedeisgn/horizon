@@ -40,7 +40,7 @@
       </div>
     {%- endif -%}
 
-    <div class="ds-product-grid">
+    <div class="ds-product-grid{% if section.settings.grid_lines %} ds-product-grid--lines{% endif %}">
       {%- for product in products limit: products_to_show -%}
         {% render 'ds-product-card', product: product, quick_add: true, index: forloop.index %}
       {%- else -%}
@@ -117,11 +117,26 @@
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-5);
   }
+  /* Hairline table treatment: 1px gaps painted by the grid's own
+     background, cells re-opaqued, plus a framing border. */
+  .ds-product-grid--lines {
+    gap: 1px;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+  }
+  .ds-product-grid--lines > * {
+    background: var(--color-background);
+    padding: var(--space-4);
+  }
   @media (max-width: 900px) {
     .ds-product-grid { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 500px) {
     .ds-product-grid { grid-template-columns: 1fr; }
+    /* Phone cap: hide products beyond the configured count. */
+    #shopify-section-{{ section.id }} .ds-product-grid > :nth-child(n + {{ section.settings.mobile_products | default: 3 | plus: 1 }}) {
+      display: none;
+    }
   }
   .ds-product-grid__empty {
     grid-column: 1 / -1;
@@ -156,7 +171,7 @@
     {
       "type": "text",
       "id": "heading",
-      "default": "Featured Work",
+      "default": "Featured products",
       "label": "Title"
     },
     {
@@ -187,6 +202,23 @@
       "max": 12,
       "step": 1,
       "default": 6
+    },
+    {
+      "type": "range",
+      "id": "mobile_products",
+      "label": "Products to show on phones",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 3,
+      "info": "Applies under 500px, where the grid is one column."
+    },
+    {
+      "type": "checkbox",
+      "id": "grid_lines",
+      "label": "Hairline grid lines",
+      "default": true,
+      "info": "Thin border lines between products."
     },
     { "type": "header", "content": "View all link" },
     {
