@@ -122,9 +122,16 @@
         {%- assign dur = i | times: 6 | plus: s.wall_duration -%}
         {%- assign delay = i | times: -37 -%}
         <div class="ds-hero-studio__row{% cycle '', ' ds-hero-studio__row--rev' %}">
+          {%- comment -%}
+            asset_img_url 4000x: Shopify's image CDN halves the resolution
+            (plenty under the veil at 35% opacity) and auto-serves WebP.
+            lazy + low priority keeps the decor from competing with the
+            headline for bandwidth: without this the strips became the
+            LCP element (13.7s mobile LCP, strips were ~1.4MB of the page).
+          {%- endcomment -%}
           <div class="ds-hero-studio__track" style="animation-duration: {{ dur }}s; animation-delay: {{ delay }}s;">
-            <img src="{{ strip | asset_url }}" alt="" width="{{ sw }}" height="340" loading="eager">
-            <img src="{{ strip | asset_url }}" alt="" width="{{ sw }}" height="340" loading="eager">
+            <img src="{{ strip | asset_img_url: '4000x' }}" alt="" width="{{ sw }}" height="340" loading="lazy" fetchpriority="low" decoding="async">
+            <img src="{{ strip | asset_img_url: '4000x' }}" alt="" width="{{ sw }}" height="340" loading="lazy" fetchpriority="low" decoding="async">
           </div>
         </div>
       {%- endfor -%}
