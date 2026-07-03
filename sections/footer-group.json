@@ -87,6 +87,8 @@
       ],
       "settings": {
         "color_scheme": "scheme-1",
+        "brand_use_logo": true,
+        "brand_logo": "shopify://shop_images/logo_crack_79b04c24-942d-4074-a147-4dbee99ae5fb.svg",
         "brand_name": "DISRUPTED STUDIO",
         "brand_blurb": "A small studio building plugins, type, and graphic assets for designers. Made in Atlanta, GA. One-time purchase, free updates.",
         "instagram_url": "https://www.instagram.com/disrupted.minds/",
