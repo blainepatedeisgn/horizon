@@ -15,7 +15,7 @@
         "ds_hero_title_nBxfYi": {
           "type": "ds-hero-title",
           "settings": {
-            "text": "Made for the details you obsess over.",
+            "text": "Made in the dark. Built to last.",
             "spotlight": false,
             "size_pct": 100
           },
@@ -24,7 +24,7 @@
         "ds_rich_text_NRfAN8": {
           "type": "ds-rich-text",
           "settings": {
-            "text": "<p><strong>Carefully crafted plugins, fonts, graphics and more, made in small batches for modern designers who sweat the details.</strong></p>"
+            "text": "<p><strong>Carefully crafted plugins, fonts, graphics and more, for modern designers who care about the details.</strong></p>"
           },
           "blocks": {}
         },
