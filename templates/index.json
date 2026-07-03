@@ -51,6 +51,8 @@
         "height": "full",
         "mobile_height": "fit",
         "content_width": 1180,
+        "pad_top": 48,
+        "pad_bottom": 48,
         "show_wall": true,
         "wall_opacity": 35,
         "wall_dim": 65,

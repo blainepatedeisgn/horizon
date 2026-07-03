@@ -87,6 +87,8 @@
     --hs-reach: {{ s.gradient_reach }}%;
     --hs-minh: {{ min_h }};
     --hs-minh-m: {{ min_h_m }};
+    --hs-pt: {{ s.pad_top }}px;
+    --hs-pb: {{ s.pad_bottom }}px;
     --hs-cw: {{ s.content_width }}px;
     --hs-align: {{ align_text }};
     --hs-items: {{ align_items }};
@@ -161,7 +163,7 @@
     display: flex;
     flex-direction: column;
     min-height: var(--hs-minh);
-    padding: clamp(48px, 8vh, 110px) var(--pad-x) 0;
+    padding: var(--hs-pt) var(--pad-x) var(--hs-pb);
     background: var(--hs-bg);
     color: var(--hs-text);
     font-family: var(--hs-bfont);
@@ -327,8 +329,8 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px 20px;
-    margin-top: 40px;
-    padding: 16px 0;
+    margin-top: 32px;
+    padding: 16px 0 0;
     border-top: 1px solid var(--color-border);
     font-family: var(--font-mono);
     font-size: 12px;
@@ -341,7 +343,8 @@
     .ds-hero-studio {
       --fs-display: clamp(40px, 12vw, 64px);
       min-height: var(--hs-minh-m);
-      padding-top: 40px;
+      padding-top: calc(var(--hs-pt) * 0.6);
+      padding-bottom: calc(var(--hs-pb) * 0.6);
     }
     .ds-hero-studio__row { height: calc(var(--hsw-row-h) * 0.72); }
     .ds-hero-studio__inner {
@@ -405,6 +408,28 @@
       "step": 20,
       "unit": "px",
       "default": 1180
+    },
+    {
+      "type": "range",
+      "id": "pad_top",
+      "label": "Top padding",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "info": "Mobile uses 60% of this."
+    },
+    {
+      "type": "range",
+      "id": "pad_bottom",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "info": "Mobile uses 60% of this."
     },
 
     { "type": "header", "content": "Asset wall" },
