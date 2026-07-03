@@ -15,9 +15,9 @@
         "ds_hero_title_nBxfYi": {
           "type": "ds-hero-title",
           "settings": {
-            "text": "The Texture Behind Good Work.",
+            "text": "Designed to darken your work.",
             "spotlight": false,
-            "size_pct": 100
+            "size_pct": 80
           },
           "blocks": {}
         },
