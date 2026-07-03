@@ -49,6 +49,7 @@
       "settings": {
         "align": "left",
         "height": "full",
+        "mobile_height": "fit",
         "content_width": 1180,
         "show_wall": true,
         "wall_opacity": 35,
