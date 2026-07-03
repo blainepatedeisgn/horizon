@@ -86,7 +86,7 @@
         "type": "ds-loader",
         "settings": {
           "enabled": true,
-          "show_mode": "every_visit",
+          "show_mode": "first_visit",
           "min_duration": 1800,
           "frame_ms": 130,
           "fade_ms": 400
