@@ -51,8 +51,8 @@
         "height": "full",
         "mobile_height": "fit",
         "content_width": 1180,
-        "pad_top": 48,
-        "pad_bottom": 48,
+        "pad_top": 72,
+        "pad_bottom": 72,
         "show_wall": true,
         "wall_opacity": 35,
         "wall_dim": 65,
@@ -74,7 +74,7 @@
         "heading_glow": false,
         "text_color": "#f2f0ec",
         "muted_color": "#8c8a85",
-        "accent_color": "#46ff64"
+        "accent_color": "#FF4C20"
       }
     },
     "ds_hero_pixelperfect_KLC9fz": {
