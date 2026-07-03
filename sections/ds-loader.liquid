@@ -154,6 +154,17 @@
       opacity: 0;
       pointer-events: none;
     }
+    /* While the loader is up, force the page canvas itself to black.
+       No web content can paint over the browser's own chrome (URL bar,
+       home indicator). The browser tints those regions from the PAGE
+       background and the theme-color meta, not from overlays. Blacking
+       the canvas (plus the JS theme-color swap below) makes the bar
+       region and overscroll rubber-banding read as one solid black
+       screen. Class is added/removed by the controller JS. */
+    html.ds-loader-active,
+    html.ds-loader-active body {
+      background: #000 !important;
+    }
     .ds-loader__stage {
       position: relative;
       /* Desktop: cap at 1200px, otherwise 88vw — fills most of the
@@ -239,6 +250,45 @@
         }
       }
 
+      // ----- FULL-SCREEN BLACKOUT -----
+      // The overlay can never cover the browser's URL bar or home
+      // indicator region; browsers tint that area from the page
+      // background and <meta name="theme-color">. While the loader is
+      // up: black the page canvas (CSS class above) and swap every
+      // theme-color meta to #000. Both restore on teardown.
+      document.documentElement.classList.add('ds-loader-active');
+      var themeMetas = [];
+      try {
+        var metas = document.querySelectorAll('meta[name="theme-color"]');
+        if (metas.length === 0) {
+          var m = document.createElement('meta');
+          m.setAttribute('name', 'theme-color');
+          m.setAttribute('data-ds-loader-created', '1');
+          m.setAttribute('content', '#000000');
+          document.head.appendChild(m);
+          themeMetas.push({ el: m, original: null });
+        } else {
+          for (var mi = 0; mi < metas.length; mi++) {
+            themeMetas.push({ el: metas[mi], original: metas[mi].getAttribute('content') });
+            metas[mi].setAttribute('content', '#000000');
+          }
+        }
+      } catch (e) {}
+
+      function restoreChrome() {
+        document.documentElement.classList.remove('ds-loader-active');
+        try {
+          for (var ri = 0; ri < themeMetas.length; ri++) {
+            var t = themeMetas[ri];
+            if (t.el.getAttribute('data-ds-loader-created')) {
+              if (t.el.parentNode) t.el.parentNode.removeChild(t.el);
+            } else if (t.original !== null) {
+              t.el.setAttribute('content', t.original);
+            }
+          }
+        } catch (e) {}
+      }
+
       // ----- JS-DRIVEN STROBE -----
       // Cycle the 6 frames manually with setInterval. The previous
       // CSS @keyframes implementation worked on desktop but iOS Safari
@@ -291,8 +341,11 @@
         loader.classList.add('is-hiding');
         try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
         // Detach after the fade transition so the DOM stays clean.
+        // Restore the canvas + theme-color in the same tick so the
+        // browser chrome fades back with the overlay, not before it.
         setTimeout(function () {
           if (loader.parentNode) loader.parentNode.removeChild(loader);
+          restoreChrome();
         }, fadeMs + 50);
       }
 
