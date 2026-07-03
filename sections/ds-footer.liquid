@@ -45,7 +45,26 @@
     <div class="ds-footer__grid">
       {%- comment -%} ----- BRAND ----- {%- endcomment -%}
       <div class="ds-footer__brand">
-        {%- if section.settings.brand_name != blank -%}
+        {%- comment -%}
+          Prefer the logo image. Footer is dark, so default to the theme's
+          inverse (light) logo; brand_logo overrides per-footer. Falls back
+          to the text brand mark when no logo is set or the toggle is off.
+        {%- endcomment -%}
+        {%- assign footer_logo = section.settings.brand_logo | default: settings.logo_inverse | default: settings.logo -%}
+        {%- if section.settings.brand_use_logo and footer_logo != blank -%}
+          <a href="{{ routes.root_url }}" class="ds-footer__brand-logo-link" aria-label="{{ shop.name | escape }}">
+            {{
+              footer_logo
+              | image_url: width: 400
+              | image_tag:
+                loading: 'lazy',
+                widths: '160, 240, 320, 400',
+                sizes: '200px',
+                alt: shop.name,
+                class: 'ds-footer__brand-logo'
+            }}
+          </a>
+        {%- elsif section.settings.brand_name != blank -%}
           <div class="ds-footer__brand-mark">{{ section.settings.brand_name }}</div>
         {%- endif -%}
         {%- if section.settings.brand_blurb != blank -%}
@@ -249,6 +268,16 @@
     text-transform: uppercase;
     color: var(--color-fg);
     margin-bottom: var(--space-4);
+  }
+  .ds-footer__brand-logo-link {
+    display: inline-block;
+    margin-bottom: var(--space-4);
+  }
+  .ds-footer__brand-logo {
+    display: block;
+    height: var(--ds-footer-logo-h, 34px);
+    width: auto;
+    max-width: 220px;
   }
   .ds-footer__brand-blurb {
     font-size: var(--fs-small);
@@ -542,10 +571,23 @@
     },
     { "type": "header", "content": "Brand" },
     {
+      "type": "checkbox",
+      "id": "brand_use_logo",
+      "default": true,
+      "label": "Use logo instead of name",
+      "info": "Shows the logo image. Defaults to your theme's inverse (light) logo. Turn off to show the text brand mark below."
+    },
+    {
+      "type": "image_picker",
+      "id": "brand_logo",
+      "label": "Footer logo (optional)",
+      "info": "Overrides the theme logo here. Leave empty to use the theme's inverse logo."
+    },
+    {
       "type": "text",
       "id": "brand_name",
       "default": "DISRUPTED STUDIO",
-      "label": "Brand mark"
+      "label": "Brand mark (text fallback)"
     },
     {
       "type": "textarea",
