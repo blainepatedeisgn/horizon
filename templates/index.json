@@ -63,7 +63,7 @@
         "gradient_style": "fade_down",
         "glow_color": "#ff4c20",
         "gradient_strength": 100,
-        "gradient_reach": 46,
+        "gradient_reach": 34,
         "show_grain": true,
         "grain_strength": 14,
         "show_meta_strip": false,
