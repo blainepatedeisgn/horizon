@@ -70,7 +70,7 @@
           </div>
         {%- endif -%}
 
-        <div class="ds-pdp-video__block">
+        <div class="ds-pdp-video__block" id="ds-pdp-video-{{ section.id }}">
           {%- if video_file -%}
             {%- comment -%}
               Handle BOTH metaobject field types:
@@ -94,6 +94,15 @@
               {%- endif -%}
               Your browser doesn't support HTML video.
             </video>
+            {%- comment -%}
+              Uploaded video keeps native `controls`, but with no poster
+              it reads as a dead black box. This trigger adds the same
+              scrim + play affordance the thumbnail branch uses; JS below
+              plays on click and reveals it again on pause/ended.
+            {%- endcomment -%}
+            <button type="button" class="ds-pdp-video__playtrigger" aria-label="Play video">
+              <span class="ds-pdp-video__play"><span class="ds-pdp-video__play-icon"></span></span>
+            </button>
           {%- elsif youtube_id != blank -%}
             <iframe
               class="ds-pdp-video__media"
@@ -141,6 +150,23 @@
         </div>
       </div>
     </section>
+
+    <script>
+      (function () {
+        var block = document.getElementById('ds-pdp-video-{{ section.id }}');
+        if (!block) return;
+        var video = block.querySelector('.ds-pdp-video__media');
+        var trigger = block.querySelector('.ds-pdp-video__playtrigger');
+        if (!video || !trigger) return;
+        trigger.addEventListener('click', function () {
+          var p = video.play();
+          if (p && p.catch) { p.catch(function () {}); }
+        });
+        video.addEventListener('play', function () { block.classList.add('is-playing'); });
+        video.addEventListener('pause', function () { block.classList.remove('is-playing'); });
+        video.addEventListener('ended', function () { block.classList.remove('is-playing'); });
+      })();
+    </script>
   {%- endif -%}
 {%- endif -%}
 
@@ -208,6 +234,41 @@
   }
   .ds-pdp-video__block:hover .ds-pdp-video__play-icon {
     border-left-color: var(--color-accent-fg);
+  }
+  /* Interactive play trigger over an uploaded <video controls>. Full
+     cover, centers the play circle, greys the frame. Hidden once the
+     video is playing so native controls take over. */
+  .ds-pdp-video__playtrigger {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.4);
+    transition: opacity var(--t-fast) var(--ease);
+  }
+  .ds-pdp-video__playtrigger .ds-pdp-video__play {
+    position: static;
+    transform: none;
+  }
+  .ds-pdp-video__playtrigger:hover .ds-pdp-video__play,
+  .ds-pdp-video__playtrigger:focus-visible .ds-pdp-video__play {
+    transform: scale(1.08);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .ds-pdp-video__playtrigger:hover .ds-pdp-video__play-icon,
+  .ds-pdp-video__playtrigger:focus-visible .ds-pdp-video__play-icon {
+    border-left-color: var(--color-accent-fg);
+  }
+  .ds-pdp-video__block.is-playing .ds-pdp-video__playtrigger {
+    opacity: 0;
+    pointer-events: none;
   }
   .ds-pdp-video__meta {
     position: absolute;
