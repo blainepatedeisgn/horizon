@@ -62,7 +62,7 @@
         "bg_color": "#000000",
         "gradient_style": "fade_down",
         "glow_color": "#ff4c20",
-        "gradient_strength": 100,
+        "gradient_strength": 0,
         "gradient_reach": 34,
         "show_grain": true,
         "grain_strength": 14,
@@ -74,7 +74,7 @@
         "heading_glow": false,
         "text_color": "#f2f0ec",
         "muted_color": "#8c8a85",
-        "accent_color": "#FF4C20"
+        "accent_color": "#ff4c20"
       }
     },
     "ds_hero_pixelperfect_KLC9fz": {
