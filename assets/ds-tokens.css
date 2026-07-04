@@ -421,6 +421,29 @@ body {
   margin-right: 6px;
 }
 
+/* Phones (2-up grids): the title + price share one row with the title
+   set to nowrap-ellipsis, which chops the title to a few letters in a
+   narrow cell. Stack the meta so the title gets the full cell width and
+   wraps to two lines instead of truncating. */
+@media (max-width: 620px) {
+  .ds-product-card__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+  .ds-product-card__title-group {
+    max-width: 100%;
+  }
+  .ds-product-card__title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.2;
+  }
+}
+
 /* ----- Quick-add overlay (collection page) ----------------------
    Compact 36x36 square in the top-RIGHT corner of the image (badge sits
    top-LEFT so no collision). Icon-only — accessible label is on aria.
