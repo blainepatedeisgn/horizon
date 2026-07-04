@@ -583,6 +583,10 @@
           {%- endform -%}
         </product-form-component>
 
+        {%- if section.settings.atc_trust_text != blank -%}
+          <p class="ds-pdp__atc-trust">{{ section.settings.atc_trust_text }}</p>
+        {%- endif -%}
+
         {%- unless product.has_only_default_variant -%}
           {%- comment -%}
             Tiny per-section script: keep the hidden variantId input in
@@ -1489,6 +1493,18 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
+  /* Trust microcopy directly under the buy button. Mono, muted,
+     centered; separators stay readable at small sizes. */
+  .ds-pdp__atc-trust {
+    margin: var(--space-2) 0 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    text-align: center;
+    line-height: 1.6;
+  }
 
   /* Sub-CTA — full-width row with text left and arrow right, slot
      into the visual rhythm between the ATC button and the specs
@@ -1847,6 +1863,17 @@
       "id": "color_scheme",
       "default": "scheme-1",
       "label": "Color scheme"
+    },
+    {
+      "type": "header",
+      "content": "Buy button trust line"
+    },
+    {
+      "type": "text",
+      "id": "atc_trust_text",
+      "label": "Text under Add to cart",
+      "default": "Instant download · Sent to your email in seconds · Lifetime updates",
+      "info": "Small reassurance line under the buy button. Leave blank to hide."
     },
     {
       "type": "header",
