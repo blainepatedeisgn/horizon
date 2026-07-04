@@ -719,6 +719,45 @@
           {%- endif -%}
         {%- endif -%}
 
+        {%- comment -%}
+          LONG DESCRIPTION. Rendered BEFORE the specs table: shoppers
+          want the pitch before the data sheet, especially on mobile.
+
+          Clamped to a few lines by default with a "Read more" toggle
+          appended underneath. Clamp height is controlled by a CSS
+          custom property so it's easy to tune. The button auto-hides
+          on load if the description is short enough not to need it
+          — see JS at bottom of the section.
+        {%- endcomment -%}
+        {%- if product.description != blank -%}
+          <div
+            class="ds-pdp__info-description-wrap"
+            data-ds-desc
+            data-clamp-lines="{{ section.settings.description_clamp_lines | default: 4 }}"
+          >
+            <div class="ds-pdp__info-description" data-ds-desc-body>
+              {{ product.description }}
+            </div>
+            {%- comment -%}
+              Toggle button. Starts hidden via attribute; JS reveals it
+              only if the description actually overflows the clamp. No
+              JS = no toggle = full description shown, which is the
+              correct graceful degradation.
+            {%- endcomment -%}
+            <button
+              type="button"
+              class="ds-pdp__info-description-toggle"
+              data-ds-desc-toggle
+              aria-expanded="false"
+              hidden
+            >
+              <span data-ds-desc-toggle-label-more>Read more</span>
+              <span data-ds-desc-toggle-label-less hidden>Read less</span>
+              <span class="ds-pdp__info-description-toggle-arrow" aria-hidden="true">&darr;</span>
+            </button>
+          </div>
+        {%- endif -%}
+
         {%- comment -%} SPECS TABLE — typed sets (plugin/font/graphics) preferred, then generic, then legacy {%- endcomment -%}
         {%- if has_specs -%}
           <div class="ds-pdp__info-specs">
@@ -757,44 +796,6 @@
                 {%- endif -%}
               {%- endfor -%}
             {%- endif -%}
-          </div>
-        {%- endif -%}
-
-        {%- comment -%}
-          LONG DESCRIPTION.
-
-          Clamped to a few lines by default with a "Read more" toggle
-          appended underneath. Clamp height is controlled by a CSS
-          custom property so it's easy to tune. The button auto-hides
-          on load if the description is short enough not to need it
-          — see JS at bottom of the section.
-        {%- endcomment -%}
-        {%- if product.description != blank -%}
-          <div
-            class="ds-pdp__info-description-wrap"
-            data-ds-desc
-            data-clamp-lines="{{ section.settings.description_clamp_lines | default: 4 }}"
-          >
-            <div class="ds-pdp__info-description" data-ds-desc-body>
-              {{ product.description }}
-            </div>
-            {%- comment -%}
-              Toggle button. Starts hidden via attribute; JS reveals it
-              only if the description actually overflows the clamp. No
-              JS = no toggle = full description shown, which is the
-              correct graceful degradation.
-            {%- endcomment -%}
-            <button
-              type="button"
-              class="ds-pdp__info-description-toggle"
-              data-ds-desc-toggle
-              aria-expanded="false"
-              hidden
-            >
-              <span data-ds-desc-toggle-label-more>Read more</span>
-              <span data-ds-desc-toggle-label-less hidden>Read less</span>
-              <span class="ds-pdp__info-description-toggle-arrow" aria-hidden="true">&darr;</span>
-            </button>
           </div>
         {%- endif -%}
       </div>
