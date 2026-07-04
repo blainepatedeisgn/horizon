@@ -81,6 +81,20 @@
         <span class="ds-product-card__badge {{ badge_modifier }}">{{ badge_text }}</span>
       {%- endif -%}
 
+      {%- comment -%}
+        First cards in a section load eager with high priority: a lazy
+        first-card image was the page's LCP element and did not start
+        downloading until ~9s in (11.6s mobile LCP). Hover layer stays
+        lazy either way.
+      {%- endcomment -%}
+      {%- liquid
+        assign img_loading = 'lazy'
+        assign img_priority = 'auto'
+        if index and index <= 3
+          assign img_loading = 'eager'
+          assign img_priority = 'high'
+        endif
+      -%}
       <div class="ds-product-card__media-layer ds-product-card__media-layer--primary">
         {%- if product.featured_image != blank -%}
           {{
@@ -89,7 +103,8 @@
             | image_tag:
                 widths: '300,600,900,1200',
                 sizes: '(min-width: 900px) 33vw, 50vw',
-                loading: 'lazy',
+                loading: img_loading,
+                fetchpriority: img_priority,
                 alt: product.title,
                 class: 'ds-product-card__img'
           }}

@@ -97,13 +97,29 @@
                 aria-label="{{ product.title | escape }}{% if on_sale %} — on sale, {{ discount_pct }}% off{% endif %}"
                 {% if is_duplicate %}aria-hidden="true" tabindex="-1"{% endif %}
               >
+                {%- liquid
+                  comment
+                    First three original cards load eager with high
+                    priority: the scroller sits right under the hero, so
+                    a lazy first card was the homepage LCP element and
+                    started downloading ~9s in. Duplicated marquee pass
+                    stays lazy.
+                  endcomment
+                  assign sc_loading = 'lazy'
+                  assign sc_priority = 'auto'
+                  if is_duplicate == false and forloop.index <= 3
+                    assign sc_loading = 'eager'
+                    assign sc_priority = 'high'
+                  endif
+                -%}
                 {%- if product.featured_image -%}
                   {{
                     product.featured_image
                     | image_url: width: 600
                     | image_tag:
                         class: 'ds-scroller__card-img',
-                        loading: 'lazy',
+                        loading: sc_loading,
+                        fetchpriority: sc_priority,
                         widths: '240,360,480,600',
                         alt: product.title
                   }}
