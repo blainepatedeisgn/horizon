@@ -32,10 +32,10 @@
           "type": "ds-button-row",
           "settings": {
             "primary_label": "Shop everything",
-            "primary_url": "",
+            "primary_url": "shopify://collections/all",
             "primary_product": "",
             "secondary_label": "See what's new",
-            "secondary_url": ""
+            "secondary_url": "shopify://products/pixel-perfect-plugin"
           },
           "blocks": {}
         }
