@@ -660,6 +660,62 @@
         {%- endunless -%}
 
         {%- comment -%}
+          SUB-CTA (metafield demo_url). Sits right under the buybox as a
+          skip link: a shopper who does not want to read the description
+          or specs taps it to jump straight to the deeper content
+          (what's inside / video / specimen). Kept ABOVE the description
+          on purpose so the click-through is the first thing a skimmer
+          sees, not buried under the reading material.
+
+          `demo_url` was scheme-allowlisted above (http/https/`/`/`#`
+          only); | escape on the href as a belt-and-braces attribute
+          escape. Same for sub_cta_label. The wrapper is rendered with
+          `hidden` + a data-target-id for in-page anchors; the inline JS
+          below un-hides it only if the target actually exists.
+        {%- endcomment -%}
+        {%- if demo_url != blank -%}
+          {%- liquid
+            assign sub_cta_first = demo_url | slice: 0, 1
+            assign sub_cta_is_anchor = false
+            if sub_cta_first == '#'
+              assign sub_cta_is_anchor = true
+              assign sub_cta_target_id = demo_url | remove_first: '#'
+            endif
+          -%}
+          <div
+            class="ds-pdp__info-sub-cta"
+            {% if sub_cta_is_anchor %}
+              data-ds-sub-cta-target="{{ sub_cta_target_id | escape }}"
+              hidden
+            {% endif %}
+          >
+            <a href="{{ demo_url | escape }}" class="ds-pdp__info-sub-cta-link">
+              <span class="ds-pdp__info-sub-cta-text">{{ sub_cta_label | escape }}</span>
+              <span class="ds-pdp__info-sub-cta-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+          {%- if sub_cta_is_anchor -%}
+            <script>
+              (function () {
+                var wrapper = document.currentScript.previousElementSibling;
+                if (!wrapper || wrapper.dataset.dsSubCtaTarget == null) return;
+                var targetId = wrapper.dataset.dsSubCtaTarget;
+                if (!targetId) return;
+                function probe() {
+                  if (document.getElementById(targetId)) {
+                    wrapper.removeAttribute('hidden');
+                  }
+                }
+                probe();
+                if (wrapper.hasAttribute('hidden')) {
+                  document.addEventListener('DOMContentLoaded', probe);
+                }
+              })();
+            </script>
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- comment -%}
           LONG DESCRIPTION. Rendered BEFORE the specs table: shoppers
           want the pitch before the data sheet, especially on mobile.
 
@@ -737,72 +793,6 @@
               {%- endfor -%}
             {%- endif -%}
           </div>
-        {%- endif -%}
-
-        {%- comment -%}
-          SUB-CTA (metafield demo_url). Moved to the END of the buybox:
-          directly under the ATC it stacked as a third full-width bar
-          against the trust line and description. Down here it closes
-          the column as a "browse deeper" action after the pitch and
-          the specs.
-
-          `demo_url` was scheme-allowlisted above (http/https/`/`/`#`
-          only); | escape on the href as a belt-and-braces attribute
-          escape. Same for sub_cta_label.
-
-          The sub-CTA points to in-page anchors like #video, #features,
-          #specimen, #includes. If the merchant's template doesn't
-          include the matching section/block (e.g. plugin product
-          page set up without a video block), the link would scroll
-          to nothing. The wrapper is rendered with `hidden` and a
-          data-target-id attribute; the small inline JS below
-          un-hides it ONLY if the target element actually exists in
-          the DOM. External http(s) URLs are always shown (they go
-          off-site, no need to verify).
-        {%- endcomment -%}
-        {%- if demo_url != blank -%}
-          {%- liquid
-            assign sub_cta_first = demo_url | slice: 0, 1
-            assign sub_cta_is_anchor = false
-            if sub_cta_first == '#'
-              assign sub_cta_is_anchor = true
-              assign sub_cta_target_id = demo_url | remove_first: '#'
-            endif
-          -%}
-          <div
-            class="ds-pdp__info-sub-cta"
-            {% if sub_cta_is_anchor %}
-              data-ds-sub-cta-target="{{ sub_cta_target_id | escape }}"
-              hidden
-            {% endif %}
-          >
-            <a href="{{ demo_url | escape }}" class="ds-pdp__info-sub-cta-link">
-              <span class="ds-pdp__info-sub-cta-text">{{ sub_cta_label | escape }}</span>
-              <span class="ds-pdp__info-sub-cta-arrow" aria-hidden="true">→</span>
-            </a>
-          </div>
-          {%- if sub_cta_is_anchor -%}
-            <script>
-              (function () {
-                var wrapper = document.currentScript.previousElementSibling;
-                if (!wrapper || wrapper.dataset.dsSubCtaTarget == null) return;
-                var targetId = wrapper.dataset.dsSubCtaTarget;
-                if (!targetId) return;
-                // Probe the DOM both now (in case the target has
-                // already rendered) and on DOMContentLoaded (for
-                // sections that render after this one).
-                function probe() {
-                  if (document.getElementById(targetId)) {
-                    wrapper.removeAttribute('hidden');
-                  }
-                }
-                probe();
-                if (wrapper.hasAttribute('hidden')) {
-                  document.addEventListener('DOMContentLoaded', probe);
-                }
-              })();
-            </script>
-          {%- endif -%}
         {%- endif -%}
       </div>
     </div>
@@ -1502,15 +1492,18 @@
   }
   /* Trust microcopy directly under the buy button. Mono, muted,
      centered; separators stay readable at small sizes. */
+  /* Trust whisper: hugs the buy button as fine print. Deliberately
+     smaller and dimmer than the sub-CTA and description so it reads as
+     a reassurance caption, not another content row. */
   .ds-pdp__atc-trust {
-    margin: var(--space-2) 0 0;
+    margin: 10px 0 0;
     font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.06em;
+    font-size: 10px;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--color-fg-muted);
+    color: var(--color-fg-faint);
     text-align: center;
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
   /* Sub-CTA — full-width row with text left and arrow right, slot
@@ -1879,8 +1872,8 @@
       "type": "text",
       "id": "atc_trust_text",
       "label": "Text under Add to cart",
-      "default": "Instant download · Sent to your email in seconds · Lifetime updates",
-      "info": "Small reassurance line under the buy button. Leave blank to hide."
+      "default": "Instant download · Lifetime updates",
+      "info": "Small reassurance line under the buy button. Keep it short — one line reads best. Leave blank to hide."
     },
     {
       "type": "header",
