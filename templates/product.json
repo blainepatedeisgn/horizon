@@ -38,6 +38,7 @@
     },
     "reviews": {
       "type": "ds-testimonials",
+      "disabled": true,
       "blocks": {
         "testimonial_CPWm8J": {
           "type": "testimonial",
