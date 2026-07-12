@@ -355,7 +355,15 @@
 {%- if main_menu != blank and linklists[main_menu].links.size > 0 -%}
   <script src="{{ 'dialog.js' | asset_url }}" type="module"></script>
   <dialog-component id="ds-menu-drawer">
-    <dialog ref="dialog" class="ds-header__drawer" aria-label="Menu">
+    {%- comment -%}
+      autofocus on the <dialog> itself: showModal() would otherwise
+      focus the first control (the Close button) and iOS draws its
+      default white focus ring around it. Focusing the dialog surface
+      is the standard pattern — no visible ring, screen readers still
+      announce the labelled dialog, and Tab reaches Close first with
+      the accent focus-visible style below.
+    {%- endcomment -%}
+    <dialog ref="dialog" class="ds-header__drawer" aria-label="Menu" autofocus>
       <div class="ds-header__drawer-inner">
         <div class="ds-header__drawer-head">
           <span class="ds-header__drawer-eyebrow">[ Menu ]</span>
@@ -928,6 +936,18 @@
     color: var(--color-fg);
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+  .ds-header__drawer:focus,
+  .ds-header__drawer:focus-visible {
+    /* The dialog surface takes initial focus (autofocus attr) — a
+       focus ring around a full-screen surface is meaningless. */
+    outline: none;
+  }
+  .ds-header__drawer-close:focus-visible {
+    /* Keyboard users get an on-brand ring instead of the UA default
+       white square when they Tab to Close. */
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
   }
   .ds-header__drawer::backdrop {
     /* Load-bearing on iOS: the top-layer backdrop reliably paints the
