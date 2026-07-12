@@ -165,6 +165,18 @@
     html.ds-loader-active body {
       background: #000 !important;
     }
+    /* iOS 26 Safari regression: with the tab bar minimized, fixed
+       overlays can fail to reach the true bottom of the screen — even
+       with the min-height: 100lvh above — leaving a strip where page
+       content shows through (WebKit under-resolves viewport units for
+       non-top-layer fixed elements). Rather than chase viewport math,
+       make the gap unpaintable: while the loader is up, hide everything
+       else in <body>. Any strip the overlay misses then renders as the
+       forced-black canvas above. visibility (not display) so nothing
+       reflows when it restores on teardown. */
+    html.ds-loader-active body > *:not(.ds-loader-wrap) {
+      visibility: hidden !important;
+    }
     .ds-loader__stage {
       position: relative;
       /* Desktop: cap at 1200px, otherwise 88vw — fills most of the
