@@ -1095,7 +1095,10 @@
     max-width: none;
     max-height: none;
     width: 100vw;
-    height: 100svh;
+    /* dvh (dynamic viewport) — was 100svh, which stopped ~100px short
+       of the true bottom whenever the iOS tab bar collapsed, leaving
+       only the ::backdrop to cover the difference. */
+    height: 100dvh;
     inset: 0;
     /* Hidden by default — :modal styles take over when .showModal() is called */
     overflow: visible;
@@ -1117,7 +1120,7 @@
     top: 0;
     right: 0;
     width: min(440px, 92vw);
-    height: 100svh;
+    height: 100dvh; /* match the dialog — see note above */
     background: var(--color-bg-elev);
     border-left: 1px solid var(--color-border);
     display: flex;
