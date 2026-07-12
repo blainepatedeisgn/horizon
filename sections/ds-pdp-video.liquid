@@ -78,6 +78,17 @@
                 • Generic "File" reference   → has .url (raw uploaded file)
               Merchants tend to use File since it accepts any .mov/.mp4 upload.
             {%- endcomment -%}
+            {%- comment -%}
+              With no curated poster, a bare <video> paints solid black until
+              the user hits play. Appending the #t=0.001 media fragment makes the
+              browser seek to the first frame and hold it as the preview, so the
+              block reads as a real still. Skipped when a thumbnail poster is set.
+            {%- endcomment -%}
+            {%- if thumbnail -%}
+              {%- assign frame_hint = '' -%}
+            {%- else -%}
+              {%- assign frame_hint = '#t=0.001' -%}
+            {%- endif -%}
             <video
               class="ds-pdp-video__media"
               controls
@@ -87,10 +98,10 @@
             >
               {%- if video_file.sources and video_file.sources.size > 0 -%}
                 {%- for source in video_file.sources -%}
-                  <source src="{{ source.url }}" type="{{ source.mime_type | default: 'video/mp4' }}">
+                  <source src="{{ source.url }}{{ frame_hint }}" type="{{ source.mime_type | default: 'video/mp4' }}">
                 {%- endfor -%}
               {%- elsif video_file.url -%}
-                <source src="{{ video_file.url }}" type="video/mp4">
+                <source src="{{ video_file.url }}{{ frame_hint }}" type="video/mp4">
               {%- endif -%}
               Your browser doesn't support HTML video.
             </video>
@@ -158,6 +169,18 @@
         var video = block.querySelector('.ds-pdp-video__media');
         var trigger = block.querySelector('.ds-pdp-video__playtrigger');
         if (!video || !trigger) return;
+
+        // No curated poster? Some browsers paint a black box from
+        // preload="metadata" alone. Nudging currentTime a hair past 0
+        // forces them to decode and hold the first frame as the preview.
+        if (!video.getAttribute('poster')) {
+          var paintFirstFrame = function () {
+            try { if (video.currentTime < 0.001) { video.currentTime = 0.001; } } catch (e) {}
+          };
+          if (video.readyState >= 1) { paintFirstFrame(); }
+          else { video.addEventListener('loadedmetadata', paintFirstFrame, { once: true }); }
+        }
+
         trigger.addEventListener('click', function () {
           var p = video.play();
           if (p && p.catch) { p.catch(function () {}); }
