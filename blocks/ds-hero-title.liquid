@@ -26,8 +26,30 @@
   {{ block.shopify_attributes }}
 >
   {{ safe_text }}
-  <span class="ds-hero-title__glow" aria-hidden="true">{{ safe_text }}</span>
+  {%- comment -%}
+    Glow halo. The text used to be duplicated as a real child node here,
+    which made the H1 read twice to crawlers ("… Your Work. … Your Work.").
+    The span is now empty and renders its copy of the text through a
+    ::before pseudo (content: attr(data-text)), so the headline exists
+    exactly once in the DOM / textContent. data-text carries the raw
+    text with literal newlines; white-space: pre-line (below) turns them
+    into line breaks. The 48px blur means exact wrap parity is moot.
+    aria-hidden keeps assistive tech on the single real text node.
+  {%- endcomment -%}
+  <span class="ds-hero-title__glow" data-text="{{ block.settings.text | escape }}" aria-hidden="true"></span>
 </h1>
+
+{%- comment -%}
+  Scoped here (not in each hero section) so the pseudo-text mechanism
+  travels with the block. The per-section rules still style the .glow
+  span itself (blur, color, position) — this only supplies its text.
+{%- endcomment -%}
+<style>
+  .ds-hero-title__glow::before {
+    content: attr(data-text);
+    white-space: pre-line;
+  }
+</style>
 
 {% schema %}
 {
