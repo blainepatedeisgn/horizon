@@ -1253,6 +1253,15 @@
     margin: 0;
     padding: 4px 0;
   }
+  .ds-pdp__info-rating[hidden] {
+    /* The markup ships with `hidden` and JS only reveals the row when
+       testimonial cards exist to aggregate. An author `display` beats
+       the UA's [hidden]{display:none}, so without this override the
+       empty row still rendered — an invisible padded band that also
+       claimed a flex-gap slot, doubling the space under the title
+       once reviews were disabled. */
+    display: none;
+  }
   .ds-pdp__info-rating-stars {
     /* Slightly larger than the testimonial-card stars so they read
        as a primary signal rather than an afterthought. Letter-spacing
