@@ -430,7 +430,7 @@
               <div class="ds-header__drawer-foot-row">
                 <span>{{ drawer_loc }}</span>
                 {%- if drawer_status != blank -%}
-                  <span><span class="ds-header__drawer-dot" aria-hidden="true">●</span> {{ drawer_status }}</span>
+                  <span><span class="ds-header__drawer-status-dot" aria-hidden="true"></span> {{ drawer_status }}</span>
                 {%- endif -%}
               </div>
             {%- endif -%}
@@ -1153,7 +1153,16 @@
     letter-spacing: 0.06em;
     color: var(--color-fg-muted);
   }
-  .ds-header__drawer-dot { color: var(--color-accent); }
+  .ds-header__drawer-status-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #57b98a;
+    box-shadow: 0 0 0 3px rgba(87, 185, 138, 0.15);
+    margin-right: 4px;
+    vertical-align: middle;
+  }
 
   /* Respect reduced motion — collapse the slide to near-instant.
      0.01ms rather than `none` so animationend still fires and
