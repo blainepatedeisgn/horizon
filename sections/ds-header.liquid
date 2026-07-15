@@ -1460,6 +1460,10 @@
      the content more inset than the header. */
   .ds-cart__items-wrap--empty {
     padding: 0 var(--space-5);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
   }
 
   /* Empty state v5 — Drake's / ALD pattern. Every vertical band
@@ -1468,14 +1472,73 @@
      is decoration alone. Horizontal alignment is governed entirely
      by the .ds-cart__items-wrap--empty parent above — this rule
      only deals with vertical breathing room and stacking. */
+  /* Empty state — minimal (mock parity): centered mark + headline + bracket CTA */
   .ds-cart__empty {
-    height: 100%;
+    flex: 1;
+    min-height: 300px;
     display: flex;
     flex-direction: column;
-    text-align: left;
-    padding: var(--space-4) 0 var(--space-5);
-    gap: var(--space-4);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 15px;
+    padding: 40px 0 48px;
   }
+  .ds-cart__empty-ico {
+    position: relative;
+    width: 68px;
+    height: 68px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    color: var(--color-fg-muted);
+  }
+  .ds-cart__empty-ico::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    transform: translate(-50%, -50%) rotate(45deg);
+    border: 1px solid rgba(241, 231, 229, 0.12);
+  }
+  .ds-cart__empty-ico svg { position: relative; width: 28px; height: 28px; }
+  .ds-cart__empty-h {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-fg);
+  }
+  .ds-cart__empty-sub {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .ds-cart__empty-cta {
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+    border: 0;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 10px 5px;
+    transition: filter var(--t-fast) var(--ease);
+  }
+  .ds-cart__empty-cta::before { content: "["; font-size: 1.8em; line-height: 0; margin-right: 9px; font-weight: 400; }
+  .ds-cart__empty-cta::after  { content: "]"; font-size: 1.8em; line-height: 0; margin-left: 9px; font-weight: 400; }
+  .ds-cart__empty-cta:hover { filter: brightness(1.09); }
 
   /* Editorial lede — replaces the ghosted "EMPTY." anchor with
      copy that has voice + hierarchy. Two-line headline + one-line
