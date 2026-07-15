@@ -1212,7 +1212,7 @@
     position: absolute;
     top: 0;
     right: 0;
-    width: min(440px, 92vw);
+    width: min(380px, 92vw);
     height: 100dvh; /* match the dialog — see note above */
     background: var(--color-bg-elev);
     border-left: 1px solid var(--color-border);
@@ -1817,13 +1817,18 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
+    gap: var(--space-3);
   }
+  /* Card Tile — each line item is a bordered card (mock parity) */
   .ds-cart__item {
+    position: relative;
     display: grid;
-    grid-template-columns: 96px 1fr auto;
-    gap: var(--space-4);
+    grid-template-columns: 72px 1fr auto;
+    gap: var(--space-3);
     align-items: start;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
   }
   .ds-cart__item-media {
     aspect-ratio: 1 / 1;
@@ -1831,7 +1836,7 @@
     background: var(--color-bg);
     overflow: hidden;
     display: block;
-    width: 96px;
+    width: 72px;
   }
   .ds-cart__item-img,
   .ds-cart__item-img-placeholder {
