@@ -366,26 +366,57 @@
     <dialog ref="dialog" class="ds-header__drawer" aria-label="Menu" autofocus>
       <div class="ds-header__drawer-inner">
         <div class="ds-header__drawer-head">
-          <span class="ds-header__drawer-eyebrow">[ Menu ]</span>
+          <a href="{{ routes.root_url }}" class="ds-header__drawer-logo" aria-label="{{ shop.name | escape }} — home">
+            {%- if logo_image -%}
+              {{ logo_image | image_url: width: 220 | image_tag: widths: '110,165,220', alt: shop.name, class: 'ds-header__drawer-logo-img', loading: 'lazy' }}
+            {%- else -%}
+              {{ logo_text }}
+            {%- endif -%}
+          </a>
           <button class="ds-header__drawer-close" type="button" aria-label="Close menu" on:click="#ds-menu-drawer/closeDialog">
-            <svg viewBox="0 0 24 24" fill="none" width="16" height="16" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
-              <path d="M5 5L19 19M19 5L5 19"/>
-            </svg>
-            <span>Close</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         </div>
 
+        <form class="ds-header__drawer-search" action="{{ routes.search_url }}" method="get" role="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input class="ds-header__drawer-field" type="search" name="q" placeholder="Search the studio" aria-label="Search the studio" autocomplete="off">
+        </form>
+
         <nav class="ds-header__drawer-nav" aria-label="Mobile main navigation">
           {%- for link in linklists[main_menu].links -%}
-            <a
-              href="{{ link.url }}"
-              class="ds-header__drawer-link{% if link.active or link.child_active %} is-active{% endif %}"
-            >
-              <span>{{ link.title }}</span>
-              <span class="ds-header__drawer-link-arrow" aria-hidden="true">→</span>
+            <a href="{{ link.url }}" class="ds-header__drawer-link{% if link.active or link.child_active %} is-active{% endif %}">
+              <span class="ds-header__drawer-dot" aria-hidden="true"></span>
+              <span class="ds-header__drawer-label">{{ link.title }}</span>
+              <svg class="ds-header__drawer-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
             </a>
           {%- endfor -%}
         </nav>
+
+        {%- assign spot = section.settings.drawer_spotlight_product -%}
+        {%- if spot != blank -%}
+          <a href="{{ spot.url }}" class="ds-header__drawer-spot">
+            <span class="ds-header__drawer-spot-txt">
+              <span class="ds-header__drawer-kick">{{ section.settings.drawer_spotlight_kicker | default: 'New Release' }}</span>
+              <span class="ds-header__drawer-spot-name">{{ spot.title }}</span>
+            </span>
+            <span class="ds-header__drawer-spot-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </a>
+        {%- endif -%}
+
+        <div class="ds-header__drawer-util">
+          <a class="ds-header__drawer-row" href="{{ routes.account_url }}">
+            <span class="ds-header__drawer-ricon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+            <span class="ds-header__drawer-rlabel">My Account</span>
+            <svg class="ds-header__drawer-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="ds-header__drawer-row" href="{{ routes.cart_url }}">
+            <span class="ds-header__drawer-ricon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>
+            <span class="ds-header__drawer-rlabel">Cart</span>
+            {%- if cart.item_count > 0 -%}<span class="ds-header__drawer-badge">{{ cart.item_count }}</span>{%- endif -%}
+            <svg class="ds-header__drawer-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </div>
 
         {%- liquid
           assign drawer_loc    = section.settings.drawer_footer_location
@@ -986,91 +1017,124 @@
     min-height: 100%;
   }
 
-  /* Head — [Menu] eyebrow on left, × Close on right, hairline under */
+  /* Head — brand mark on left, × close on right */
   .ds-header__drawer-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: var(--space-4);
-    border-bottom: 1px solid var(--color-border);
+    gap: var(--space-4);
   }
-  .ds-header__drawer-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-fg-muted);
-  }
-  .ds-header__drawer-close {
-    background: none;
-    border: 0;
-    color: var(--color-fg);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 0;
-    min-height: 44px;
+  .ds-header__drawer-logo {
     font-family: var(--font-sans);
-    font-size: var(--fs-caps);
-    font-weight: 500;
-    letter-spacing: 0.14em;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.005em;
     text-transform: uppercase;
-    line-height: 1;
-  }
-  .ds-header__drawer-close svg {
-    width: 16px;
-    height: 16px;
-    display: block;
-  }
-
-  /* Nav links — huge display type, divider per row, arrow on the right.
-     Hover slides text right and reveals the arrow shift. */
-  .ds-header__drawer-nav {
-    display: flex;
-    flex-direction: column;
-  }
-  .ds-header__drawer-link {
-    font-family: var(--font-sans);
-    font-size: clamp(40px, 12vw, 60px);
-    font-weight: 600;
-    letter-spacing: -0.035em;
-    line-height: 1;
     color: var(--color-fg);
     text-decoration: none;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--color-border);
-    display: flex;
+    white-space: nowrap;
+  }
+  .ds-header__drawer-logo-img { height: 15px; width: auto; display: block; }
+  .ds-header__drawer-close {
+    width: 44px;
+    height: 44px;
+    margin-right: -8px;
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    transition:
-      color        var(--t-fast) var(--ease),
-      padding-left var(--t-fast) var(--ease);
+    justify-content: center;
+    background: none;
+    border: 1px solid var(--color-border);
+    color: var(--color-fg);
+    cursor: pointer;
+    transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
   }
-  .ds-header__drawer-link:first-child {
-    padding-top: var(--space-4);
+  .ds-header__drawer-close:hover,
+  .ds-header__drawer-close:focus-visible { border-color: var(--color-accent); color: var(--color-accent); }
+  .ds-header__drawer-close svg { width: 18px; height: 18px; display: block; }
+
+  /* Search field */
+  .ds-header__drawer-search {
+    position: relative;
+    margin: var(--space-4) 0 var(--space-5);
   }
-  .ds-header__drawer-link-arrow {
-    font-size: 0.42em;
-    font-weight: 400;
-    color: var(--color-fg-muted);
-    transition:
-      transform var(--t-fast) var(--ease),
-      color     var(--t-fast) var(--ease);
+  .ds-header__drawer-search svg {
+    position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+    width: 17px; height: 17px; color: var(--color-fg-muted); pointer-events: none;
+  }
+  .ds-header__drawer-field {
+    width: 100%; height: 50px; padding: 0 16px 0 42px;
+    background: rgba(241, 231, 229, 0.045);
+    border: 1px solid var(--color-border); border-radius: 12px;
+    color: var(--color-fg); font-family: var(--font-sans); font-size: 15px;
+    -webkit-appearance: none; appearance: none;
+  }
+  .ds-header__drawer-field::placeholder { color: var(--color-fg-muted); }
+  .ds-header__drawer-field:focus { outline: none; border-color: var(--color-accent); }
+
+  /* Primary nav — square dot + label + arrow rows */
+  .ds-header__drawer-nav { display: flex; flex-direction: column; border-top: 1px solid var(--color-border); }
+  .ds-header__drawer-link {
+    display: flex; align-items: center; gap: 15px;
+    min-height: 56px; padding: 8px 2px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-fg); text-decoration: none;
+    font-family: var(--font-sans); font-size: 20px; font-weight: 500; letter-spacing: -0.01em;
+    transition: color var(--t-fast) var(--ease), padding-left var(--t-fast) var(--ease);
+  }
+  .ds-header__drawer-dot {
+    flex: 0 0 auto; width: 7px; height: 7px; background: var(--color-fg-muted);
+    transition: transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+  }
+  .ds-header__drawer-label { flex: 1 1 auto; }
+  .ds-header__drawer-arrow {
+    flex: 0 0 auto; width: 17px; height: 17px; color: var(--color-fg-muted); opacity: 0.5;
+    transform: translateX(-3px);
+    transition: transform var(--t-fast) var(--ease), color var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
   }
   .ds-header__drawer-link:hover,
   .ds-header__drawer-link:active,
-  .ds-header__drawer-link.is-active {
-    color: var(--color-accent);
-    padding-left: var(--space-3);
+  .ds-header__drawer-link.is-active { color: var(--color-accent); padding-left: 6px; }
+  .ds-header__drawer-link:hover .ds-header__drawer-dot,
+  .ds-header__drawer-link:active .ds-header__drawer-dot,
+  .ds-header__drawer-link.is-active .ds-header__drawer-dot { transform: rotate(45deg) scale(1.15); background: var(--color-accent); }
+  .ds-header__drawer-link:hover .ds-header__drawer-arrow,
+  .ds-header__drawer-link:active .ds-header__drawer-arrow,
+  .ds-header__drawer-link.is-active .ds-header__drawer-arrow { transform: translateX(0); color: var(--color-accent); opacity: 1; }
+
+  /* Spotlight strip — optional featured product */
+  .ds-header__drawer-spot {
+    display: flex; align-items: center; gap: 14px; margin-top: var(--space-5);
+    padding: 14px 16px; border: 1px solid var(--color-border); border-left: 2px solid var(--color-accent);
+    background: rgba(241, 231, 229, 0.03); color: var(--color-fg); text-decoration: none;
+    transition: border-color var(--t-fast) var(--ease);
   }
-  .ds-header__drawer-link:hover .ds-header__drawer-link-arrow,
-  .ds-header__drawer-link:active .ds-header__drawer-link-arrow,
-  .ds-header__drawer-link.is-active .ds-header__drawer-link-arrow {
-    transform: translateX(6px);
-    color: var(--color-accent);
+  .ds-header__drawer-spot:hover { border-color: var(--color-accent); }
+  .ds-header__drawer-spot-txt { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .ds-header__drawer-kick { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--color-accent); }
+  .ds-header__drawer-spot-name { font-size: 15px; font-weight: 500; color: var(--color-fg); }
+  .ds-header__drawer-spot-arrow { margin-left: auto; flex: 0 0 auto; color: var(--color-fg-muted); }
+  .ds-header__drawer-spot-arrow svg { width: 18px; height: 18px; display: block; }
+
+  /* Utility rows — account + cart */
+  .ds-header__drawer-util { margin-top: var(--space-5); display: flex; flex-direction: column; }
+  .ds-header__drawer-row {
+    display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 0 2px;
+    border-top: 1px solid var(--color-border); color: var(--color-fg); text-decoration: none;
+    font-family: var(--font-sans); font-size: 15px; transition: color var(--t-fast) var(--ease);
   }
+  .ds-header__drawer-row:last-child { border-bottom: 1px solid var(--color-border); }
+  .ds-header__drawer-row:hover { color: var(--color-accent); }
+  .ds-header__drawer-ricon { flex: 0 0 auto; display: flex; color: var(--color-fg-muted); transition: color var(--t-fast) var(--ease); }
+  .ds-header__drawer-ricon svg { width: 21px; height: 21px; }
+  .ds-header__drawer-row:hover .ds-header__drawer-ricon { color: var(--color-accent); }
+  .ds-header__drawer-rlabel { flex: 1 1 auto; }
+  .ds-header__drawer-badge {
+    flex: 0 0 auto; min-width: 20px; height: 20px; margin-right: 2px; padding: 0 6px;
+    display: inline-flex; align-items: center; justify-content: center; border-radius: 999px;
+    background: var(--color-accent); color: var(--color-fg);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600; line-height: 1;
+  }
+  .ds-header__drawer-chev { flex: 0 0 auto; width: 16px; height: 16px; color: var(--color-fg-muted); }
 
   /* Foot — pushed to the bottom via margin-top: auto; mono caps rows */
   .ds-header__drawer-foot {
@@ -3102,6 +3166,22 @@
       "id": "sticky",
       "default": true,
       "label": "Stick to top on scroll"
+    },
+    { "type": "header", "content": "Mobile drawer spotlight" },
+    {
+      "type": "paragraph",
+      "content": "Optional \"New Release\" strip near the top of the mobile menu drawer. Leave the product blank to hide it."
+    },
+    {
+      "type": "product",
+      "id": "drawer_spotlight_product",
+      "label": "Spotlight product"
+    },
+    {
+      "type": "text",
+      "id": "drawer_spotlight_kicker",
+      "label": "Spotlight kicker",
+      "default": "New Release"
     },
     { "type": "header", "content": "Mobile drawer footer" },
     {
