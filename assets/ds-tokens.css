@@ -26,21 +26,21 @@
 :root {
   /* Color — these are the brand's own tokens. The Horizon-alias
      block further down maps these onto Horizon's component vars. */
-  --color-bg:               #000000;
-  --color-bg-elev:          #0A0A0A;
-  --color-bg-elev-2:        #131313;
-  --color-fg:               #F2F0EC;
-  --color-fg-muted:         #8C8A85;
-  --color-fg-faint:         #4A4A47;
-  --color-border:           rgba(242, 240, 236, 0.16);
-  --color-border-strong:    rgba(242, 240, 236, 0.30);
-  --color-accent:           #FF4D1F;     /* BACKLIT orange */
-  --color-accent-glow:      rgba(255, 77, 31, 0.45);
-  --color-accent-fg:        #0A0A0A;
-  --color-button:           #F2F0EC;
-  --color-button-text:      #0A0A0A;
-  --color-button-hover:     #FFFFFF;
-  --color-sale:             #FF4444;
+  --color-bg:               #0C0708;
+  --color-bg-elev:          #170D0F;
+  --color-bg-elev-2:        #201315;
+  --color-fg:               #F1E7E5;
+  --color-fg-muted:         #8E7A78;
+  --color-fg-faint:         #4D3F3E;
+  --color-border:           rgba(241, 231, 229, 0.12);
+  --color-border-strong:    rgba(241, 231, 229, 0.28);
+  --color-accent:           #C1121F;     /* OXBLOOD red */
+  --color-accent-glow:      rgba(193, 18, 31, 0.42);
+  --color-accent-fg:        #F1E7E5;
+  --color-button:           #C1121F;
+  --color-button-text:      #F1E7E5;
+  --color-button-hover:     #D81B2A;
+  --color-sale:             #E0525B;
 
   /* Type — loaded via Shopify's font_face filter in theme-styles-variables.liquid */
   --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -94,9 +94,9 @@
    ------------------------------------------------------------ */
 :root {
   --color-foreground:        var(--color-fg);
-  --color-foreground-rgb:    242, 240, 236;
+  --color-foreground-rgb:    241, 231, 229;
   --color-background:        var(--color-bg);
-  --color-background-rgb:    0, 0, 0;
+  --color-background-rgb:    12, 7, 8;
   --color-button-background: var(--color-button);
   --color-button-label:      var(--color-button-text);
   --color-link:              var(--color-fg);
@@ -218,7 +218,7 @@ body {
   color: var(--color-accent-fg);
 }
 .ds-btn--accent:hover {
-  background: #FF6438;
+  background: #D81B2A;
   color: var(--color-accent-fg);
 }
 
