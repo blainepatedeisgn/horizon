@@ -216,8 +216,8 @@
       "name": "Product scroller",
       "settings": {
         "color_scheme": "",
-        "eyebrow": "ON SALE",
-        "heading": "USE CODE DISRUPTEDMINDS FOR 20% OFF",
+        "eyebrow": "all products",
+        "heading": "",
         "intro": "",
         "products": [
           "afterlife-graphics-pack",
