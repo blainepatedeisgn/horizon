@@ -33,8 +33,8 @@
 
 {%- liquid
   assign cs = section.settings.color_scheme
-  assign version = section.settings.version | default: 'v1.2'
-  assign version_date = section.settings.version_date | default: 'May 2026'
+  assign version = section.settings.version | default: 'v1.3'
+  assign version_date = section.settings.version_date | default: 'July 2026'
   assign eyebrow = section.settings.eyebrow | default: 'ASSET LICENSE'
   assign title = section.settings.title | default: 'License terms'
   assign intro = section.settings.intro | default: 'Plain-language summary first. Full numbered terms below. The version in effect at the time of your order is the one that applies to your purchase — see the changelog at the bottom for prior versions.'
@@ -86,6 +86,7 @@
           </ul>
         </div>
       </div>
+      <p class="ds-license__tldr-note">Plugins are the exception: they ship with a <strong>single license that covers both</strong> of the first two columns — personal and commercial use are included, with nothing extra to buy. The Personal / Commercial split applies to fonts and graphics.</p>
     </section>
 
     {%- comment -%} ============ TIER COMPARISON ============ {%- endcomment -%}
@@ -94,25 +95,16 @@
         <span class="ds-license__block-num ds-mono">02</span>
         Tiers by product type
       </h2>
-      <p class="ds-license__block-intro">Two tiers — <strong>Personal</strong> for your own non-monetized work, <strong>Commercial</strong> for anything that brings in money (client work, products you sell, agency use, ads). The rights at each tier vary by what you're buying — plugins, fonts, and graphics each gate on different things.</p>
+      <p class="ds-license__block-intro">Fonts and graphics come in two tiers — <strong>Personal</strong> for your own non-monetized work, <strong>Commercial</strong> for anything that brings in money (client work, products you sell, agency use, ads). <strong>Plugins ship with a single license that already covers both</strong> — there's no second tier to buy. The rights vary by what you're buying, so each product type is spelled out below.</p>
 
-      <h3 class="ds-license__tier-heading ds-mono">[ PLUGINS — BACKLIT, PIXEL PERFECT, ETC. ]</h3>
-      <div class="ds-license__tier-table">
-        <div class="ds-license__tier-col">
-          <h4 class="ds-license__tier-name">Personal</h4>
-          <ul class="ds-license__tier-list">
-            <li><strong>Personal projects only</strong></li>
-            <li>Hobby art, learning, portfolio, your own non-sale work</li>
-            <li>1 designer · 2 devices</li>
-            <li>Output may NOT be sold, monetized, or used in paid client work</li>
-            <li>Lifetime updates within the major version</li>
-          </ul>
-        </div>
+      <h3 class="ds-license__tier-heading ds-mono">[ PLUGINS ]</h3>
+      <div class="ds-license__tier-table ds-license__tier-table--single">
         <div class="ds-license__tier-col ds-license__tier-col--upsell">
-          <h4 class="ds-license__tier-name">Commercial</h4>
+          <h4 class="ds-license__tier-name">One license — personal + commercial</h4>
           <ul class="ds-license__tier-list">
-            <li><strong>Client work + monetized output</strong></li>
-            <li>Use in products you sell, ads, marketing, agency / business work</li>
+            <li><strong>Personal and commercial use are both included</strong> — nothing extra to buy</li>
+            <li>Client work, products you sell, paid ads, marketing, agency / business work</li>
+            <li>Hobby art, learning, portfolio, your own non-sale work</li>
             <li>1 designer · 2 devices (single seat)</li>
             <li>For 5+ seats or a whole studio, email for a custom Studio quote</li>
             <li>Lifetime updates within the major version</li>
@@ -120,7 +112,7 @@
         </div>
       </div>
 
-      <h3 class="ds-license__tier-heading ds-mono">[ FONTS — NEUE PORTAL, RIVET MONO, ETC. ]</h3>
+      <h3 class="ds-license__tier-heading ds-mono">[ FONTS ]</h3>
       <div class="ds-license__tier-table">
         <div class="ds-license__tier-col">
           <h4 class="ds-license__tier-name">Personal</h4>
@@ -144,7 +136,7 @@
         </div>
       </div>
 
-      <h3 class="ds-license__tier-heading ds-mono">[ GRAPHICS — CHROMA, BOTANIC, ARCADE, STARGAZER, ETC. ]</h3>
+      <h3 class="ds-license__tier-heading ds-mono">[ GRAPHICS ]</h3>
       <div class="ds-license__tier-table">
         <div class="ds-license__tier-col">
           <h4 class="ds-license__tier-name">Personal</h4>
@@ -225,7 +217,7 @@
           <li><strong>Personal:</strong> desktop installation only. Embed in personal PDFs as subset (security-locked or print-only) for your own non-sale documents.</li>
           <li><strong>Commercial:</strong> includes Personal usage plus the right to convert the supplied OTF/TTF to webfont formats (WOFF/WOFF2) and self-host on your site, embed in iOS / Android apps you distribute, embed in ePub, use in broadcast, and use in paid advertising. No pageview cap.</li>
         </ul>
-        <p>For plugins: the plugin itself is installed and run on the Licensee's machine. The Personal vs Commercial distinction governs the use of the <em>output</em> created with the plugin, not the plugin's installation. See Section 3.3.</p>
+        <p>For plugins: the plugin itself is installed and run on the Licensee's machine. Plugins are supplied under a <strong>single license that covers both personal and commercial use of the output</strong> — there is no separate Commercial tier to purchase, and output created with a plugin may be sold, monetized, or used in paid client work. Seat limits still apply (see Section 3.3).</p>
         <p>For graphics: no specific embedding restrictions beyond Section 3.4 apply. Commercial tier allows inclusion in end products for sale up to the volume cap stated in Section 02.</p>
 
         <h3 id="refunds" class="ds-license__term-heading">3.7 Refunds</h3>
@@ -259,6 +251,10 @@
       </h2>
       <p class="ds-license__block-intro">The version in effect when you placed your order is the one that applies to your purchase. Older versions are kept here for reference.</p>
       <ul class="ds-license__changelog">
+        <li>
+          <span class="ds-license__changelog-version ds-mono">v1.3 — July 2026</span>
+          <span class="ds-license__changelog-note">Plugins moved to a single license covering both personal and commercial use of the output — the Personal / Commercial split no longer applies to plugins, and there is no separate Commercial plugin tier to purchase. Sections 02 and 3.6 updated. Fonts and graphics are unchanged. Also removed product names from the tier headings so the page cannot go stale as the catalog changes.</span>
+        </li>
         <li>
           <span class="ds-license__changelog-version ds-mono">v1.2 — May 2026</span>
           <span class="ds-license__changelog-note">Section 3.6 clarification: font orders ship OTF and TTF only — the Commercial license permits the licensee to convert to WOFF/WOFF2 for self-hosted web use. The right to web-embed isn't new; this clarifies that the format conversion is the licensee's responsibility since webfont formats aren't delivered.</span>
@@ -408,6 +404,16 @@
     border: 1px solid var(--color-border);
     background: var(--color-bg-elev);
   }
+  .ds-license__tldr-note {
+    margin: var(--space-4) 0 0;
+    font-size: var(--fs-small, 14px);
+    line-height: 1.6;
+    color: var(--color-fg-muted);
+  }
+  .ds-license__tldr-note strong { color: var(--color-fg); }
+  .ds-license__tier-table--single {
+    grid-template-columns: 1fr;  /* plugins have one license, not a Personal/Commercial split */
+  }
   .ds-license__tier-col {
     padding: var(--space-5);
   }
@@ -545,14 +551,14 @@
     {
       "type": "text",
       "id": "version",
-      "default": "v1.2",
+      "default": "v1.3",
       "label": "Version",
       "info": "Bump on each amendment. Old versions stay in the changelog at the bottom of the page."
     },
     {
       "type": "text",
       "id": "version_date",
-      "default": "May 2026",
+      "default": "July 2026",
       "label": "Effective date",
       "info": "Month + year. Shown next to the version pill."
     },

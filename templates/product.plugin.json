@@ -28,43 +28,8 @@
     "reviews": {
       "type": "ds-testimonials",
       "disabled": true,
-      "blocks": {
-        "testimonial_CPWm8J": {
-          "type": "testimonial",
-          "settings": {
-            "quote": "Quality images. Easy to work with and budget friendly. I would recommend this to anyone!",
-            "name": "Caleb R.",
-            "source": "Studio 2am",
-            "rating": 5,
-            "product": "afterlife-graphics-pack"
-          }
-        },
-        "testimonial_8PYrjA": {
-          "type": "testimonial",
-          "settings": {
-            "quote": "High quality, huge variety, and easy to use.",
-            "name": "Brett A.",
-            "source": "Studio 2am",
-            "rating": 5,
-            "product": "stargazer-graphics-pack"
-          }
-        },
-        "testimonial_L64rnJ": {
-          "type": "testimonial",
-          "settings": {
-            "quote": "Incredibly fast effects and great variety of style options.",
-            "name": "Maya Singh",
-            "source": "Instagram",
-            "rating": 5,
-            "product": "pixel-perfect-plugin"
-          }
-        }
-      },
-      "block_order": [
-        "testimonial_CPWm8J",
-        "testimonial_8PYrjA",
-        "testimonial_L64rnJ"
-      ],
+      "blocks": {},
+      "block_order": [],
       "name": "Disrupted testimonials",
       "settings": {
         "color_scheme": "",
@@ -115,7 +80,7 @@
           "type": "faq_item",
           "settings": {
             "question": "Can I use the output commercially?",
-            "answer": "Yes — with the Commercial license. Personal license covers your own non-monetized work (hobby art, portfolio, learning). Commercial license is required for client work, products you sell, paid ads, or anything monetized. See the License page for the full breakdown."
+            "answer": "Yes. Pixel Perfect ships with a single license that covers both personal and commercial use — client work, products you sell, paid ads, anything monetized. There is no separate commercial tier to buy. See the License page for the full breakdown."
           }
         },
         "faq_updates": {

@@ -73,6 +73,28 @@
       "@type": "Brand",
       "name": {{ brand_name | json }}
     },
+    {%- comment -%}
+      Multi-variant products (licence tiers) must advertise a RANGE. A single
+      Offer reports only the selected/first variant, so a $20–$60 font was
+      telling Google it costs $20 — the price shown in search then mismatches
+      the page for anyone who needs Commercial.
+
+      Deliberately NOT emitting hasMerchantReturnPolicy: our posted refund
+      policy has real exceptions (incl. the EU 14-day withdrawal right), so
+      MerchantReturnNotPermitted would publish a machine-readable claim that
+      contradicts our own policy page.
+    {%- endcomment -%}
+    {%- if product.variants.size > 1 -%}
+    "offers": {
+      "@type": "AggregateOffer",
+      "url": "{{ shop.url }}{{ product.url }}",
+      "priceCurrency": {{ currency | json }},
+      "lowPrice": "{{ product.price_min | divided_by: 100.0 }}",
+      "highPrice": "{{ product.price_max | divided_by: 100.0 }}",
+      "offerCount": {{ product.variants.size }},
+      "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
+    }
+    {%- else -%}
     "offers": {
       "@type": "Offer",
       "url": "{{ shop.url }}{{ product.url }}",
@@ -81,6 +103,7 @@
       "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
       "itemCondition": "https://schema.org/NewCondition"
     }
+    {%- endif -%}
   }
   </script>
 

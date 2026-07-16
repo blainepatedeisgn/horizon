@@ -194,6 +194,18 @@
       {%- comment -%} ----- GALLERY ----- {%- endcomment -%}
       <div class="ds-pdp__gallery"
            {%- if section.settings.auto_advance_to_second and product.media.size > 1 %} data-auto-advance="1"{% endif -%}>
+        {%- comment -%}
+          Gallery render budget — resolved ONCE, here, because the counter
+          total and the pagination row MUST agree. This used to be computed
+          twice: the counter used a flat 12 while thumbnails mode rendered
+          only 8, so any product with 9+ media showed "1 / 10" while the
+          arrows (which enumerate rendered thumbs) cycled 8.
+        {%- endcomment -%}
+        {%- assign pagination_style = section.settings.gallery_pagination_style | default: 'thumbnails' -%}
+        {%- assign render_limit = 12 -%}
+        {%- if pagination_style == 'thumbnails' -%}{%- assign render_limit = 8 -%}{%- endif -%}
+        {%- assign gallery_count = product.media.size -%}
+        {%- if gallery_count > render_limit -%}{%- assign gallery_count = render_limit -%}{%- endif -%}
         <div class="ds-pdp__gallery-main">
           {%- if product.featured_media -%}
             {%- comment -%}
@@ -252,7 +264,7 @@
             <div class="ds-pdp__gallery-counter" aria-hidden="true">
               <span data-counter-current>1</span>
               <span class="ds-pdp__gallery-counter-sep">/</span>
-              <span data-counter-total>{%- assign max_render = 12 -%}{%- if product.media.size > max_render -%}{{ max_render }}{%- else -%}{{ product.media.size }}{%- endif -%}</span>
+              <span data-counter-total>{{ gallery_count }}</span>
             </div>
           {%- endif -%}
         </div>
@@ -265,9 +277,6 @@
             (activate / step / swipe) is identical — only visuals
             change.
           {%- endcomment -%}
-          {%- assign pagination_style = section.settings.gallery_pagination_style | default: 'thumbnails' -%}
-          {%- assign render_limit = 12 -%}
-          {%- if pagination_style == 'thumbnails' -%}{%- assign render_limit = 8 -%}{%- endif -%}
 
           <div class="ds-pdp__gallery-thumbs ds-pdp__gallery-thumbs--{{ pagination_style }}">
             {%- for media in product.media limit: render_limit -%}
@@ -1523,12 +1532,17 @@
      smaller and dimmer than the sub-CTA and description so it reads as
      a reassurance caption, not another content row. */
   .ds-pdp__atc-trust {
+    /* Was 10px on --color-fg-faint = 1.99:1 contrast — under half the 4.5:1
+       AA minimum, i.e. the only delivery reassurance on the page was
+       effectively unreadable. 12px on --color-fg-muted is 4.96:1 and still
+       sits below the sub-CTA (11px at full --color-fg), so it stays a
+       whisper — just an audible one. */
     margin: 10px 0 0;
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--color-fg-faint);
+    color: var(--color-fg-muted);
     text-align: center;
     line-height: 1.5;
   }

@@ -27,7 +27,12 @@
   /* Color — these are the brand's own tokens. The Horizon-alias
      block further down maps these onto Horizon's component vars. */
   --color-bg:               #0C0708;
-  --color-bg-elev:          #170D0F;
+  /* Elevated surface. Was #170D0F — oxblood, red-dominant (R23 G13 B15, a
+     10-point R>G spread), which read as maroon everywhere it landed and got
+     rejected on the popup and the cart. #141112 keeps the same subtle lift
+     off --color-bg (#0C0708) with an almost-neutral R>G spread of 3, so it
+     reads as near-black elevation instead of red. */
+  --color-bg-elev:          #141112;
   --color-bg-elev-2:        #201315;
   --color-fg:               #F1E7E5;
   --color-fg-muted:         #8E7A78;
