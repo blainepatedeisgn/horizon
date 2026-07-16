@@ -19,7 +19,7 @@
   <div class="nl4__card">
     <div class="nl4__pitch">
       {%- if section.settings.eyebrow != blank -%}<p class="nl4__label">{{ section.settings.eyebrow }}</p>{%- endif -%}
-      {%- if section.settings.title != blank -%}<p class="nl4__eyebrow">{{ section.settings.title }}</p>{%- endif -%}
+      {%- if section.settings.title != blank -%}<p class="nl4__eyebrow">{{ section.settings.title }}{%- if section.settings.title_muted != blank %} <b>{{ section.settings.title_muted }}</b>{%- endif -%}{%- if section.settings.strike != blank %} <s>{{ section.settings.strike }}</s>{%- endif -%}</p>{%- endif -%}
     </div>
     <div class="nl4__action">
       {%- form 'customer', class: 'nl4__form' -%}
@@ -191,7 +191,7 @@
   .nl4__input{width:100%;padding:15px 16px;background:transparent;border:1px solid rgba(241,231,229,.28);color:var(--color-fg);font-family:var(--font-mono);font-size:14px;outline:0;transition:border-color .16s;box-sizing:border-box;}
   .nl4__input::placeholder{color:rgba(241,231,229,.4);}
   .nl4__input:focus{border-color:var(--color-fg);}
-  .nl4__btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:16px 20px;background:transparent;color:var(--color-fg);border:2px dashed var(--color-fg);font-family:var(--font-sans);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .16s,color .16s,border-color .16s,transform .1s;white-space:nowrap;}
+  .nl4__btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:16px 20px;color:var(--color-fg);border:0;background-color:transparent;background-image:repeating-linear-gradient(90deg,var(--color-fg) 0 14px,transparent 14px 22px),repeating-linear-gradient(90deg,var(--color-fg) 0 14px,transparent 14px 22px),repeating-linear-gradient(0deg,var(--color-fg) 0 14px,transparent 14px 22px),repeating-linear-gradient(0deg,var(--color-fg) 0 14px,transparent 14px 22px);background-position:0 0,0 100%,0 0,100% 0;background-size:100% 2px,100% 2px,2px 100%,2px 100%;background-repeat:no-repeat;font-family:var(--font-sans);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:color .16s,transform .1s;white-space:nowrap;}
   .nl4__btn svg{width:15px;height:15px;flex:none;}
   .nl4__btn:hover{background:var(--color-accent);color:var(--color-accent-fg);border-color:var(--color-accent);}
   .nl4__btn:active{transform:translateY(1px);}
@@ -233,6 +233,18 @@
       "default": "New releases.\nFree assets.\nProcess notes.",
       "label": "Title",
       "info": "Line breaks render as <br>."
+    },
+    {
+      "type": "text",
+      "id": "title_muted",
+      "label": "Title — muted suffix",
+      "info": "Shown smaller/muted after the title, e.g. \"· normally\"."
+    },
+    {
+      "type": "text",
+      "id": "strike",
+      "label": "Title — struck price",
+      "info": "Shown with a strikethrough after the title, e.g. \"$8\"."
     },
     {
       "type": "text",
