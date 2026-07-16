@@ -1525,9 +1525,9 @@
     margin-top: 4px;
     display: inline-flex;
     align-items: center;
-    background: var(--color-accent);
-    color: var(--color-accent-fg);
-    border: 0;
+    background: transparent;
+    color: var(--color-fg);
+    border: 1px solid var(--color-border-strong);
     cursor: pointer;
     text-decoration: none;
     font-family: var(--font-mono);
@@ -1535,12 +1535,12 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
     font-weight: 700;
-    padding: 10px 5px;
-    transition: filter var(--t-fast) var(--ease);
+    padding: 12px 8px;
+    transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
   }
-  .ds-cart__empty-cta::before { content: "["; font-size: 1.8em; line-height: 0; margin-right: 9px; font-weight: 400; }
-  .ds-cart__empty-cta::after  { content: "]"; font-size: 1.8em; line-height: 0; margin-left: 9px; font-weight: 400; }
-  .ds-cart__empty-cta:hover { filter: brightness(1.09); }
+  .ds-cart__empty-cta::before { content: "["; font-size: 1.8em; line-height: 0; margin-right: 9px; font-weight: 400; color: var(--color-fg-muted); }
+  .ds-cart__empty-cta::after  { content: "]"; font-size: 1.8em; line-height: 0; margin-left: 9px; font-weight: 400; color: var(--color-fg-muted); }
+  .ds-cart__empty-cta:hover { border-color: var(--color-fg); }
 
   /* Editorial lede — replaces the ghosted "EMPTY." anchor with
      copy that has voice + hierarchy. Two-line headline + one-line
@@ -2700,6 +2700,9 @@
        both explicitly (top-layer dialogs are positioned by the browser
        but we re-pin them via inset). */
     position: fixed;
+    /* Non-modal dialog (opened via .show()) sits at z:auto → later-in-DOM
+       page content (product grid) paints over it. Lift it above the page. */
+    z-index: 60;
     margin: 0 !important;
     padding: 0;
     border: 0;
