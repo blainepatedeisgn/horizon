@@ -15,50 +15,24 @@
   assign cs = section.settings.color_scheme
 -%}
 
-<section class="ds-newsletter-section color-{{ cs }}">
-  <div class="ds-newsletter-section__inner">
-    <div class="ds-newsletter-card">
-      <div class="ds-newsletter-card__copy">
-        {%- if section.settings.eyebrow != blank -%}
-          <p class="ds-eyebrow ds-newsletter-card__eyebrow">{{ section.settings.eyebrow }}</p>
+<section class="nl4 color-{{ cs }}">
+  <div class="nl4__card">
+    <div class="nl4__pitch">
+      {%- if section.settings.eyebrow != blank -%}<p class="nl4__label">{{ section.settings.eyebrow }}</p>{%- endif -%}
+      {%- if section.settings.title != blank -%}<p class="nl4__eyebrow">{{ section.settings.title }}</p>{%- endif -%}
+    </div>
+    <div class="nl4__action">
+      {%- form 'customer', class: 'nl4__form' -%}
+        {%- if section.settings.signup_tag != blank -%}<input type="hidden" name="contact[tags]" value="{{ section.settings.signup_tag }}">{%- endif -%}
+        {%- if form.posted_successfully? -%}
+          <p class="nl4__note nl4__success">{{ section.settings.success_message | default: 'Thanks. See you in your inbox.' }}</p>
+        {%- else -%}
+          <input class="nl4__input" type="email" name="contact[email]" placeholder="{{ section.settings.placeholder | default: 'your@email.com' }}" aria-label="Email address" required>
+          <button class="nl4__btn" type="submit">{{ section.settings.button_label | default: 'Send me the font' }} <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 8h10M8 4l4 4-4 4"/></svg></button>
+          {%- if form.errors -%}<p class="nl4__error">{{ form.errors | default_errors }}</p>{%- endif -%}
         {%- endif -%}
-        {%- if section.settings.title != blank -%}
-          {%- assign safe_title = section.settings.title | escape | newline_to_br -%}
-          <h2 class="ds-newsletter-card__title">{{ safe_title }}</h2>
-        {%- endif -%}
-        {%- if section.settings.subhead != blank -%}
-          <p class="ds-newsletter-card__sub">{{ section.settings.subhead }}</p>
-        {%- endif -%}
-      </div>
-
-      <div class="ds-newsletter-card__form-wrap">
-        {%- form 'customer', class: 'ds-newsletter-card__form-inner' -%}
-          {%- if section.settings.signup_tag != blank -%}
-            <input type="hidden" name="contact[tags]" value="{{ section.settings.signup_tag }}">
-          {%- endif -%}
-
-          {%- if form.posted_successfully? -%}
-            <p class="ds-newsletter-card__success">{{ section.settings.success_message | default: 'Thanks. See you in your inbox.' }}</p>
-          {%- else -%}
-            <div class="ds-newsletter-card__form">
-              <input
-                class="ds-newsletter-card__input"
-                type="email"
-                name="contact[email]"
-                placeholder="{{ section.settings.placeholder | default: 'your@email.com' }}"
-                aria-label="{{ 'Email address' }}"
-                required
-              >
-              <button class="ds-newsletter-card__btn" type="submit">
-                {{ section.settings.button_label | default: 'Subscribe' }}
-              </button>
-            </div>
-            {%- if form.errors -%}
-              <p class="ds-newsletter-card__error">{{ form.errors | default_errors }}</p>
-            {%- endif -%}
-          {%- endif -%}
-        {%- endform -%}
-      </div>
+      {%- endform -%}
+      {%- if section.settings.subhead != blank -%}<p class="nl4__note">{{ section.settings.subhead }}</p>{%- endif -%}
     </div>
   </div>
 </section>
@@ -204,6 +178,33 @@
       letter-spacing: 0.16em;
     }
   }
+
+  /* ===== Newsletter — nl4 (spiral bg + dark card). Old .ds-newsletter-* rules above dead. ===== */
+  .nl4{background-color:var(--color-bg);background-image:url({{ 'ds-freefont-spiral.webp' | asset_url }});background-size:cover;background-position:center;border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border);padding:34px clamp(16px,6vw,30px);display:flex;justify-content:center;}
+  .nl4__card{width:100%;max-width:560px;background:#0b0708;border:1px solid rgba(241,231,229,.14);box-shadow:0 20px 54px rgba(0,0,0,.55);padding:30px 24px;text-align:center;}
+  .nl4__pitch{margin:0 0 20px;}
+  .nl4__label{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--color-fg-muted);margin:0 0 8px;}
+  .nl4__eyebrow{font-family:var(--font-sans);font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--color-fg);margin:0;}
+  .nl4__eyebrow b{color:var(--color-fg-muted);font-weight:400;font-size:.8em;}
+  .nl4__eyebrow s{color:var(--color-fg-muted);}
+  .nl4__form{display:flex;flex-direction:column;gap:11px;margin:0;}
+  .nl4__input{width:100%;padding:15px 16px;background:transparent;border:1px solid rgba(241,231,229,.28);color:var(--color-fg);font-family:var(--font-mono);font-size:14px;outline:0;transition:border-color .16s;box-sizing:border-box;}
+  .nl4__input::placeholder{color:rgba(241,231,229,.4);}
+  .nl4__input:focus{border-color:var(--color-fg);}
+  .nl4__btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:16px 20px;background:transparent;color:var(--color-fg);border:2px dashed var(--color-fg);font-family:var(--font-sans);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .16s,color .16s,border-color .16s,transform .1s;white-space:nowrap;}
+  .nl4__btn svg{width:15px;height:15px;flex:none;}
+  .nl4__btn:hover{background:var(--color-accent);color:var(--color-accent-fg);border-color:var(--color-accent);}
+  .nl4__btn:active{transform:translateY(1px);}
+  .nl4__note{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;color:var(--color-fg-muted);margin:14px 0 0;}
+  .nl4__error{font-family:var(--font-mono);font-size:11px;color:#E0525B;margin:10px 0 0;}
+  .nl4__success{color:var(--color-fg);font-size:14px;}
+  @media (min-width:720px){
+    .nl4{padding:58px 30px;}
+    .nl4__card{max-width:880px;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:48px;padding:42px 50px;text-align:left;}
+    .nl4__pitch{margin:0;}
+    .nl4__eyebrow{font-size:25px;white-space:nowrap;}
+  }
+
 {% endstyle %}
 
 {% schema %}
