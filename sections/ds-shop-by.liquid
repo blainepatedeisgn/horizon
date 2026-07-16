@@ -113,7 +113,8 @@
           -%}
           <div class="pgrid">
             {%- for product in coll.products limit: lim -%}
-              {% render 'ds-product-card', product: product, label: lbl, index: forloop.index %}
+              {%- comment -%} quick_add: matches the collection/search cards — hover-revealed corner button ("+" AJAX-adds a single-variant product, "→" sends a multi-variant one to the PDP to pick a licence). {%- endcomment -%}
+              {% render 'ds-product-card', product: product, label: lbl, quick_add: true, index: forloop.index %}
             {%- else -%}
               <p class="catpanel__empty">No products in this collection yet.</p>
             {%- endfor -%}
