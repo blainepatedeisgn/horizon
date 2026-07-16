@@ -80,8 +80,8 @@
         }
       },
       "block_order": [
-        "shop_links",
         "studio_links",
+        "shop_links",
         "newsletter",
         "link_column_frLTiJ"
       ],

@@ -384,7 +384,7 @@
      are now dead (markup uses .ftF__*). Theme-tokenised. */
   .ftF{container-type:inline-size;background:var(--color-bg);color:var(--color-fg);font-family:var(--font-sans);border-top:1px solid var(--color-border);--cell:rgba(241,231,229,.26);}
   .ftF *{box-sizing:border-box;}
-  .ftF__frame{border:2px solid var(--cell);margin:clamp(30px,5vw,54px) clamp(16px,4vw,30px) clamp(20px,4vw,30px);}
+  .ftF__frame{border:0;margin:0;}  /* mobile: full-width, no box — only the cell divider lines show. Framed box is re-added at >=720px below. */
   .ftF__grid{display:grid;grid-template-columns:1fr;}
   .ftF__cell{border-bottom:2px solid var(--cell);padding:20px 18px;min-width:0;}
   .ftF__cell:last-child{border-bottom:0;}
@@ -416,6 +416,7 @@
   .ftF__chips{display:flex;flex-wrap:wrap;gap:8px;}
   .ftF__chip{border:1.5px solid var(--cell);padding:6px 9px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;color:var(--color-fg);text-transform:uppercase;white-space:nowrap;}
   @container (min-width:720px){
+    .ftF__frame{border:2px solid var(--cell);margin:clamp(30px,5vw,54px) clamp(16px,4vw,30px) clamp(20px,4vw,30px);}
     .ftF__grid{grid-template-columns:2fr 1fr 1fr 1.3fr;}
     .ftF__cell{border-right:2px solid var(--cell);border-bottom:2px solid var(--cell);padding:26px 24px;}
     .ftF__b-connect{border-right:0;}
