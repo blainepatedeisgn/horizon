@@ -15,6 +15,10 @@
           class="catmenu__tab{% if forloop.first %} is-on{% endif %}"
           type="button"
           role="tab"
+          id="cattab-{{ section.id }}-{{ forloop.index }}"
+          aria-controls="catpanel-{{ section.id }}-{{ forloop.index }}"
+          aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+          tabindex="{% if forloop.first %}0{% else %}-1{% endif %}"
           data-cat="{{ forloop.index }}"
           {{ block.shopify_attributes }}
         >{{ block.settings.label | default: 'Tab' }}</button>
@@ -30,7 +34,7 @@
         assign lbl = block.settings.item_label | default: block.settings.label
         assign lim = block.settings.limit | default: 8
       -%}
-      <div class="catpanel{% if forloop.first %} is-on{% endif %}" data-cat-panel="{{ forloop.index }}">
+      <div class="catpanel{% if forloop.first %} is-on{% endif %}" role="tabpanel" id="catpanel-{{ section.id }}-{{ forloop.index }}" aria-labelledby="cattab-{{ section.id }}-{{ forloop.index }}" data-cat-panel="{{ forloop.index }}">
         <div class="pgrid">
           {%- for product in coll.products limit: lim -%}
             {%- liquid
@@ -66,7 +70,7 @@
   .sec-eye { font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--color-fg-muted);padding:28px 16px 14px;display:flex;justify-content:space-between; }
   .sec-eye__all { font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--color-fg);text-decoration:underline;text-underline-offset:3px;cursor:pointer; }
   .catmenu__all { display:none; }
-  .catmenu__tabs { display:flex;gap:8px;flex-wrap:nowrap;padding:0 14px 18px; }
+  .catmenu__tabs { display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 18px; }
   .catmenu__tab { flex:1;text-align:center;white-space:nowrap;padding:9px 6px;border:1px solid rgba(241,231,229,.55);background:transparent;font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-fg-muted);transition:.15s;cursor:pointer; }
   .catmenu__tab::before { content:"[ ";opacity:.5; }
   .catmenu__tab::after { content:" ]";opacity:.5; }
@@ -95,17 +99,38 @@
 {% endstyle %}
 
 {% javascript %}
-  document.addEventListener('click', function (e) {
-    var b = e.target.closest('.catmenu__tab');
-    if (!b) return;
-    var m = b.closest('.catmenu');
-    if (!m) return;
-    m.querySelectorAll('.catmenu__tab').forEach(function (x) { x.classList.remove('is-on'); });
-    b.classList.add('is-on');
-    m.querySelectorAll('.catpanel').forEach(function (p) {
-      p.classList.toggle('is-on', p.getAttribute('data-cat-panel') === b.dataset.cat);
+  (function () {
+    function activate(b) {
+      var m = b.closest('.catmenu');
+      if (!m) return;
+      m.querySelectorAll('.catmenu__tab').forEach(function (x) {
+        x.classList.remove('is-on');
+        x.setAttribute('aria-selected', 'false');
+        x.tabIndex = -1;
+      });
+      b.classList.add('is-on');
+      b.setAttribute('aria-selected', 'true');
+      b.tabIndex = 0;
+      m.querySelectorAll('.catpanel').forEach(function (p) {
+        p.classList.toggle('is-on', p.getAttribute('data-cat-panel') === b.dataset.cat);
+      });
+    }
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest('.catmenu__tab');
+      if (b) activate(b);
     });
-  });
+    document.addEventListener('keydown', function (e) {
+      var b = e.target.closest('.catmenu__tab');
+      if (!b) return;
+      var tabs = Array.prototype.slice.call(b.closest('.catmenu__tabs').querySelectorAll('.catmenu__tab'));
+      var idx = tabs.indexOf(b), n = tabs.length, t = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') t = tabs[(idx + 1) % n];
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') t = tabs[(idx - 1 + n) % n];
+      else if (e.key === 'Home') t = tabs[0];
+      else if (e.key === 'End') t = tabs[n - 1];
+      if (t) { e.preventDefault(); activate(t); t.focus(); }
+    });
+  })();
 {% endjavascript %}
 
 {% schema %}

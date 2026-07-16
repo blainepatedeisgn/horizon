@@ -28,12 +28,25 @@
     {%- endif -%}
   {%- endfor -%}
 {%- endcapture -%}
+{%- comment -%} row 3: rotated order (products 6.. then 1-5) so it reads distinct from row 1 {%- endcomment -%}
+{%- capture tiles_rot -%}
+  {%- for product in wall.products offset: 5 -%}
+    {%- if product.featured_image -%}
+      <span class="dsh__tile" style="background-image:url({{ product.featured_image | image_url: width: 400 }})"></span>
+    {%- endif -%}
+  {%- endfor -%}
+  {%- for product in wall.products limit: 5 -%}
+    {%- if product.featured_image -%}
+      <span class="dsh__tile" style="background-image:url({{ product.featured_image | image_url: width: 400 }})"></span>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
 
 <section class="dsh color-{{ cs }}">
   <div class="dsh__wall" aria-hidden="true">
     <div class="dsh__row dsh__row--l"><div class="dsh__track" style="--d:42s">{{ tiles_fwd }}{{ tiles_fwd }}</div></div>
     <div class="dsh__row dsh__row--r"><div class="dsh__track" style="--d:56s">{{ tiles_rev }}{{ tiles_rev }}</div></div>
-    <div class="dsh__row dsh__row--l"><div class="dsh__track" style="--d:48s;animation-delay:-24s">{{ tiles_fwd }}{{ tiles_fwd }}</div></div>
+    <div class="dsh__row dsh__row--l"><div class="dsh__track" style="--d:48s;animation-delay:-24s">{{ tiles_rot }}{{ tiles_rot }}</div></div>
   </div>
   <div class="dsh__scrim"></div>
   <div class="dsh__content">

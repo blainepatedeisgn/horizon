@@ -11,9 +11,9 @@
     <h2 class="rng__title">{{ title }}{% if title_accent != blank %}<br><em>{{ title_accent }}</em>{% endif %}</h2>
     <div class="rng__frame">
       {%- if strip != blank -%}
-        <img class="rng__strip" src="{{ strip | image_url: width: 2400 }}" alt="{{ title | escape }}" loading="lazy">
+        <img class="rng__strip" src="{{ strip | image_url: width: 2400 }}" alt="Muybridge gallop film reel rendered as pixel art" loading="lazy">
       {%- else -%}
-        <img class="rng__strip" src="{{ 'ds-muybridge-strip.webp' | asset_url }}" alt="{{ title | escape }}" loading="lazy">
+        <img class="rng__strip" src="{{ 'ds-muybridge-strip.webp' | asset_url }}" alt="Muybridge gallop film reel rendered as pixel art" loading="lazy">
       {%- endif -%}
     </div>
     {%- if cta_text != blank -%}
