@@ -76,7 +76,7 @@
         # collections.size > 0 here — the megamenu panel below has
         # a hardcoded fallback list that renders when the merchant
         # hasn't picked real collections yet.
-        assign mm_enabled = section.settings.megamenu_enabled
+        assign mm_enabled = false
         assign mm_trigger_label = section.settings.megamenu_trigger | default: '' | downcase
         assign mm_active = false
         if mm_enabled and mm_trigger_label != ''
@@ -470,7 +470,7 @@
 {%- endcomment -%}
 {%- liquid
   assign mm_show = false
-  if section.settings.megamenu_enabled
+  if false
     assign mm_show = true
   endif
   assign mm_collections = section.settings.megamenu_collections
