@@ -637,7 +637,7 @@
               ref="searchInput"
               type="search"
               name="q"
-              placeholder="Search products, fonts, plugins…"
+              placeholder="Search the studio"
               class="ds-search-modal__input"
               role="combobox"
               aria-expanded="false"
@@ -681,7 +681,7 @@
           <div class="ds-search-modal__body">
             <aside class="ds-search-modal__sidebar" aria-label="Browse">
               <div class="ds-search-modal__sidebar-group">
-                <div class="ds-search-modal__sidebar-head">Browse</div>
+                <div class="ds-search-modal__sidebar-head">Browse // Categories</div>
                 <a href="{{ routes.all_products_collection_url }}" class="ds-search-modal__sidebar-link">All products</a>
                 <a href="/collections/plugins" class="ds-search-modal__sidebar-link">Plugins</a>
                 <a href="/collections/fonts"   class="ds-search-modal__sidebar-link">Fonts</a>
@@ -695,7 +695,7 @@
               {%- endcomment -%}
               <div class="ds-search-modal__sidebar-group ds-search-modal__sidebar-group--recent" data-ds-recent-group hidden>
                 <div class="ds-search-modal__sidebar-head ds-search-modal__sidebar-head--with-action">
-                  <span>Recent</span>
+                  <span>Recent // Searches</span>
                   <button type="button" class="ds-search-modal__sidebar-clear" data-ds-recent-clear aria-label="Clear recent searches">Clear</button>
                 </div>
                 <ul class="ds-search-modal__sidebar-recent-list" data-ds-recent-list role="list"></ul>
@@ -2853,14 +2853,32 @@
     margin-bottom: var(--space-3);
   }
   .ds-search-modal__sidebar-link {
-    display: block;
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
     color: var(--color-fg);
     text-decoration: none;
-    padding: 6px 0;
-    transition: color var(--t-fast) var(--ease);
+    padding: 11px 2px;
+    border-top: 1px solid var(--color-border);
+    transition: color var(--t-fast) var(--ease), padding-left var(--t-fast) var(--ease);
   }
-  .ds-search-modal__sidebar-link:hover { color: var(--color-accent); }
+  .ds-search-modal__sidebar-link::before {
+    content: "";
+    width: 7px; height: 7px; flex: 0 0 auto;
+    background: var(--color-fg-muted);
+    transition: background var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+  }
+  .ds-search-modal__sidebar-link::after {
+    content: "\2192";
+    margin-left: auto;
+    font-family: var(--font-mono);
+    color: var(--color-fg-muted);
+    transition: color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+  }
+  .ds-search-modal__sidebar-link:hover { color: #E0525B; padding-left: 6px; }
+  .ds-search-modal__sidebar-link:hover::before { background: var(--color-accent); transform: rotate(45deg); }
+  .ds-search-modal__sidebar-link:hover::after { color: var(--color-accent); transform: translateX(3px); }
 
   /* Recent searches group — head has an inline "Clear" action */
   .ds-search-modal__sidebar-head--with-action {
