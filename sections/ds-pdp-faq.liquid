@@ -46,15 +46,72 @@
       </div>
     {%- endif -%}
 
+    {%- comment -%}
+      ---------- Per-product FAQ visibility, resolved ONCE ----------
+      One FAQ set is shared by every product on a template, but some answers
+      are only true for some products (e.g. TXT-84 and Obscura Gothic really
+      are uppercase-only; Bone Marrow has a full lowercase set). So a block
+      can gate itself on a product TAG:
+
+        show_if_tag — render only when the product HAS that tag
+        hide_if_tag — skip when the product HAS that tag
+
+      Both blank = always show (existing blocks are unaffected).
+
+      Resolved into `visible_ids` here because THREE loops must agree: the
+      visible list, the JSON-LD counter, and the JSON-LD renderer. If they
+      disagreed, the FAQPage schema would advertise an answer that isn't on
+      the page (a Google FAQ policy violation) and the comma logic would emit
+      invalid JSON. Match is delimiter-wrapped so "uppercase" can't match a
+      tag like "uppercase-only".
+    {%- endcomment -%}
+    {%- liquid
+      assign tag_hay = product.tags | join: '||' | downcase | prepend: '||' | append: '||'
+      assign visible_ids = ''
+      assign valid_q_count = 0
+      for block in section.blocks
+        if block.type != 'faq_item' or block.settings.question == blank
+          continue
+        endif
+        assign faq_ok = true
+        assign want = block.settings.show_if_tag | strip | downcase
+        if want != blank
+          assign needle = want | prepend: '||' | append: '||'
+          unless tag_hay contains needle
+            assign faq_ok = false
+          endunless
+        endif
+        assign skip = block.settings.hide_if_tag | strip | downcase
+        if skip != blank
+          assign needle = skip | prepend: '||' | append: '||'
+          if tag_hay contains needle
+            assign faq_ok = false
+          endif
+        endif
+        if faq_ok
+          assign visible_ids = visible_ids | append: block.id | append: '||'
+          if block.settings.answer != blank
+            assign valid_q_count = valid_q_count | plus: 1
+          endif
+        endif
+      endfor
+      assign visible_ids = visible_ids | prepend: '||'
+    -%}
+
     <div class="ds-pdp-faq__list">
+      {%- assign vis_n = 0 -%}
       {%- for block in section.blocks -%}
         {%- if block.type == 'faq_item' -%}
           {%- liquid
             assign question = block.settings.question
             assign answer = block.settings.answer
-            assign num_str = forloop.index | prepend: '0' | slice: -2, 2
+            assign bid = block.id | prepend: '||' | append: '||'
           -%}
-          {%- if question != blank -%}
+          {%- if question != blank and visible_ids contains bid -%}
+            {%- liquid
+              assign vis_n = vis_n | plus: 1
+              assign num_str = vis_n | prepend: '0' | slice: -2, 2
+            -%}
             <details class="ds-pdp-faq__item" {{ block.shopify_attributes }}>
               <summary class="ds-pdp-faq__q">
                 <span class="ds-pdp-faq__q-num">{{ num_str }}</span>
@@ -84,13 +141,12 @@
   Each Question / Answer pair maps directly to one section block
   so the SEO surface stays in sync with what visitors actually see.
 {%- endcomment -%}
+{%- comment -%}
+  valid_q_count is computed ABOVE, over VISIBLE blocks only (see the
+  visibility note there) — a tag-hidden answer must not appear here, or the
+  schema would claim something the page never shows.
+{%- endcomment -%}
 {%- liquid
-  assign valid_q_count = 0
-  for block in section.blocks
-    if block.type == 'faq_item' and block.settings.question != blank and block.settings.answer != blank
-      assign valid_q_count = valid_q_count | plus: 1
-    endif
-  endfor
   assign rendered_q = 0
 -%}
 {%- if valid_q_count > 0 -%}
@@ -100,7 +156,8 @@
   "@type": "FAQPage",
   "mainEntity": [
     {%- for block in section.blocks -%}
-      {%- if block.type == 'faq_item' and block.settings.question != blank and block.settings.answer != blank -%}
+      {%- assign bid = block.id | prepend: '||' | append: '||' -%}
+      {%- if block.type == 'faq_item' and block.settings.question != blank and block.settings.answer != blank and visible_ids contains bid -%}
         {%- assign rendered_q = rendered_q | plus: 1 -%}
         {
           "@type": "Question",
@@ -243,7 +300,9 @@
   "tag": "section",
   "class": "ds-section ds-section--pdp-faq",
   "enabled_on": {
-    "templates": ["product"]
+    "templates": [
+      "product"
+    ]
   },
   "settings": [
     {
@@ -252,7 +311,10 @@
       "default": "scheme-1",
       "label": "Color scheme"
     },
-    { "type": "header", "content": "Heading" },
+    {
+      "type": "header",
+      "content": "Heading"
+    },
     {
       "type": "text",
       "id": "heading",
@@ -291,6 +353,22 @@
           "id": "answer",
           "label": "Answer",
           "info": "Line breaks render as paragraph breaks."
+        },
+        {
+          "type": "header",
+          "content": "Per-product visibility"
+        },
+        {
+          "type": "text",
+          "id": "show_if_tag",
+          "label": "Only show if product tagged",
+          "info": "Leave blank to always show. e.g. enter \"uppercase\" and this answer renders only for products carrying that tag."
+        },
+        {
+          "type": "text",
+          "id": "hide_if_tag",
+          "label": "Hide if product tagged",
+          "info": "Leave blank to never hide. Pair with the block above — same tag, opposite field — to serve two different answers to the same question."
         }
       ]
     }

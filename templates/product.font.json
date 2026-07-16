@@ -76,18 +76,29 @@
             "answer": "Yes, with a Commercial license. Personal license does not cover client work or anything monetized. The license is granted to the entity named on the order; for client work, place the order in the client's name (industry standard practice)."
           }
         },
-        "faq_language": {
-          "type": "faq_item",
-          "settings": {
-            "question": "What languages and characters are included?",
-            "answer": "English only, uppercase. Every typeface ships Basic Latin uppercase glyphs (A–Z), numerals (0–9), and basic punctuation.  No lowercase, no extended Latin, no other scripts. If you need lowercase or another language, email blainepatedesign@gmail.com useful demand drives the roadmap!!"
-          }
-        },
         "faq_refund": {
           "type": "faq_item",
           "settings": {
             "question": "What's the refund policy?",
             "answer": "All sales final once the font has been downloaded. EU buyers have a 14-day right of withdrawal before downloading per Article 16(m) of the Consumer Rights Directive. Defective files are replaced at no charge."
+          }
+        },
+        "faq_language_upper": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What languages and characters are included?",
+            "answer": "English (Basic Latin), uppercase only. This face ships A–Z, numerals 0–9 and basic punctuation — no lowercase, no extended Latin, no other scripts. The exact set is listed on the Glyphs row in the spec table above. Need lowercase or another language? Email blainepatedesign@gmail.com — demand drives the roadmap.",
+            "show_if_tag": "uppercase",
+            "hide_if_tag": ""
+          }
+        },
+        "faq_language_full": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What languages and characters are included?",
+            "answer": "English (Basic Latin) — uppercase A–Z, lowercase a–z, numerals 0–9 and punctuation. The exact character set is listed on the Glyphs row in the spec table above, and the type specimen below renders it in the real face. No extended Latin or other scripts yet. Need another language? Email blainepatedesign@gmail.com — demand drives the roadmap.",
+            "show_if_tag": "",
+            "hide_if_tag": "uppercase"
           }
         }
       },
@@ -95,7 +106,8 @@
         "faq_formats",
         "faq_web",
         "faq_client",
-        "faq_language",
+        "faq_language_upper",
+        "faq_language_full",
         "faq_refund"
       ],
       "settings": {
