@@ -54,21 +54,11 @@
             "item_label": "Graphics",
             "limit": 8
           }
-        },
-        "tab_plugins": {
-          "type": "tab",
-          "settings": {
-            "label": "Plugins",
-            "collection": "plugins",
-            "item_label": "Plugin",
-            "limit": 8
-          }
         }
       },
       "block_order": [
         "tab_fonts",
-        "tab_graphics",
-        "tab_plugins"
+        "tab_graphics"
       ],
       "settings": {
         "eyebrow": "[ Shop by ]",
@@ -85,11 +75,57 @@
         "cta_link": "shopify://products/pixel-perfect-plugin",
         "color_scheme": "scheme-1"
       }
+    },
+    "ds_plugin_viewer_dm01": {
+      "type": "ds-plugin-viewer",
+      "blocks": {
+        "spec_1": {
+          "type": "spec",
+          "settings": {
+            "value": "Real-time",
+            "key": "Live pixel preview"
+          }
+        },
+        "spec_2": {
+          "type": "spec",
+          "settings": {
+            "value": "Non-destructive",
+            "key": "Original stays intact"
+          }
+        },
+        "spec_3": {
+          "type": "spec",
+          "settings": {
+            "value": "Vector + image",
+            "key": "Type, shapes or photos"
+          }
+        },
+        "spec_4": {
+          "type": "spec",
+          "settings": {
+            "value": "One click",
+            "key": "Apply & commit"
+          }
+        }
+      },
+      "block_order": [
+        "spec_1",
+        "spec_2",
+        "spec_3",
+        "spec_4"
+      ],
+      "settings": {
+        "eyebrow": "[ The plugin ]",
+        "video_label": "[ Demo · 0:38 ]",
+        "buy_label": "+ Add to cart",
+        "color_scheme": "scheme-1"
+      }
     }
   },
   "order": [
     "ds_collage_hero_dm01",
     "ds_shop_by_dm01",
+    "ds_plugin_viewer_dm01",
     "ds_filmstrip_dm01",
     "newsletter"
   ]
