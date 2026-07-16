@@ -68,6 +68,7 @@
             </div>
             <div class="pp__col pp__col--r">
               <div class="ppv">
+                <script type="application/json" data-ppv-frames>[{%- assign _modes = 'V,I' | split: ',' -%}{%- assign _sep = '' -%}{%- for _md in _modes -%}{%- for _s in (1..4) -%}{%- for _p in (1..5) -%}{%- capture _fn -%}ds-ppv-g{{ _md }}-{{ _s }}-{{ _p }}.webp{%- endcapture -%}{{ _sep }}"{{ _fn | asset_url }}"{%- assign _sep = ',' -%}{%- endfor -%}{%- endfor -%}{%- endfor -%}]</script>
                 <div class="ppv__pair">
                   <div class="ppv__col">
                     <div class="ppv__box">
@@ -188,9 +189,10 @@
   .pp__buy::after { content:"]";font-size:1.6em;line-height:0;margin-left:8px;font-weight:400; }
   .pp__buy:hover { filter:brightness(1.09); }
   .ppv { margin-top:16px; }
-  .ppv__pair { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+  .ppv__pair { display:grid;grid-template-columns:1fr 1fr;gap:0; }
   .ppv__col { display:flex;flex-direction:column;min-width:0; }
   .ppv__box { position:relative;border:1px solid var(--color-border);background:#0e090b;overflow:hidden; }
+  .ppv__col:first-child .ppv__box { border-right:0; }  /* zero-gap pair → single hairline divider, not a doubled border */
   .ppv__img { aspect-ratio:1/1;background-size:cover;background-position:center;background-repeat:no-repeat; }
   .ppv__chip { position:absolute;left:7px;bottom:7px;font-family:var(--font-mono);font-size:9px;letter-spacing:.03em;color:#e8646c;background:rgba(24,6,8,.78);border:1px solid rgba(193,18,31,.5);padding:2px 6px;border-radius:2px;pointer-events:none; }
   .ppv__cap { padding:9px 2px 0;font-family:var(--font-mono); }
@@ -293,6 +295,24 @@
         zi = Math.max(0, Math.min(px.length - 1, (parseInt(rg.value, 10) || 1) - 1));
         render();
       });
+
+      // Preload all 40 frames once the viewer scrolls into view, so shape/pixel
+      // swaps are instant (no per-frame network fetch + decode flash).
+      var framesEl = root.querySelector('[data-ppv-frames]'), frames = null, preloaded = false;
+      if (framesEl) { try { frames = JSON.parse(framesEl.textContent); } catch (e) {} }
+      function preload() {
+        if (preloaded || !frames) return;
+        preloaded = true;
+        frames.forEach(function (u) { var im = new Image(); im.decoding = 'async'; im.src = u; });
+      }
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) { if (en.isIntersecting) { preload(); io.disconnect(); } });
+        }, { rootMargin: '400px' });
+        io.observe(root);
+      } else { preload(); }
+      root.addEventListener('pointerenter', preload, { once: true });
+
       render();
     });
   })();
