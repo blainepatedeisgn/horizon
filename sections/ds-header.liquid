@@ -2971,11 +2971,21 @@
      browse; once results come in, browse hides and results take over. */
   @media (max-width: 900px) {
     /* Full-height sheet on phones — fill to the bottom so the homepage
-       doesn't show through below a short dropdown. */
+       doesn't show through below a short dropdown. Native <dialog>
+       defaults to height:fit-content, so set an explicit height and make
+       the dialog a flex column so the panel fills + the foot pins bottom. */
     .ds-search-modal__dialog {
       bottom: 0;
+      height: calc(100dvh - var(--ds-search-top, 64px));
       max-height: none;
       box-shadow: none;
+      display: flex;
+      flex-direction: column;
+    }
+    .ds-search-modal__panel {
+      flex: 1;
+      max-height: none;
+      min-height: 0;
     }
     .ds-search-modal__body {
       display: flex;
