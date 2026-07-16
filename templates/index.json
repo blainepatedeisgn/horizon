@@ -211,6 +211,16 @@
         "color_scheme": ""
       }
     },
+    "ds_collage_hero_dm01": {
+      "type": "ds-hero-collage",
+      "settings": {
+        "heading": "Designed to darken your work.",
+        "collection": "all-products",
+        "cta_text": "+ Shop everything",
+        "cta_link": "shopify://collections/all",
+        "color_scheme": "scheme-1"
+      }
+    },
     "ds_product_scroller_QHJ8rQ": {
       "type": "ds-product-scroller",
       "name": "Product scroller",
@@ -368,9 +378,7 @@
     }
   },
   "order": [
-    "ds_hero_studio_VAJ8Kc",
-    "ds_hero_pixelperfect_KLC9fz",
-    "hero",
+    "ds_collage_hero_dm01",
     "ds_product_scroller_QHJ8rQ",
     "product_grid",
     "category_teasers",
