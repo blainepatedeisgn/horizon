@@ -912,7 +912,10 @@
       display: none;
     }
     .ds-header__actions { gap: 8px; }
-    .ds-header__inner { gap: 16px; }
+    /* Nav is hidden on mobile, so the 3-col grid collapses to 2 items and
+       auto-places the actions in the middle track. Revert to flex here:
+       burger+logo left, actions hard right. Grid (centered nav) is desktop-only. */
+    .ds-header__inner { display: flex; justify-content: space-between; gap: 16px; }
     .ds-header__icon-btn {
       min-width: 44px;
       min-height: 44px;
