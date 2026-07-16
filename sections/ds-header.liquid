@@ -3774,7 +3774,7 @@
   //
   // Even with all :hover rules on the button itself wrapped in
   // @media (hover: hover), iOS still defers the first tap on a
-  // .ds-product-card__quick--add because the parent .ds-product-
+  // .pcard__quick--add because the parent .ds-product-
   // card has a :hover rule (image swap, kept intentionally so the
   // hover feature still works on tap-outside-the-+). iOS treats any
   // ancestor :hover as grounds to defer descendant clicks.
@@ -3791,7 +3791,7 @@
     var startX = 0, startY = 0, startTime = 0;
 
     document.addEventListener('touchstart', function (e) {
-      var btn = e.target && e.target.closest && e.target.closest('.ds-product-card__quick--add');
+      var btn = e.target && e.target.closest && e.target.closest('.pcard__quick--add');
       if (!btn) return;
       var touch = e.touches[0];
       startX = touch.clientX;
@@ -3800,7 +3800,7 @@
     }, { passive: true });
 
     document.addEventListener('touchend', function (e) {
-      var btn = e.target && e.target.closest && e.target.closest('.ds-product-card__quick--add');
+      var btn = e.target && e.target.closest && e.target.closest('.pcard__quick--add');
       if (!btn) return;
 
       // Tap, not scroll/drag — finger moved < 10px in < 700ms.

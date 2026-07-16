@@ -1,196 +1,139 @@
 {%- comment -%}
-  snippets/ds-product-card.liquid — Disrupted Studio product card
+  snippets/ds-product-card.liquid — Disrupted Studio product card (.pcard)
+
+  The single card used everywhere: homepage shop-by tabs, collection pages,
+  search results, and PDP "you may also like". Matches the homepage design —
+  a square image tile with the badge top-left and the name + "$price · TYPE"
+  overlaid on a bottom scrim. The whole tile is one link.
 
   Required parameters
-    product               — a Shopify product object
+    product     — a Shopify product object
 
   Optional parameters
-    show_secondary_image  — bool, default true. When true and the product has
-                            a 2nd image, swap to it on hover.
-    show_category         — bool, default true. Renders product.type (or first
-                            collection title as fallback) as the mono caps subline.
-    quick_add             — bool, default false. When true, renders a
-                            hover-revealed "+ ADD" / "→ OPTIONS" button overlay
-                            on the image. Single-variant products AJAX-add; variant
-                            products link to the PDP. Used on collection pages.
-
-  Auto badge logic (no parameter)
-    - SALE  (accent orange) when compare_at_price > price
-    - NEW   (white)         when product.tags contains "new"/"New"/"NEW"
-    - none  otherwise
-
-  Usage example
-    {% render 'ds-product-card', product: product %}
-    {% render 'ds-product-card', product: product, quick_add: true %}
+    label       — category text after the price (e.g. "Font"). Defaults to
+                  product.type, then the first collection's title.
+    quick_add   — bool, default false. Renders a hover-revealed corner button
+                  over the image: single-variant products AJAX-add (opens the
+                  cart drawer), variant products link to the PDP.
+    index       — 1-based position. The first 3 load eager/high priority so a
+                  card image can be the LCP element without a lazy delay.
 
   Structure note
-    Outer wrapper is <article>, NOT <a>, because nesting a <button> inside
-    an <a> is invalid HTML. The main link wraps the image + meta. The quick-
-    add button (when enabled) is a sibling of the link, positioned absolutely
-    over the image — clicks on it don't bubble to the link.
+    Outer wrapper is <article>, NOT <a>: the quick-add <button> must be a
+    sibling of the link, since a <button> inside an <a> is invalid HTML.
+
+  Badge priority: FREE > BUNDLE > SALE > NEW.
+    Bundles inherently have compare_at_price > price, so type == "Bundle" is
+    checked before SALE to label the saving as BUNDLE rather than generic SALE.
+
+  CSS lives in assets/ds-tokens.css (global) so every template gets it.
 {%- endcomment -%}
 
 {%- liquid
-  if show_secondary_image == nil
-    assign show_secondary_image = true
-  endif
-  if show_category == nil
-    assign show_category = true
-  endif
   if quick_add == nil
     assign quick_add = false
   endif
 
-  assign secondary = product.images[1]
-
-  assign category = product.type
+  assign category = label
+  if category == blank
+    assign category = product.type
+  endif
   if category == blank
     assign category = product.collections.first.title
   endif
 
-  comment
-    Badge priority: BUNDLE > SALE > NEW.
-    Bundle products inherently have compare_at_price > price (that's
-    how the savings render), so we check `product.type == "Bundle"`
-    FIRST to label the savings as "BUNDLE" instead of generic "SALE".
-  endcomment
   assign badge_text = ''
-  assign badge_modifier = ''
-  if product.type == 'Bundle'
+  if product.price == 0
+    assign badge_text = 'FREE'
+  elsif product.type == 'Bundle'
     assign badge_text = 'BUNDLE'
-    assign badge_modifier = 'ds-product-card__badge--accent'
   elsif product.compare_at_price > product.price
     assign badge_text = 'SALE'
-    assign badge_modifier = 'ds-product-card__badge--accent'
   elsif product.tags contains 'new' or product.tags contains 'New' or product.tags contains 'NEW'
     assign badge_text = 'NEW'
   endif
 
   assign current_variant = product.selected_or_first_available_variant
+
+  assign img_loading = 'lazy'
+  assign img_priority = 'auto'
+  if index and index <= 3
+    assign img_loading = 'eager'
+    assign img_priority = 'high'
+  endif
 -%}
 
 {%- if quick_add -%}
-  {%- comment -%} Load AJAX form component once per page when any card uses quick-add. {%- endcomment -%}
+  {%- comment -%} Load the AJAX form component once per page when any card uses quick-add. {%- endcomment -%}
   <script src="{{ 'product-form.js' | asset_url }}" type="module" fetchpriority="low"></script>
 {%- endif -%}
 
-<article class="ds-product-card">
-  <div class="ds-product-card__media">
-    <a href="{{ product.url }}" class="ds-product-card__media-link" aria-label="{{ product.title | escape }}" tabindex="-1">
-      {%- if badge_text != blank -%}
-        <span class="ds-product-card__badge {{ badge_modifier }}">{{ badge_text }}</span>
-      {%- endif -%}
-
-      {%- comment -%}
-        First cards in a section load eager with high priority: a lazy
-        first-card image was the page's LCP element and did not start
-        downloading until ~9s in (11.6s mobile LCP). Hover layer stays
-        lazy either way.
-      {%- endcomment -%}
-      {%- liquid
-        assign img_loading = 'lazy'
-        assign img_priority = 'auto'
-        if index and index <= 3
-          assign img_loading = 'eager'
-          assign img_priority = 'high'
-        endif
-      -%}
-      <div class="ds-product-card__media-layer ds-product-card__media-layer--primary">
-        {%- if product.featured_image != blank -%}
-          {{
-            product.featured_image
-            | image_url: width: 800
-            | image_tag:
-                widths: '300,600,900,1200',
-                sizes: '(min-width: 900px) 33vw, 50vw',
-                loading: img_loading,
-                fetchpriority: img_priority,
-                alt: product.title,
-                class: 'ds-product-card__img'
-          }}
-        {%- else -%}
-          {{ 'product-1' | placeholder_svg_tag: 'ds-product-card__img ds-product-card__img--placeholder' }}
-        {%- endif -%}
-      </div>
-
-      {%- if show_secondary_image and secondary != blank -%}
-        <div class="ds-product-card__media-layer ds-product-card__media-layer--hover" aria-hidden="true">
-          {{
-            secondary
-            | image_url: width: 800
-            | image_tag:
-                widths: '300,600,900,1200',
-                sizes: '(min-width: 900px) 33vw, 50vw',
-                loading: 'lazy',
-                alt: '',
-                class: 'ds-product-card__img'
-          }}
-        </div>
-      {%- endif -%}
-    </a>
-
-    {%- comment -%}
-      -------- QUICK ADD OVERLAY (sibling of the media link) --------
-      Sits in the top-RIGHT corner of the image (badge is top-LEFT).
-      Compact 36x36 icon-only button — text in aria-label for SR users.
-    {%- endcomment -%}
-    {%- if quick_add and product.available -%}
-      {%- if product.has_only_default_variant -%}
-        {%- comment -%}
-          Single-variant product — AJAX add via Horizon's product-form-component.
-          Successful add dispatches CartAddEvent which auto-opens the cart drawer.
-        {%- endcomment -%}
-        <product-form-component
-          class="ds-product-card__quick-form"
-          data-product-id="{{ product.id }}"
-          on:submit="/handleSubmit"
-          data-skeleton-title="{{ product.title | escape }}"
-          data-skeleton-image="{%- if product.featured_image -%}{{ product.featured_image | image_url: width: 192 }}{%- endif -%}"
-        >
-          <div class="visually-hidden" aria-live="assertive" role="status" aria-atomic="true" ref="liveRegion"></div>
-          {%- form 'product', product, novalidate: 'novalidate' -%}
-            <input type="hidden" name="id" ref="variantId" value="{{ current_variant.id }}">
-            <input type="hidden" name="quantity" value="1">
-            <button
-              type="submit"
-              class="ds-product-card__quick ds-product-card__quick--add"
-              aria-label="Add {{ product.title | escape }} to cart"
-            >
-              <span aria-hidden="true">+</span>
-            </button>
-          {%- endform -%}
-        </product-form-component>
-
+<article class="pcard">
+  <a href="{{ product.url }}" class="pcard__link">
+    <div class="pcard__img">
+      {%- if product.featured_image != blank -%}
+        {{
+          product.featured_image
+          | image_url: width: 800
+          | image_tag:
+              widths: '300,600,900',
+              sizes: '(min-width: 900px) 25vw, 50vw',
+              loading: img_loading,
+              fetchpriority: img_priority,
+              alt: product.title,
+              class: 'pcard__photo'
+        }}
       {%- else -%}
-        {%- comment -%} Variant product — link to PDP to pick options {%- endcomment -%}
-        <a
-          href="{{ product.url }}"
-          class="ds-product-card__quick ds-product-card__quick--options"
-          aria-label="Choose options for {{ product.title | escape }}"
-        >
-          <span aria-hidden="true">→</span>
-        </a>
+        {{ 'product-1' | placeholder_svg_tag: 'pcard__photo' }}
       {%- endif -%}
-    {%- endif -%}
-  </div>
 
-  <a href="{{ product.url }}" class="ds-product-card__meta-link">
-    {%- comment -%}
-      Single-row meta: title + small arrow grouped on the left,
-      price on the right. Category pill removed per user request.
-    {%- endcomment -%}
-    <div class="ds-product-card__meta">
-      <span class="ds-product-card__title-group">
-        <span class="ds-product-card__title">{{ product.title }}</span>
-        <span class="ds-product-card__arrow" aria-hidden="true">→</span>
-      </span>
-      <span class="ds-product-card__price">
-        {%- if product.compare_at_price > product.price -%}
-          <span class="ds-product-card__price-strike">{{ product.compare_at_price | money }}</span>{{ product.price | money }}
-        {%- else -%}
-          {{ product.price | money }}
-        {%- endif -%}
-      </span>
+      {%- if badge_text != blank -%}
+        <span class="pcard__badge">[ {{ badge_text }} ]</span>
+      {%- endif -%}
+
+      <div class="pcard__scrim"></div>
+
+      <div class="pcard__meta">
+        <p class="pcard__name">{{ product.title }}</p>
+        <div class="pcard__sub tnum">
+          {%- if product.price == 0 -%}Free{%- else -%}{{ product.price | money_without_trailing_zeros }}{%- endif -%}
+          {%- if category != blank %} &nbsp;&middot;&nbsp; {{ category | upcase }}{% endif -%}
+        </div>
+      </div>
     </div>
   </a>
+
+  {%- comment -%} Quick add — sibling of the link, absolutely placed top-right (badge is top-left). {%- endcomment -%}
+  {%- if quick_add and product.available -%}
+    {%- if product.has_only_default_variant -%}
+      <product-form-component
+        class="pcard__quick-form"
+        data-product-id="{{ product.id }}"
+        on:submit="/handleSubmit"
+        data-skeleton-title="{{ product.title | escape }}"
+        data-skeleton-image="{%- if product.featured_image -%}{{ product.featured_image | image_url: width: 192 }}{%- endif -%}"
+      >
+        <div class="visually-hidden" aria-live="assertive" role="status" aria-atomic="true" ref="liveRegion"></div>
+        {%- form 'product', product, novalidate: 'novalidate' -%}
+          <input type="hidden" name="id" ref="variantId" value="{{ current_variant.id }}">
+          <input type="hidden" name="quantity" value="1">
+          <button
+            type="submit"
+            class="pcard__quick pcard__quick--add"
+            aria-label="Add {{ product.title | escape }} to cart"
+          >
+            <span aria-hidden="true">+</span>
+          </button>
+        {%- endform -%}
+      </product-form-component>
+    {%- else -%}
+      <a
+        href="{{ product.url }}"
+        class="pcard__quick pcard__quick--options"
+        aria-label="Choose options for {{ product.title | escape }}"
+      >
+        <span aria-hidden="true">&rarr;</span>
+      </a>
+    {%- endif -%}
+  {%- endif -%}
 </article>

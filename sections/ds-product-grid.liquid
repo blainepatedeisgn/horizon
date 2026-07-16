@@ -136,7 +136,7 @@
     /* Phone cap: hide product cards beyond the configured count. Count
        by article type, not nth-child: quick-add renders a <script>
        sibling per card, so :nth-child double-counts and cuts too early. */
-    #shopify-section-{{ section.id }} .ds-product-grid > article.ds-product-card:nth-of-type(n + {{ section.settings.mobile_products | default: 3 | plus: 1 }}) {
+    #shopify-section-{{ section.id }} .ds-product-grid > article.pcard:nth-of-type(n + {{ section.settings.mobile_products | default: 3 | plus: 1 }}) {
       display: none;
     }
   }
