@@ -2997,6 +2997,11 @@
       height: calc(100dvh - var(--ds-search-top, 64px));
       max-height: none;
       box-shadow: none;
+    }
+    /* display:flex ONLY when open — an unconditional display here would
+       override the native <dialog> "display:none when closed", leaving the
+       search permanently visible on mobile. */
+    .ds-search-modal__dialog[open] {
       display: flex;
       flex-direction: column;
     }
