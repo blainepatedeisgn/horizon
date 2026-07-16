@@ -1,0 +1,144 @@
+{%- comment -%} Shop-by category tabs. 1:1 port of homepage-build .catmenu. Each tab = a block (label + collection). {%- endcomment -%}
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+-%}
+<section class="catmenu color-{{ cs }}">
+  <div class="sec-eye">
+    <span>{{ section.settings.eyebrow | default: '[ Shop by ]' }}</span>
+    {%- if section.settings.view_all_url != blank -%}<a class="sec-eye__all" href="{{ section.settings.view_all_url }}">View all</a>{%- endif -%}
+  </div>
+
+  <div class="catmenu__bar">
+    <div class="catmenu__tabs" role="tablist">
+      {%- for block in section.blocks -%}
+        <button
+          class="catmenu__tab{% if forloop.first %} is-on{% endif %}"
+          type="button"
+          role="tab"
+          data-cat="{{ forloop.index }}"
+          {{ block.shopify_attributes }}
+        >{{ block.settings.label | default: 'Tab' }}</button>
+      {%- endfor -%}
+    </div>
+    {%- if section.settings.view_all_url != blank -%}<a class="catmenu__all" href="{{ section.settings.view_all_url }}">View all &rarr;</a>{%- endif -%}
+  </div>
+
+  <div class="catmenu__panels">
+    {%- for block in section.blocks -%}
+      {%- liquid
+        assign coll = block.settings.collection
+        assign lbl = block.settings.item_label | default: block.settings.label
+        assign lim = block.settings.limit | default: 8
+      -%}
+      <div class="catpanel{% if forloop.first %} is-on{% endif %}" data-cat-panel="{{ forloop.index }}">
+        <div class="pgrid">
+          {%- for product in coll.products limit: lim -%}
+            {%- liquid
+              assign badge = ''
+              if product.price == 0
+                assign badge = 'FREE'
+              elsif product.compare_at_price > product.price
+                assign badge = 'SALE'
+              elsif product.tags contains 'new'
+                assign badge = 'NEW'
+              endif
+            -%}
+            <a class="pcard" href="{{ product.url }}">
+              <div class="pcard__img" style="background-image:url({{ product.featured_image | image_url: width: 600 }});aspect-ratio:1/1">
+                {%- if badge != '' -%}<span class="pcard__badge">[ {{ badge }} ]</span>{%- endif -%}
+                <div class="pcard__scrim"></div>
+                <div class="pcard__meta">
+                  <p class="pcard__name">{{ product.title }}</p>
+                  <div class="pcard__sub tnum">{% if product.price == 0 %}Free{% else %}{{ product.price | money_without_trailing_zeros }}{% endif %} &nbsp;&middot;&nbsp; {{ lbl | upcase }}</div>
+                </div>
+              </div>
+            </a>
+          {%- else -%}
+            <p class="catpanel__empty">No products in this collection yet.</p>
+          {%- endfor -%}
+        </div>
+      </div>
+    {%- endfor -%}
+  </div>
+</section>
+
+{% style %}
+  .sec-eye { font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--color-fg-muted);padding:28px 16px 14px;display:flex;justify-content:space-between; }
+  .sec-eye__all { font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--color-fg);text-decoration:underline;text-underline-offset:3px;cursor:pointer; }
+  .catmenu__all { display:none; }
+  .catmenu__tabs { display:flex;gap:8px;flex-wrap:nowrap;padding:0 14px 18px; }
+  .catmenu__tab { flex:1;text-align:center;white-space:nowrap;padding:9px 6px;border:1px solid rgba(241,231,229,.55);background:transparent;font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-fg-muted);transition:.15s;cursor:pointer; }
+  .catmenu__tab::before { content:"[ ";opacity:.5; }
+  .catmenu__tab::after { content:" ]";opacity:.5; }
+  .catmenu__tab.is-on { background:var(--color-accent);color:var(--color-accent-fg);border-color:var(--color-accent); }
+  .catpanel { display:none; }
+  .catpanel.is-on { display:block; }
+  .catpanel__empty { font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);padding:22px 16px 36px; }
+  .pgrid { display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:22px 16px 36px;border-top:1px solid var(--color-border); }
+  .pcard { position:relative;overflow:hidden;background:var(--color-bg-elev);text-decoration:none;display:block; }
+  .pcard__img { position:relative;background-size:cover;background-position:center;background-repeat:no-repeat;background-color:var(--color-bg-elev); }
+  .pcard__badge { position:absolute;top:8px;left:8px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;padding:3px 6px;background:var(--color-accent);color:var(--color-accent-fg); }
+  .pcard__scrim { position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to top,rgba(0,0,0,.74),rgba(0,0,0,0));pointer-events:none; }
+  .pcard__meta { position:absolute;left:10px;right:10px;bottom:9px;color:#fff; }
+  .pcard__name { font-family:var(--font-mono);font-size:11px;letter-spacing:.02em;text-transform:uppercase;line-height:1.15;margin:0;color:#fff; }
+  .pcard__sub { font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;margin-top:4px;color:rgba(255,255,255,.75); }
+  @media (min-width:720px){
+    .sec-eye { padding:36px 30px 16px;font-size:11px; }
+    .sec-eye__all { display:none; }
+    .catmenu__bar { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 30px 20px; }
+    .catmenu__tabs { gap:11px;flex-wrap:wrap;padding:0; }
+    .catmenu__tab { flex:0 0 auto;text-align:left;padding:13px 20px;font-size:12px; }
+    .catmenu__all { display:inline-flex;align-items:center;border:1px solid rgba(241,231,229,.55);padding:12px 18px;font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-fg);white-space:nowrap;cursor:pointer;text-decoration:none; }
+    .pgrid { grid-template-columns:repeat(4,1fr);gap:18px;padding:30px; }
+    .pcard__name { font-size:12px; }
+  }
+{% endstyle %}
+
+{% javascript %}
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('.catmenu__tab');
+    if (!b) return;
+    var m = b.closest('.catmenu');
+    if (!m) return;
+    m.querySelectorAll('.catmenu__tab').forEach(function (x) { x.classList.remove('is-on'); });
+    b.classList.add('is-on');
+    m.querySelectorAll('.catpanel').forEach(function (p) {
+      p.classList.toggle('is-on', p.getAttribute('data-cat-panel') === b.dataset.cat);
+    });
+  });
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Shop by category",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "[ Shop by ]" },
+    { "type": "url", "id": "view_all_url", "label": "View all link" },
+    { "type": "color_scheme", "id": "color_scheme", "label": "Color scheme", "default": "scheme-1" }
+  ],
+  "blocks": [
+    {
+      "type": "tab",
+      "name": "Tab",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Tab label", "default": "Fonts" },
+        { "type": "collection", "id": "collection", "label": "Collection" },
+        { "type": "text", "id": "item_label", "label": "Card category label", "info": "Shown after the price, e.g. FONT. Defaults to the tab label." },
+        { "type": "range", "id": "limit", "min": 2, "max": 12, "step": 1, "label": "Max products", "default": 8 }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [
+    {
+      "name": "Shop by category",
+      "blocks": [
+        { "type": "tab", "settings": { "label": "Fonts" } },
+        { "type": "tab", "settings": { "label": "Graphics" } },
+        { "type": "tab", "settings": { "label": "Plugins" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

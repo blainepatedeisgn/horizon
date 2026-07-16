@@ -19,148 +19,6 @@
         "color_scheme": "scheme-1"
       }
     },
-    "ds_product_scroller_QHJ8rQ": {
-      "type": "ds-product-scroller",
-      "name": "Product scroller",
-      "settings": {
-        "color_scheme": "",
-        "eyebrow": "all products",
-        "heading": "",
-        "intro": "",
-        "products": [
-          "afterlife-graphics-pack",
-          "medieval-graphics-pack",
-          "music-video-title-templates",
-          "obscura-gothic",
-          "stargazer-graphics-pack",
-          "txt-84"
-        ],
-        "show_sale_badge": true,
-        "direction": "left",
-        "speed": 60,
-        "card_width": 240
-      }
-    },
-    "product_grid": {
-      "type": "ds-product-grid",
-      "settings": {
-        "color_scheme": "",
-        "heading": "Featured products",
-        "num_label": "06",
-        "subhead": "Hand-built plugins, original type, and ready-to-use asset packs, released in small batches.",
-        "collection": "all-products",
-        "products_to_show": 6,
-        "mobile_products": 3,
-        "grid_lines": true,
-        "show_view_all": true,
-        "view_all_label": "View all products",
-        "view_all_url": ""
-      }
-    },
-    "category_teasers": {
-      "type": "ds-category-teasers",
-      "blocks": {
-        "tile_plugins": {
-          "type": "ds-category-tile",
-          "settings": {
-            "collection": "plugins",
-            "label": "Plugins",
-            "meta_line_1": "02 products",
-            "meta_line_2": "FROM $25"
-          }
-        },
-        "tile_fonts": {
-          "type": "ds-category-tile",
-          "settings": {
-            "collection": "fonts",
-            "label": "Fonts",
-            "meta_line_1": "02 families",
-            "meta_line_2": "FROM $8"
-          }
-        },
-        "tile_graphics": {
-          "type": "ds-category-tile",
-          "settings": {
-            "collection": "graphics",
-            "label": "Graphics",
-            "meta_line_1": "04 collections",
-            "meta_line_2": "FROM $8"
-          }
-        },
-        "ds_category_tile_qazd9f": {
-          "type": "ds-category-tile",
-          "disabled": true,
-          "settings": {
-            "collection": "freebies",
-            "label": "Freebies",
-            "meta_line_1": "02 freebies",
-            "meta_line_2": "FREE"
-          }
-        }
-      },
-      "block_order": [
-        "tile_plugins",
-        "tile_fonts",
-        "tile_graphics",
-        "ds_category_tile_qazd9f"
-      ],
-      "settings": {
-        "color_scheme": "",
-        "heading": "By Category",
-        "num_label": "03",
-        "subhead": ""
-      }
-    },
-    "ds_testimonials_rnM6fR": {
-      "type": "ds-testimonials",
-      "blocks": {
-        "testimonial_CPWm8J": {
-          "type": "testimonial",
-          "settings": {
-            "quote": "Quality images. Easy to work with and budget friendly. I would recommend this to anyone!",
-            "name": "Caleb R.",
-            "source": "Studio 2am",
-            "rating": 5,
-            "product": "afterlife-graphics-pack"
-          }
-        },
-        "testimonial_8PYrjA": {
-          "type": "testimonial",
-          "settings": {
-            "quote": "High quality, huge variety, and easy to use.",
-            "name": "Brett A.",
-            "source": "Studio 2am",
-            "rating": 5,
-            "product": "stargazer-graphics-pack"
-          }
-        },
-        "testimonial_L64rnJ": {
-          "type": "testimonial",
-          "settings": {
-            "quote": "Incredibly fast effects and great variety of style options.",
-            "name": "Maya Singh",
-            "source": "Instagram",
-            "rating": 5,
-            "product": "pixel-perfect-plugin"
-          }
-        }
-      },
-      "block_order": [
-        "testimonial_CPWm8J",
-        "testimonial_8PYrjA",
-        "testimonial_L64rnJ"
-      ],
-      "disabled": true,
-      "name": "Disrupted testimonials",
-      "settings": {
-        "color_scheme": "",
-        "eyebrow": "",
-        "heading": "Reviews",
-        "num_label": "03",
-        "subhead": "",
-        "layout": "grid"
-      }
-    },
     "newsletter": {
       "type": "ds-newsletter-card",
       "settings": {
@@ -175,14 +33,64 @@
         "signup_tag": "newsletter",
         "success_message": "Thanks. See you in your inbox."
       }
+    },
+    "ds_shop_by_dm01": {
+      "type": "ds-shop-by",
+      "blocks": {
+        "tab_fonts": {
+          "type": "tab",
+          "settings": {
+            "label": "Fonts",
+            "collection": "fonts",
+            "item_label": "Font",
+            "limit": 8
+          }
+        },
+        "tab_graphics": {
+          "type": "tab",
+          "settings": {
+            "label": "Graphics",
+            "collection": "graphics",
+            "item_label": "Graphics",
+            "limit": 8
+          }
+        },
+        "tab_plugins": {
+          "type": "tab",
+          "settings": {
+            "label": "Plugins",
+            "collection": "plugins",
+            "item_label": "Plugin",
+            "limit": 8
+          }
+        }
+      },
+      "block_order": [
+        "tab_fonts",
+        "tab_graphics",
+        "tab_plugins"
+      ],
+      "settings": {
+        "eyebrow": "[ Shop by ]",
+        "view_all_url": "shopify://collections/all",
+        "color_scheme": "scheme-1"
+      }
+    },
+    "ds_filmstrip_dm01": {
+      "type": "ds-filmstrip",
+      "settings": {
+        "title": "24 clicks in Photoshop.",
+        "title_accent": "Made into one.",
+        "cta_text": "Get Pixel Perfect — $25",
+        "cta_link": "shopify://products/pixel-perfect-plugin",
+        "color_scheme": "scheme-1"
+      }
     }
   },
   "order": [
     "ds_collage_hero_dm01",
-    "ds_product_scroller_QHJ8rQ",
-    "product_grid",
-    "category_teasers",
-    "ds_testimonials_rnM6fR",
+    "ds_shop_by_dm01",
+    "ds_filmstrip_dm01",
     "newsletter"
   ]
 }
