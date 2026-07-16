@@ -2744,6 +2744,7 @@
   .ds-search-modal__panel {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     max-height: calc(100vh - var(--ds-search-top, 64px));
     min-height: 0;
     width: 100%;
@@ -2757,6 +2758,11 @@
     min-height: 0;
     flex: 1;
     margin: 0;
+    /* The predictive-search-component parent doesn't stretch its child by
+       default, leaving the form at content width (centered, pinched). Force
+       full width so all inner content aligns to the header's --pad-x gutter. */
+    width: 100%;
+    align-self: stretch;
   }
 
   /* Input bar (top) — horizontal padding matches the header's --pad-x
@@ -2964,6 +2970,13 @@
   /* Mobile: single column — browse rows stack (mock parity). Idle shows
      browse; once results come in, browse hides and results take over. */
   @media (max-width: 900px) {
+    /* Full-height sheet on phones — fill to the bottom so the homepage
+       doesn't show through below a short dropdown. */
+    .ds-search-modal__dialog {
+      bottom: 0;
+      max-height: none;
+      box-shadow: none;
+    }
     .ds-search-modal__body {
       display: flex;
       flex-direction: column;
