@@ -2961,12 +2961,28 @@
     }
   }
 
-  /* Mobile: collapse to single-column flow (sidebar hidden) */
+  /* Mobile: single column — browse rows stack (mock parity). Idle shows
+     browse; once results come in, browse hides and results take over. */
   @media (max-width: 900px) {
     .ds-search-modal__body {
-      grid-template-columns: 1fr;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
     }
-    .ds-search-modal__sidebar { display: none; }
+    .ds-search-modal__sidebar {
+      display: block;
+      border-right: 0;
+      border-bottom: 1px solid var(--color-border);
+      overflow: visible;
+      padding: var(--space-4) var(--pad-x) var(--space-5);
+    }
+    .ds-search-modal__results { overflow: visible; }
+    /* Browse IS the idle content on mobile — drop the "start typing" hint */
+    .ds-search-modal__results .ds-search-results--idle { display: none; }
+    /* Swap: when real results are present, hide browse so results own the sheet */
+    .ds-search-modal__body:has(.ds-search-results:not(.ds-search-results--idle)) .ds-search-modal__sidebar {
+      display: none;
+    }
   }
 
   /* Footer */
