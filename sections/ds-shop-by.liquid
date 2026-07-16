@@ -99,10 +99,16 @@
                 </div>
               </div>
               {%- if pprod != blank and pprod.available -%}
-                <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" class="pp__buyform">
-                  <input type="hidden" name="id" value="{{ pprod.selected_or_first_available_variant.id }}">
-                  <button type="submit" class="pp__buy">{{ block.settings.buy_label | default: '+ Add to cart' }} &middot; {{ pprod.price | money_without_trailing_zeros }}</button>
-                </form>
+                {%- comment -%} Horizon product-form-component: AJAX add + auto-opens the cart drawer (no /cart page redirect). Needs product-form.js (homepage doesn't load it otherwise). {%- endcomment -%}
+                <product-form-component class="pp__buyform" on:submit="/handleSubmit">
+                  <div class="visually-hidden" aria-live="assertive" role="status" aria-atomic="true" ref="liveRegion"></div>
+                  {%- form 'product', pprod, novalidate: 'novalidate' -%}
+                    <input type="hidden" name="id" ref="variantId" value="{{ pprod.selected_or_first_available_variant.id }}">
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" name="add" class="pp__buy">{{ block.settings.buy_label | default: '+ Add to cart' }} &middot; {{ pprod.price | money_without_trailing_zeros }}</button>
+                  {%- endform -%}
+                </product-form-component>
+                <script src="{{ 'product-form.js' | asset_url }}" type="module" fetchpriority="low"></script>
               {%- else -%}
                 <a class="pp__buy" href="{{ pprod.url | default: '#' }}">{{ block.settings.buy_label | default: '+ Add to cart' }}</a>
               {%- endif -%}
@@ -183,7 +189,8 @@
   .pp__cell:nth-child(odd) { border-right:1px solid var(--color-border); }
   .pp__v { font-weight:700;font-size:14px;letter-spacing:-.01em;color:var(--color-fg); }
   .pp__k { font-family:var(--font-mono);font-size:10px;letter-spacing:.02em;color:var(--color-fg-muted);line-height:1.35; }
-  .pp__buyform { width:100%;margin:0; }
+  .pp__buyform { display:block;width:100%;margin:0; }
+  .pp__buyform form { margin:0;width:100%; }
   .pp__buy { display:flex;width:100%;justify-content:center;align-items:center;background:var(--color-accent);color:var(--color-accent-fg);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:13px 16px;margin-top:16px;cursor:pointer;border:0;text-decoration:none; }
   .pp__buy::before { content:"[";font-size:1.6em;line-height:0;margin-right:8px;font-weight:400; }
   .pp__buy::after { content:"]";font-size:1.6em;line-height:0;margin-left:8px;font-weight:400; }
