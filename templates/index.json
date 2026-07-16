@@ -13,7 +13,7 @@
       "type": "ds-hero-collage",
       "settings": {
         "heading": "Designed to darken your work.",
-        "collection": "all-products",
+        "collection": "",
         "cta_text": "+ Shop everything",
         "cta_link": "shopify://collections/all",
         "color_scheme": "scheme-1"
