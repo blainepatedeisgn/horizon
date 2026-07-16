@@ -58,7 +58,7 @@
 
       {%- assign col_n = 0 -%}
       {%- for block in section.blocks -%}
-        {%- if block.type == 'link' -%}
+        {%- if block.type == 'link_column' -%}
           {%- assign col_n = col_n | plus: 1 -%}
           <nav class="ftF__cell" aria-label="{{ block.settings.heading | escape }}" {{ block.shopify_attributes }}>
             <p class="ftF__tag"><b>INDEX</b> // {{ block.settings.heading }} <span class="ftF__no">{{ col_n | prepend: '0' }}</span></p>
