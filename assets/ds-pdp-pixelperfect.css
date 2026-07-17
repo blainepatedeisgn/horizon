@@ -551,3 +551,21 @@ video.p2-art-img::-webkit-media-controls-overlay-play-button{display:none!import
 .p2-buys product-form-component,
 .p2-buys .p2-form{display:block;}
 .p2-buys .p2-btn{width:100%;}
+
+/* ---------- seam with the shared sections below the page ----------
+   ds-pdp-faq and ds-pdp-related each carry padding:clamp(56px,7vw,96px), so
+   where they meet they stack ~180px of dead space at 1280 -- nearly double this
+   page's own 52+52 section rhythm, and it reads as a hole between the last FAQ
+   row and "More tools".
+
+   Both sections are shared by all six product templates, so their own files must
+   not change. This stylesheet is emitted by ds-pdp-pixelperfect.liquid and
+   therefore only ever loads on this template, which makes it the one safe place
+   to retune the seam -- other products keep the 7vw rhythm untouched.
+
+   `body ` is load-bearing, not decoration: those sections set their padding from
+   an inline {% style %} that renders AFTER this <link> in the body, so a bare
+   `.ds-pdp-faq` (0,1,0) would tie on specificity and lose on document order.
+   `body .ds-pdp-faq` (0,1,1) wins regardless of order. */
+body .ds-pdp-faq{padding-bottom:52px;}
+body .ds-pdp-related{padding-top:52px;}
