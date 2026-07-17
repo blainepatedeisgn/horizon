@@ -424,22 +424,35 @@
   }
   preloadShape(shape);
 
+  /* Timing lifted from Doron Supply's own demo GIFs (frame-delay parse of
+     DTP_CtaSection-1 / DTPmgif7 on doronsupply.com): parameter states step at
+     ~400ms with hard cuts, and each loop parks ~1.2s on a "money frame" before
+     continuing — tick, tick, tick, HOLD reads authored; a flat metronome reads
+     mechanical. We dwell on the coarsest size (the skull at its most designed),
+     rest longest on the finest before the next lap, and hold ordinary steps at
+     450ms. Full lap ~8s, inside the 5-9s band all their loops live in. */
   var sweepDir = 1, sweepTimer = null, resumeTimer = null;
   var motionOK = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function sweepDelay(){
+    if (size >= 4) return 1250;   /* dwell: 24 PX, the money frame */
+    if (size <= 0) return 2600;   /* rest: 7 PX, poster state, before the next lap */
+    return 450;
+  }
   function sweepStep(){
     if (size >= 4) sweepDir = -1;
     else if (size <= 0) sweepDir = 1;
     size += sweepDir;
     renderViewer();
+    sweepTimer = setTimeout(sweepStep, sweepDelay());
   }
   function sweepStart(){
     if (!motionOK || sweepTimer) return;
-    sweepTimer = setInterval(sweepStep, 1000);
+    sweepTimer = setTimeout(sweepStep, sweepDelay());
   }
   function sweepPause(){
-    if (sweepTimer){ clearInterval(sweepTimer); sweepTimer = null; }
+    clearTimeout(sweepTimer); sweepTimer = null;
     clearTimeout(resumeTimer);
-    resumeTimer = setTimeout(sweepStart, 10000);
+    resumeTimer = setTimeout(sweepStart, 5000);
   }
   var ctrl = page.querySelector('.p2-ctrl');
   if (ctrl){
