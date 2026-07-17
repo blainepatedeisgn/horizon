@@ -151,14 +151,17 @@
 .p2-pane{position:relative;grid-row:1;margin:0;background:var(--p2-bg);aspect-ratio:1/1;overflow:hidden;}
 .p2-pane--v{grid-column:1;}
 .p2-pane--i{grid-column:3;}
+/* The panes are now <video> sweeps (pre-antialiased 768px, shown at ~374px).
+   Smooth scaling only — `pixelated` nearest-neighbour at a non-integer ratio
+   drops/doubles the gap lines irregularly, the raggedness this replaced. */
 .p2-img{
   display:block;width:100%;height:100%;object-fit:contain;background:var(--p2-bg);
-  /* The frames are now pre-antialiased 768px renders shown at ~374px. `pixelated`
-     nearest-neighbour scaling at that non-integer ratio drops/doubles the 1-2px
-     gap lines irregularly — the exact raggedness the re-render fixed. Smooth
-     scaling of an already-crisp 2x source is what reads clean. */
   image-rendering:auto;
 }
+/* Safari paints a play overlay on chromeless video — the panes are ambient. */
+video.p2-img::-webkit-media-controls,
+video.p2-img::-webkit-media-controls-start-playback-button,
+video.p2-img::-webkit-media-controls-overlay-play-button{display:none!important;-webkit-appearance:none;}
 
 
 .p2-file{
@@ -188,6 +191,18 @@
   font-family:var(--p2-mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--p2-fg);font-variant-numeric:tabular-nums;
 }
+
+/* auto/manual — bracket chip; accent while the film drifts */
+.p2-auto{
+  -webkit-appearance:none;appearance:none;background:transparent;border:1px solid var(--p2-line2);
+  color:var(--p2-fg);cursor:pointer;font-family:var(--p2-mono);font-size:10px;
+  letter-spacing:.14em;text-transform:uppercase;padding:5px 10px;margin-left:12px;
+  transition:background .12s linear,color .12s linear,border-color .12s linear;
+}
+.p2-auto::before{content:"[ ";}
+.p2-auto::after{content:" ]";}
+.p2-auto[aria-pressed="true"]{background:var(--p2-acc);border-color:var(--p2-acc);color:var(--p2-ink);}
+.p2-auto:focus-visible{outline:1px solid var(--p2-fg);outline-offset:2px;}
 
 /* slider */
 .p2-range{
