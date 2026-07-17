@@ -381,6 +381,15 @@
     {%- capture p2fn -%}ds-ppv-g{{ md }}-{{ s }}-{{ p }}.webp{%- endcapture -%}
   window.P2FRAMES["{{ p2fn }}"] = "{{ p2fn | asset_url }}";
   {%- endfor -%}{%- endfor -%}{%- endfor -%}
+
+  {%- comment -%}
+    The output/layer cards swap between these four the same way, so they must be
+    in the map too -- otherwise the JS resets src to a bare filename on load.
+  {%- endcomment -%}
+  window.P2FRAMES["before.png"]     = "{% if section.settings.ba_before %}{{ section.settings.ba_before | image_url: width: 1400 }}{% else %}{{ 'before.png' | file_url }}{% endif %}";
+  window.P2FRAMES["Artboard_3.png"] = "{% if section.settings.ba_after %}{{ section.settings.ba_after | image_url: width: 1400 }}{% else %}{{ 'Artboard_3.png' | file_url }}{% endif %}";
+  window.P2FRAMES["Artboard_4.png"] = "{% if section.settings.lyr_shot %}{{ section.settings.lyr_shot | image_url: width: 1400 }}{% else %}{{ 'Artboard_4.png' | file_url }}{% endif %}";
+  window.P2FRAMES["biw.png"]        = "{% if section.settings.lyr_alt %}{{ section.settings.lyr_alt | image_url: width: 1400 }}{% else %}{{ 'biw.png' | file_url }}{% endif %}";
 </script>
 <script>
 (function(){
