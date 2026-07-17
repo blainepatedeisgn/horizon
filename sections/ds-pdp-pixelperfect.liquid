@@ -212,68 +212,17 @@
               <div><dt>Showing</dt><dd id="p2-out-show">Raw layer</dd></div>
               <div><dt>In</dt><dd class="p2-fname" id="p2-out-in">before.png</dd></div>
               <div><dt>Out</dt><dd class="p2-fname" id="p2-out-out">Artboard_3.png</dd></div>
+              <div><dt>Layer</dt><dd>Source stays. Output is a real pixel layer — move it, mask it, blend it.</dd></div>
             </dl>
 
-            <p class="p2-card-note">On the grid. No blur. No half pixels.</p>
+            <p class="p2-card-note">On the grid. No blur. No half pixels. Nothing flattened, nothing replaced.</p>
           </div>
         </div>
       </section>
 
-      <!-- ---------- 03 · RAW LAYER ---------- -->
-      <section class="p2-sec" aria-labelledby="p2-raw-h">
-        <div class="p2-eyebrow"><span><b>03</b> / Raw Layer</span></div>
-
-        <div class="p2-headrow">
-          <h2 class="p2-h" id="p2-raw-h">It adds a layer.<br><em>It takes nothing.</em></h2>
-          <p class="p2-dek">Toggle the eyes. Source intact.</p>
-        </div>
-
-        <div class="p2-card">
-          <div class="p2-card-art p2-lyrart">
-            <img id="p2-lyr-shot" width="1400" height="1400" src="{% if section.settings.lyr_shot %}{{ section.settings.lyr_shot | image_url: width: 1400 }}{% else %}{{ 'Artboard_4.png' | file_url }}{% endif %}"
-                 alt="The Pixel Perfect output layer." decoding="async">
-            <div class="p2-lyr-empty" id="p2-lyr-empty" hidden>No visible layers</div>
-            <div class="p2-ba-tag" id="p2-lyr-tag">Pixel Perfect / pixel</div>
-          </div>
-
-          <div class="p2-card-side">
-            <div class="p2-panel">
-              <div class="p2-panel-head">
-                <span>Layers</span>
-                <b>biw.psd</b>
-              </div>
-              <ul class="p2-lyr-list">
-                <li class="p2-lyr-row" id="p2-row-top">
-                  <button class="p2-eye" type="button" data-p2-eye="top" aria-pressed="true"
-                          aria-label="Toggle the Pixel Perfect output layer"></button>
-                  <span class="p2-lyr-thumb"><img width="1400" height="1400" src="{% if section.settings.lyr_shot %}{{ section.settings.lyr_shot | image_url: width: 1400 }}{% else %}{{ 'Artboard_4.png' | file_url }}{% endif %}" alt="" decoding="async"></span>
-                  <span class="p2-lyr-name">Pixel Perfect</span>
-                  <span class="p2-lyr-kind">Pixel</span>
-                </li>
-                <li class="p2-lyr-row" id="p2-row-src">
-                  <button class="p2-eye" type="button" data-p2-eye="src" aria-pressed="true"
-                          aria-label="Toggle your source layer"></button>
-                  <span class="p2-lyr-thumb"><img width="1400" height="1400" src="{% if section.settings.lyr_alt %}{{ section.settings.lyr_alt | image_url: width: 1400 }}{% else %}{{ 'biw.png' | file_url }}{% endif %}" alt="" decoding="async"></span>
-                  <span class="p2-lyr-name">biw</span>
-                  <span class="p2-lyr-kind">Source</span>
-                </li>
-              </ul>
-            </div>
-
-            <dl class="p2-card-rows">
-              <div><dt>Source layer</dt><dd>Stays. Untouched.</dd></div>
-              <div><dt>Output</dt><dd>A real pixel layer</dd></div>
-              <div><dt>Handling</dt><dd>Move it. Mask it. Blend it.</dd></div>
-            </dl>
-
-            <p class="p2-card-note">Nothing flattened. Nothing replaced.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- ---------- 04 · THE POINT ---------- -->
+      <!-- ---------- 03 · THE POINT ---------- -->
       <section class="p2-sec" aria-labelledby="p2-beat-h">
-        <div class="p2-eyebrow"><span><b>04</b> / The Point</span></div>
+        <div class="p2-eyebrow"><span><b>03</b> / The Point</span></div>
 
         <h2 class="p2-beat-h" id="p2-beat-h">24 clicks in Photoshop.<br><em>Made into one.</em></h2>
 
@@ -291,9 +240,9 @@
         </div>
       </section>
 
-      <!-- ---------- 05 · NOTE ---------- -->
+      <!-- ---------- 04 · NOTE ---------- -->
       <section class="p2-sec" aria-labelledby="p2-note-h">
-        <div class="p2-eyebrow"><span id="p2-note-h"><b>05</b> / Why I built this</span></div>
+        <div class="p2-eyebrow"><span id="p2-note-h"><b>04</b> / Why I built this</span></div>
         <div class="p2-notecard">
           <p class="p2-note-body">I know the pain. The clicking. The undoing. The grid landing a pixel off.</p>
           <p class="p2-note-body">So I built the panel I kept wishing existed.</p>
@@ -303,10 +252,10 @@
         </div>
       </section>
 
-      <!-- ---------- 06 · COMPATIBILITY ---------- -->
+      <!-- ---------- 05 · COMPATIBILITY ---------- -->
       <section class="p2-sec" aria-labelledby="p2-compat-h">
         <div class="p2-eyebrow">
-          <span><b>06</b> / Compatibility</span>
+          <span><b>05</b> / Compatibility</span>
         </div>
         <div class="p2-headrow">
           <h2 class="p2-h p2-h--quiet" id="p2-compat-h">What it runs on.<br><em>And what it doesn&rsquo;t.</em></h2>
@@ -339,7 +288,7 @@
   <!-- ============== CTA BAND — THE WALL ============== -->
   <section class="p2-cta" aria-labelledby="p2-cta-h">
     <div class="p2-cta-eyebrow">
-      <span><b>07</b> / Every frame here is output</span>
+      <span><b>06</b> / Every frame here is output</span>
       <span>Index // 40 Frames</span>
     </div>
 
@@ -523,41 +472,7 @@
   setPair('1');
   setX(50);
 
-  /* ============ 03 · RAW LAYER — the layers panel ============ */
-  var shot = $('p2-lyr-shot'), empty = $('p2-lyr-empty'), lyrTag = $('p2-lyr-tag');
-  var rowTop = $('p2-row-top'), rowSrc = $('p2-row-src');
-  var vis = { top:true, src:true };
-
-  function renderLayers(){
-    rowTop.setAttribute('data-p2-off', vis.top ? '0' : '1');
-    rowSrc.setAttribute('data-p2-off', vis.src ? '0' : '1');
-
-    if(vis.top){
-      setSrc(shot, 'Artboard_4.png');
-      shot.alt = 'The Pixel Perfect output layer: the artwork rebuilt as pixels.';
-      lyrTag.textContent = 'Pixel Perfect / pixel';
-      empty.hidden = true;  shot.hidden = false;
-    } else if(vis.src){
-      setSrc(shot, 'biw.png');
-      shot.alt = 'Your source layer, untouched underneath.';
-      lyrTag.textContent = 'biw / source';
-      empty.hidden = true;  shot.hidden = false;
-    } else {
-      lyrTag.textContent = 'Nothing visible';
-      empty.hidden = false; shot.hidden = true;
-    }
-  }
-  $$('[data-p2-eye]').forEach(function(b){
-    b.addEventListener('click', function(){
-      var k = b.getAttribute('data-p2-eye');
-      vis[k] = !vis[k];
-      b.setAttribute('aria-pressed', String(vis[k]));
-      renderLayers();
-    });
-  });
-  renderLayers();
-
-  /* ============ 04 · the 24 cells ============ */
+  /* ============ 03 · the 24 cells ============ */
   var cellsA = $('p2-cells-a');
   if(cellsA){
     for(var c = 0; c < 24; c++){
@@ -629,14 +544,12 @@
   "enabled_on": { "templates": ["product"] },
   "settings": [
     { "type": "color_scheme", "id": "color_scheme", "default": "scheme-1", "label": "Color scheme" },
-    { "type": "header", "content": "Output card (before / after)" },
-    { "type": "paragraph", "content": "Optional. Leave empty to use the Files images (before.png / Artboard_3.png)." },
-    { "type": "image_picker", "id": "ba_before", "label": "Before — raw artwork" },
-    { "type": "image_picker", "id": "ba_after",  "label": "After — Pixel Perfect output" },
-    { "type": "header", "content": "Raw layer card" },
-    { "type": "paragraph", "content": "Optional. Leave empty to use the Files images (Artboard_4.png / biw.png)." },
-    { "type": "image_picker", "id": "lyr_shot", "label": "Output layer screenshot" },
-    { "type": "image_picker", "id": "lyr_alt",  "label": "Secondary artwork" }
+    { "type": "header", "content": "Output card — file pairs" },
+    { "type": "paragraph", "content": "Optional. Leave empty to use the Files images. Pair 01 = before.png / Artboard_3.png, pair 02 = biw.png / Artboard_4.png." },
+    { "type": "image_picker", "id": "ba_before", "label": "Pair 01 — raw artwork" },
+    { "type": "image_picker", "id": "ba_after",  "label": "Pair 01 — Pixel Perfect output" },
+    { "type": "image_picker", "id": "lyr_alt",   "label": "Pair 02 — raw artwork" },
+    { "type": "image_picker", "id": "lyr_shot",  "label": "Pair 02 — Pixel Perfect output" }
   ],
   "presets": [ { "name": "PDP — Pixel Perfect" } ]
 }

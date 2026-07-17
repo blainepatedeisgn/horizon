@@ -320,52 +320,6 @@
 .p2-ba-tag--r{right:0;border-left:1px solid var(--p2-line);border-bottom:1px solid var(--p2-line);}
 .p2-ba:focus-visible{outline:2px solid var(--p2-fg);outline-offset:-2px;}
 
-/* raw layer / layers panel */
-.p2-lyrart{display:grid;place-items:stretch;}
-.p2-lyrart img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
-.p2-lyr-empty{
-  position:absolute;inset:0;display:grid;place-items:center;background:var(--p2-elev);z-index:2;
-  font-family:var(--p2-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--p2-mut);
-}
-.p2-lyr-empty[hidden]{display:none;}
-.p2-lyrart .p2-ba-tag{top:auto;bottom:0;left:0;right:auto;border:0;border-right:1px solid var(--p2-line);border-top:1px solid var(--p2-line);}
-
-.p2-panel{border:1px solid var(--p2-line2);margin-bottom:14px;}
-.p2-panel-head{
-  display:flex;justify-content:space-between;align-items:baseline;gap:10px;
-  padding:8px 10px;border-bottom:1px solid var(--p2-line2);background:var(--p2-elev);
-  font-family:var(--p2-mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--p2-mut);
-}
-.p2-panel-head b{font-weight:400;color:var(--p2-fg);letter-spacing:.04em;text-transform:none;}
-.p2-lyr-list{margin:0;padding:0;list-style:none;}
-.p2-lyr-row{
-  display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:10px;
-  padding:8px 10px;border-bottom:1px solid var(--p2-line);
-}
-.p2-lyr-row:last-child{border-bottom:0;}
-.p2-eye{
-  -webkit-appearance:none;appearance:none;width:16px;height:16px;padding:0;cursor:pointer;
-  background:transparent;border:1px solid var(--p2-line2);display:grid;place-items:center;
-  transition:background .1s linear,border-color .1s linear;
-}
-.p2-eye::after{content:"";width:6px;height:6px;background:transparent;}
-.p2-eye[aria-pressed="true"]{background:var(--p2-acc);border-color:var(--p2-acc);}
-.p2-eye[aria-pressed="true"]::after{background:var(--p2-ink);}
-.p2-eye:focus-visible{outline:1px solid var(--p2-fg);outline-offset:2px;}
-.p2-lyr-thumb{
-  width:26px;height:26px;border:1px solid var(--p2-line);background:var(--p2-elev);
-  overflow:hidden;display:block;
-}
-.p2-lyr-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
-.p2-lyr-name{
-  font-family:var(--p2-mono);font-size:10px;letter-spacing:.06em;color:var(--p2-fg);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.p2-lyr-row[data-p2-off="1"] .p2-lyr-name,
-.p2-lyr-row[data-p2-off="1"] .p2-lyr-thumb{opacity:.4;}
-.p2-lyr-kind{
-  font-family:var(--p2-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--p2-mut);
-}
 
 /* ---------- 04 · the 24 beat ---------- */
 .p2-beat-h{
