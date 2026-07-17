@@ -153,9 +153,11 @@
 .p2-pane--i{grid-column:3;}
 .p2-img{
   display:block;width:100%;height:100%;object-fit:contain;background:var(--p2-bg);
-  image-rendering:-webkit-optimize-contrast;
-  image-rendering:crisp-edges;
-  image-rendering:pixelated;
+  /* The frames are now pre-antialiased 768px renders shown at ~374px. `pixelated`
+     nearest-neighbour scaling at that non-integer ratio drops/doubles the 1-2px
+     gap lines irregularly — the exact raggedness the re-render fixed. Smooth
+     scaling of an already-crisp 2x source is what reads clean. */
+  image-rendering:auto;
 }
 
 
@@ -389,7 +391,7 @@
 .p2-track{position:absolute;top:0;bottom:0;left:0;width:max-content;display:flex;}
 .p2-tile{
   flex:0 0 auto;height:100%;width:auto;aspect-ratio:1/1;margin-right:2px;
-  object-fit:cover;display:block;background:var(--p2-elev);image-rendering:pixelated;
+  object-fit:cover;display:block;background:var(--p2-elev);image-rendering:auto;
 }
 .p2-wall.is-looped .p2-track--l{animation:p2-drift-l 76s linear infinite;}
 .p2-wall.is-looped .p2-track--r{animation:p2-drift-r 94s linear infinite;}
