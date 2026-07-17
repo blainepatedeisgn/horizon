@@ -381,52 +381,39 @@ class PredictiveSearchComponent extends Component {
     return abortController;
   }
 
+  // DISRUPTED FORK -- see git log. The stock implementation fetched Horizon's
+  // `predictive-search-empty` section, then tried to prepend recently-viewed
+  // products parsed out of THIS component's own section by
+  // #getRecentlyViewedProductsMarkup, locating them via
+  // getElementById('predictive-search-products').
+  //
+  // ds-predictive-search renders no element with that id -- it is a
+  // products-only card grid -- so getElementById returned null and the
+  // `if (!recentlyViewedProductsHtml) return;` guard fired BEFORE the
+  // morph() that clears the results. Net effect: once a visitor had viewed any
+  // product (the block is gated on RecentlyViewed.getProducts().length > 0),
+  // emptying the search box left the previous results on screen forever, with
+  // no console error. That is why it looked intermittent.
+  //
+  // We also do not want the stock empty state: the dropdown should show nothing
+  // but the search bar until you type. So reset is now a local, synchronous
+  // clear -- no section fetch, no empty state, no recently-viewed.
+  //
+  // Deliberately generic (replaceChildren, not our markup): layout/theme.liquid
+  // also renders Horizon's stock search-modal snippet, which mounts a second
+  // instance of this component. Emptying the container is correct for both.
   #resetSearch = async () => {
     const { predictiveSearchResults, searchInput } = this.refs;
-    const emptySectionId = 'predictive-search-empty';
 
     this.#currentIndex = -1;
     searchInput.value = '';
     this.#hideResetButton();
 
-    const abortController = this.#createAbortController();
-    const url = new URL(window.location.href);
-    url.searchParams.delete('page');
+    // Abort any search still in flight, or its morph lands after this clear
+    // and the stale results reappear.
+    this.#createAbortController();
 
-    const emptySectionMarkup = await sectionRenderer.getSectionHTML(emptySectionId, false, url);
-    const parsedEmptySectionMarkup = new DOMParser()
-      .parseFromString(emptySectionMarkup, 'text/html')
-      .querySelector('.predictive-search-empty-section');
-
-    if (!parsedEmptySectionMarkup) throw new Error('No empty section markup found');
-
-    /** This needs to be awaited and not .then so the DOM is already morphed
-     * when #closeResults is called and therefore the height is animated */
-    const viewedProducts = RecentlyViewed.getProducts();
-
-    if (viewedProducts.length > 0) {
-      const recentlyViewedMarkup = await this.#getRecentlyViewedProductsMarkup();
-      if (!recentlyViewedMarkup) return;
-
-      const parsedRecentlyViewedMarkup = new DOMParser().parseFromString(recentlyViewedMarkup, 'text/html');
-      const recentlyViewedProductsHtml = parsedRecentlyViewedMarkup.getElementById('predictive-search-products');
-      if (!recentlyViewedProductsHtml) return;
-
-      for (const child of recentlyViewedProductsHtml.children) {
-        if (child instanceof HTMLElement) {
-          child.setAttribute('ref', 'recentlyViewedWrapper');
-        }
-      }
-
-      const collectionElement = parsedEmptySectionMarkup.querySelector('#predictive-search-products');
-      if (!collectionElement) return;
-      collectionElement.prepend(...recentlyViewedProductsHtml.children);
-    }
-
-    if (abortController.signal.aborted) return;
-
-    morph(predictiveSearchResults, parsedEmptySectionMarkup);
-    this.#resetScrollPositions();
+    predictiveSearchResults.replaceChildren();
   };
 }
 

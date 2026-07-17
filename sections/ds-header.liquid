@@ -2917,7 +2917,7 @@
   }
 
   /* Footer — hidden until there is something to view all OF. */
-  .ds-search-modal__form:has(.ds-search-results--idle) .ds-search-modal__foot { display: none; }
+  .ds-search-modal__form:not(:has(.ds-search-results__grid)) .ds-search-modal__foot { display: none; }
   .ds-search-modal__foot {
     display: flex;
     align-items: center;
