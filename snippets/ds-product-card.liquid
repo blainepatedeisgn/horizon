@@ -12,6 +12,9 @@
   Optional parameters
     label       — category text after the price (e.g. "Font"). Defaults to
                   product.type, then the first collection's title.
+    ratio       — 'square' (default) or 'wide'. 'wide' renders the same card
+                  at 3/2 instead of 1/1 — used by search results, where a
+                  landscape tile reads better in a dropdown than a square.
     quick_add   — bool, default false. Renders a hover-revealed corner button
                   over the image: single-variant products AJAX-add (opens the
                   cart drawer), variant products link to the PDP.
@@ -32,6 +35,11 @@
 {%- liquid
   if quick_add == nil
     assign quick_add = false
+  endif
+
+  assign card_class = 'pcard'
+  if ratio == 'wide'
+    assign card_class = 'pcard pcard--wide'
   endif
 
   assign category = label
@@ -68,7 +76,7 @@
   <script src="{{ 'product-form.js' | asset_url }}" type="module" fetchpriority="low"></script>
 {%- endif -%}
 
-<article class="pcard">
+<article class="{{ card_class }}">
   <a href="{{ product.url }}" class="pcard__link">
     <div class="pcard__img">
       {%- if product.featured_image != blank -%}

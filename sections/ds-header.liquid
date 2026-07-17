@@ -672,37 +672,18 @@
           </div>
 
           {%- comment -%}
-            Two-column body for desktop:
-              [ BROWSE sidebar | live results ]
-            Sidebar hides on mobile (≤900px) so the results take the full
-            width — mobile keeps the simple single-column flow.
+            Single column: the search bar, then live product results. The BROWSE
+            sidebar that used to sit here duplicated the header menu (All
+            products / Plugins / Fonts / Graphics), so it was noise beside the
+            one thing being searched for.
 
-            Recent searches column is a TODO (Phase 5 polish — requires
-            localStorage write on form submit + read on dropdown open).
+            NOTE ref="resetButton" below is NOT optional decoration --
+            predictive-search.js declares requiredRefs = ['searchInput',
+            'predictiveSearchResults', 'resetButton'] and component.js throws
+            MissingRefError without them, which leaves the element un-upgraded
+            and search silently dead. Same for ref="predictiveSearchResults".
           {%- endcomment -%}
           <div class="ds-search-modal__body">
-            <aside class="ds-search-modal__sidebar" aria-label="Browse">
-              <div class="ds-search-modal__sidebar-group">
-                <div class="ds-search-modal__sidebar-head">Browse // Categories</div>
-                <a href="{{ routes.all_products_collection_url }}" class="ds-search-modal__sidebar-link">All products</a>
-                <a href="/collections/plugins" class="ds-search-modal__sidebar-link">Plugins</a>
-                <a href="/collections/fonts"   class="ds-search-modal__sidebar-link">Fonts</a>
-                <a href="/collections/graphics" class="ds-search-modal__sidebar-link">Graphics</a>
-              </div>
-
-              {%- comment -%}
-                Recent searches — populated client-side from localStorage by
-                the script at the bottom of this section. Renders hidden by
-                default; the script reveals it once it has at least one entry.
-              {%- endcomment -%}
-              <div class="ds-search-modal__sidebar-group ds-search-modal__sidebar-group--recent" data-ds-recent-group hidden>
-                <div class="ds-search-modal__sidebar-head ds-search-modal__sidebar-head--with-action">
-                  <span>Recent // Searches</span>
-                  <button type="button" class="ds-search-modal__sidebar-clear" data-ds-recent-clear aria-label="Clear recent searches">Clear</button>
-                </div>
-                <ul class="ds-search-modal__sidebar-recent-list" data-ds-recent-list role="list"></ul>
-              </div>
-            </aside>
 
             <div
               class="ds-search-modal__results"
@@ -710,11 +691,7 @@
               tabindex="-1"
               on:click="/handleModalClick"
             >
-              <div class="ds-search-results ds-search-results--idle">
-                <p class="ds-search-results__hint">
-                  Start typing to search products, collections &amp; more.
-                </p>
-              </div>
+              <div class="ds-search-results ds-search-results--idle"></div>
             </div>
           </div>
 
@@ -726,9 +703,7 @@
             >
               View all results →
             </button>
-            <span class="ds-search-modal__hint">
-              <kbd>Esc</kbd> to close
-            </span>
+
           </div>
         </form>
       </predictive-search-component>
@@ -2851,118 +2826,44 @@
   .ds-search-modal__close svg { width: 16px; height: 16px; }
 
   /* Body: 2-column on desktop (sidebar + results), single column on mobile */
-  .ds-search-modal__body {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-  }
+  /* Single column now that the BROWSE sidebar is gone. */
+  .ds-search-modal__body { display: block; }
 
-  /* Sidebar (desktop only) */
-  .ds-search-modal__sidebar {
-    border-right: 1px solid var(--color-border);
-    overflow-y: auto;
-    padding: var(--space-5) var(--pad-x);
-    min-height: 0;
-  }
-  .ds-search-modal__sidebar-group + .ds-search-modal__sidebar-group {
-    margin-top: var(--space-5);
-    padding-top: var(--space-5);
-    border-top: 1px solid var(--color-border);
-  }
-  .ds-search-modal__sidebar-head {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-fg-muted);
-    margin-bottom: var(--space-3);
-  }
-  .ds-search-modal__sidebar-link {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 15px;
-    color: var(--color-fg);
-    text-decoration: none;
-    padding: 11px 2px;
-    border-top: 1px solid var(--color-border);
-    transition: color var(--t-fast) var(--ease), padding-left var(--t-fast) var(--ease);
-  }
-  .ds-search-modal__sidebar-link::before {
-    content: "";
-    width: 7px; height: 7px; flex: 0 0 auto;
-    background: var(--color-fg-muted);
-    transition: background var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
-  }
-  .ds-search-modal__sidebar-link::after {
-    content: "\2192";
-    margin-left: auto;
-    font-family: var(--font-mono);
-    color: var(--color-fg-muted);
-    transition: color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
-  }
-  .ds-search-modal__sidebar-link:hover { color: #E0525B; padding-left: 6px; }
-  .ds-search-modal__sidebar-link:hover::before { background: var(--color-accent); transform: rotate(45deg); }
-  .ds-search-modal__sidebar-link:hover::after { color: var(--color-accent); transform: translateX(3px); }
-
-  /* Recent searches group — head has an inline "Clear" action */
-  .ds-search-modal__sidebar-head--with-action {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-3);
-  }
-  .ds-search-modal__sidebar-clear {
-    background: transparent;
-    border: 0;
-    padding: 0;
-    cursor: pointer;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-fg-faint);
-    transition: color var(--t-fast) var(--ease);
-  }
-  .ds-search-modal__sidebar-clear:hover { color: var(--color-fg-muted); }
-
-  .ds-search-modal__sidebar-recent-list {
+  /* Results = a grid of the shared product card in its wide ratio, so search
+     matches the homepage / collection cards by construction. auto-fill rather
+     than a fixed count: the modal is full-bleed and a fixed 4-up would stretch
+     the tiles on wide monitors. */
+  .ds-search-results__grid {
     list-style: none;
     margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    padding: var(--space-4) var(--pad-x) var(--space-5);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
   }
-  .ds-search-modal__sidebar-recent-link {
-    background: transparent;
-    border: 0;
-    padding: 4px 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-align: left;
-    width: 100%;
-    font-family: inherit;
-    font-size: 13px;
-    color: var(--color-fg-muted);
-    transition: color var(--t-fast) var(--ease);
-  }
-  .ds-search-modal__sidebar-recent-link span:first-child {
-    color: var(--color-fg-faint);
-    font-size: 11px;
-    flex-shrink: 0;
-  }
-  .ds-search-modal__sidebar-recent-link:hover {
-    color: var(--color-fg);
-  }
-  .ds-search-modal__sidebar-recent-link:hover span:first-child {
-    color: var(--color-accent);
-  }
+  .ds-search-results__cell { min-width: 0; }
+  /* Keyboard nav marks the focused item .is-active — mirror the card hover. */
+  .ds-search-results__cell.is-active .pcard,
+  .ds-search-results__cell:focus-within .pcard { outline: 1px solid var(--color-fg); outline-offset: 0; }
+  .ds-search-results__cell.is-active .pcard__photo,
+  .ds-search-results__cell:hover .pcard__photo { transform: none; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   /* Results column (right on desktop, full on mobile) */
   .ds-search-modal__results {
@@ -2976,17 +2877,8 @@
      dead zone on big screens. Outer edges (sidebar-left + results-right)
      still align with the header's --pad-x. */
   @media (min-width: 901px) {
-    .ds-search-modal__sidebar {
-      padding-right: var(--space-5);
-    }
-    .ds-search-modal__body .ds-search-results__group-head,
-    .ds-search-modal__body .ds-search-results__product-link,
-    .ds-search-modal__body .ds-search-results__suggestion-link,
-    .ds-search-modal__body .ds-search-results__collection-link,
-    .ds-search-modal__body .ds-search-results__empty,
-    .ds-search-modal__body .ds-search-results--idle {
-      padding-left: var(--space-5);
-    }
+
+
   }
 
   /* Mobile: single column — browse rows stack (mock parity). Idle shows
@@ -3019,20 +2911,11 @@
       flex-direction: column;
       overflow-y: auto;
     }
-    .ds-search-modal__sidebar {
-      display: block;
-      border-right: 0;
-      border-bottom: 1px solid var(--color-border);
-      overflow: visible;
-      padding: var(--space-4) var(--pad-x) var(--space-5);
-    }
+
     .ds-search-modal__results { overflow: visible; }
     /* Browse IS the idle content on mobile — drop the "start typing" hint */
     .ds-search-modal__results .ds-search-results--idle { display: none; }
-    /* Swap: when real results are present, hide browse so results own the sheet */
-    .ds-search-modal__body:has(.ds-search-results:not(.ds-search-results--idle)) .ds-search-modal__sidebar {
-      display: none;
-    }
+
   }
 
   /* Footer */
@@ -3058,22 +2941,8 @@
     transition: color var(--t-fast) var(--ease);
   }
   .ds-search-modal__viewall:hover { color: var(--color-accent); }
-  .ds-search-modal__hint {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    color: var(--color-fg-faint);
-    text-transform: uppercase;
-  }
-  .ds-search-modal__hint kbd {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    background: var(--color-border);
-    color: var(--color-fg);
-    padding: 2px 6px;
-    border-radius: 2px;
-    margin-right: 4px;
-  }
+
+
 
   /* --- Inner result groups (rendered by ds-predictive-search section) --- */
   .ds-search-results {
@@ -3124,27 +2993,10 @@
     color: var(--color-fg-muted);
     margin: 0;
   }
-  .ds-search-results__group {
-    border-top: 1px solid var(--color-border);
-  }
-  .ds-search-results__group:first-child { border-top: 0; }
-  .ds-search-results__group-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-3) var(--pad-x);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-fg-muted);
-    background: var(--color-bg);
-  }
-  .ds-search-results__group-count {
-    color: var(--color-fg-faint);
-    letter-spacing: 0;
-  }
+
+
+
+
   .ds-search-results__list {
     list-style: none;
     margin: 0;
@@ -3153,84 +3005,16 @@
     flex-direction: column;
   }
 
-  /* Product result row */
-  .ds-search-results__product-link {
-    display: grid;
-    grid-template-columns: 48px 1fr auto;
-    gap: var(--space-3);
-    align-items: center;
-    padding: var(--space-3) var(--pad-x);
-    text-decoration: none;
-    color: inherit;
-    transition: background var(--t-fast) var(--ease);
-  }
-  .ds-search-results__product:hover .ds-search-results__product-link,
-  .ds-search-results__product:focus-within .ds-search-results__product-link,
-  .ds-search-results__product.is-active .ds-search-results__product-link {
-    background: var(--color-border);
-  }
-  .ds-search-results__product-media {
-    aspect-ratio: 1 / 1;
-    width: 48px;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    overflow: hidden;
-  }
-  .ds-search-results__product-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .ds-search-results__product-info { min-width: 0; }
-  .ds-search-results__product-title {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--color-fg);
-    line-height: 1.3;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .ds-search-results__product-cat {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--color-fg-muted);
-    margin-top: 2px;
-  }
-  .ds-search-results__product-price {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--color-fg);
-    white-space: nowrap;
-  }
 
-  /* Suggestion + collection rows */
-  .ds-search-results__suggestion-link,
-  .ds-search-results__collection-link {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--pad-x);
-    text-decoration: none;
-    color: var(--color-fg);
-    font-size: 13px;
-    transition: background var(--t-fast) var(--ease);
-  }
-  .ds-search-results__suggestion:hover .ds-search-results__suggestion-link,
-  .ds-search-results__collection:hover .ds-search-results__collection-link {
-    background: var(--color-border);
-  }
-  .ds-search-results__collection-count {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--color-fg-muted);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
+
+
+
+
+
+
+
+
+
 
   /* No mobile-specific overrides needed — all inner blocks use --pad-x
      which already clamps from 16px on phones up to 80px on big monitors. */
@@ -3472,93 +3256,6 @@
   })();
 
   // Recent searches — track the last N queries in localStorage and
-  // render them in the sidebar of the search dropdown. Stored under a
-  // namespaced key so it doesn't collide with other Shopify themes.
-  (function () {
-    var modal       = document.getElementById('ds-search-modal');
-    if (!modal) return;
-    var dialog      = modal.querySelector('dialog');
-    var form        = modal.querySelector('.ds-search-modal__form');
-    var input       = modal.querySelector('.ds-search-modal__input');
-    var group       = modal.querySelector('[data-ds-recent-group]');
-    var list        = modal.querySelector('[data-ds-recent-list]');
-    var clearBtn    = modal.querySelector('[data-ds-recent-clear]');
-    if (!form || !input || !group || !list || !clearBtn) return;
-
-    var STORAGE_KEY = 'ds:recent-searches';
-    var MAX_ENTRIES = 6;
-
-    function read() {
-      try {
-        var raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [];
-        var parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed.filter(function (q) { return typeof q === 'string' && q.length > 0; }) : [];
-      } catch (e) {
-        return [];
-      }
-    }
-    function write(arr) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (e) { /* quota or blocked */ }
-    }
-    function add(query) {
-      query = (query || '').trim();
-      if (!query) return;
-      var arr = read();
-      // de-dupe case-insensitively, keep newest first
-      arr = arr.filter(function (q) { return q.toLowerCase() !== query.toLowerCase(); });
-      arr.unshift(query);
-      if (arr.length > MAX_ENTRIES) arr = arr.slice(0, MAX_ENTRIES);
-      write(arr);
-    }
-    function render() {
-      var arr = read();
-      if (arr.length === 0) {
-        group.hidden = true;
-        list.innerHTML = '';
-        return;
-      }
-      // Build LI list. Each item is a button that fills the search input
-      // and triggers the predictive-search-component's own input handler.
-      list.innerHTML = arr.map(function (q) {
-        var safe = q.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        return '<li><button type="button" class="ds-search-modal__sidebar-recent-link" data-q="' + safe + '"><span aria-hidden="true">↗</span><span>' + safe + '</span></button></li>';
-      }).join('');
-      group.hidden = false;
-    }
-
-    // Re-render whenever the dialog opens, in case another tab added entries
-    if (dialog) {
-      dialog.addEventListener('toggle', function () {
-        if (dialog.open) render();
-      });
-    }
-    // Initial render on page load (in case dialog is auto-opened or pre-rendered)
-    render();
-
-    // Save on form submit (when user hits enter or clicks "View all results")
-    form.addEventListener('submit', function () {
-      add(input.value);
-    });
-
-    // Clicking a recent entry: fill the input and dispatch an input event
-    // so <predictive-search-component> picks it up via its `on:input="/search"`
-    list.addEventListener('click', function (e) {
-      var btn = e.target.closest('[data-q]');
-      if (!btn) return;
-      e.preventDefault();
-      input.value = btn.getAttribute('data-q') || '';
-      input.focus();
-      input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
-    });
-
-    // Clear-all button
-    clearBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      write([]);
-      render();
-    });
-  })();
 
   // BELT-AND-SUSPENDERS: prevent the cart drawer from closing
   // during a cart update.

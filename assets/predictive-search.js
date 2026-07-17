@@ -316,6 +316,11 @@ class PredictiveSearchComponent extends Component {
     const url = new URL(Theme.routes.predictive_search_url, location.origin);
     url.searchParams.set('q', searchTerm);
     url.searchParams.set('resources[limit_scope]', 'each');
+    // Products only. Without this Shopify also returns queries + collections,
+    // which the dropdown does not render -- searching "all" came back with a
+    // collection and zero products. #getRecentlyViewedProductsMarkup below
+    // already pinned this; #getSearchResults never did.
+    url.searchParams.set('resources[type]', 'product');
 
     const { predictiveSearchResults } = this.refs;
 
