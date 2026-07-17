@@ -139,7 +139,7 @@
                 <button class="p2-auto" id="p2-auto" type="button" aria-pressed="true"
                         title="Auto-play the sweep, or scrub it yourself">Auto</button>
               
-              <input class="p2-range" id="p2-range" type="range" min="7" max="24" step="1" value="13"
+              <input class="p2-range" id="p2-range" type="range" min="7" max="24" step="0.01" value="13"
                      aria-labelledby="p2-size-lab" aria-valuetext="13 pixels">
               <div class="p2-ticks">
                 <button class="p2-tick" type="button" data-p2-size="7">7</button>
@@ -398,10 +398,25 @@
     return cur;
   }
 
-  function renderState(){
+  /* Continuous slider position: lerp between neighbouring segment sizes so the
+     thumb GLIDES with the footage instead of snapping integer detents. During
+     the end holds both segment sizes match, so the thumb rests — same as the
+     film. */
+  function posAt(t){
+    var k = 0;
+    while (k + 1 < SEG.length && SEG[k + 1][0] <= t) k++;
+    var t0 = SEG[k][0], s0 = SEG[k][1];
+    var t1 = (k + 1 < SEG.length) ? SEG[k + 1][0] : DUR;
+    var s1 = (k + 1 < SEG.length) ? SEG[k + 1][1] : SEG[0][1];
+    if (t1 <= t0) return s0;
+    var f = Math.min(1, Math.max(0, (t - t0) / (t1 - t0)));
+    return s0 + (s1 - s0) * f;
+  }
+
+  function renderState(skipThumb){
     var name = SHAPES[shape];
     readout.textContent = size + ' PX';
-    range.value = String(size);
+    if (!skipThumb) range.value = String(size);
     range.setAttribute('aria-valuetext', size + ' pixels');
     shapeReadout.textContent = name;
     shapeName.textContent = pad(shape + 1) + ' / 04';
@@ -425,18 +440,25 @@
     renderState();
   }
 
-  function seekTo(px){
+  function seekTo(px, skipThumb){
     size = Math.min(24, Math.max(7, px));
     var t = UP[String(size)] != null ? UP[String(size)] : UP[size];
     if (t != null){ try { vidV.currentTime = t; vidI.currentTime = t; } catch(e){} }
-    renderState();
+    renderState(skipThumb);
   }
 
-  /* AUTO: the film drives the UI */
+  /* AUTO: the film drives the UI. The glide loop moves the thumb every frame;
+     timeupdate (~4Hz) keeps the integer readout/ticks and doubles as the thumb
+     fallback in contexts where rAF is throttled. */
+  (function glide(){
+    if (auto && !vidV.paused){ range.value = posAt(vidV.currentTime).toFixed(2); }
+    requestAnimationFrame(glide);
+  })();
   vidV.addEventListener('timeupdate', function(){
     if (!auto) return;
+    range.value = posAt(vidV.currentTime).toFixed(2);
     var sz = sizeAt(vidV.currentTime);
-    if (sz !== size){ size = sz; renderState(); }
+    if (sz !== size){ size = sz; renderState(true); }
     /* keep the IMAGE pane locked to the VECTOR pane */
     if (Math.abs(vidI.currentTime - vidV.currentTime) > 0.12){
       try { vidI.currentTime = vidV.currentTime; } catch(e){}
@@ -446,7 +468,19 @@
   /* MANUAL: the slider drives the film */
   range.addEventListener('input', function(){
     if (auto) setAuto(false);
-    seekTo(parseInt(range.value, 10));
+    var px = Math.round(parseFloat(range.value));
+    if (px !== size) seekTo(px, true);
+  });
+  /* release: settle the thumb on the detent it chose */
+  range.addEventListener('change', function(){ range.value = String(size); });
+  /* step="0.01" would make arrow keys near-useless — step whole sizes */
+  range.addEventListener('keydown', function(e){
+    var d = (e.key === 'ArrowRight' || e.key === 'ArrowUp') ? 1
+          : (e.key === 'ArrowLeft'  || e.key === 'ArrowDown') ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    if (auto) setAuto(false);
+    seekTo(size + d);
   });
   ticks.forEach(function(t){
     t.addEventListener('click', function(){
