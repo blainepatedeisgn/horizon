@@ -2913,12 +2913,11 @@
     }
 
     .ds-search-modal__results { overflow: visible; }
-    /* Browse IS the idle content on mobile — drop the "start typing" hint */
-    .ds-search-modal__results .ds-search-results--idle { display: none; }
 
   }
 
-  /* Footer */
+  /* Footer — hidden until there is something to view all OF. */
+  .ds-search-modal__form:has(.ds-search-results--idle) .ds-search-modal__foot { display: none; }
   .ds-search-modal__foot {
     display: flex;
     align-items: center;
@@ -2979,19 +2978,10 @@
     margin: 0 !important;
     padding: 0 !important;
   }
-  .ds-search-results--idle {
-    padding: var(--space-7) var(--pad-x);
-    align-items: center;
-    text-align: center;
-  }
-  .ds-search-results__hint {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-fg-faint);
-    margin: 0;
-  }
+  /* Before anything is typed the modal is just the search bar. This container
+     renders empty (the "start typing" hint was removed), but still reserved
+     var(--space-7) top and bottom = 96px of black. */
+  .ds-search-results--idle { display: none; }
   .ds-search-results__empty {
     padding: var(--space-6) var(--pad-x);
     text-align: center;
