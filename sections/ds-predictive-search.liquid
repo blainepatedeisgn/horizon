@@ -16,7 +16,12 @@
 
   Required hooks (Horizon's keyboard arrow-nav depends on these):
     [data-search-results]                       — container the component scrolls
-    .predictive-search-results__card            — items nav targets
+    .predictive-search-results__card            — items nav targets (REQUIRED:
+      predictive-search.js:131 queries exactly this class to build the
+      arrow-key list). It must stay on the <li> even though Horizon's styles.css
+      sizes it `width:60cqi` -- ds-header.liquid neutralises that. The sibling
+      vendor classes (__list / __wrapper-products) are deliberately NOT used:
+      they are not queried, and they carry a repeat(2,1fr) grid of their own.
     ref="resultsItems[]"                        — array of focusable items
     data-search-result-index="search-results-N" — focus index per item
 
@@ -36,7 +41,7 @@
         </p>
       </div>
     {%- else -%}
-      <ul class="ds-search-results__grid predictive-search-results__list predictive-search-results__wrapper-products">
+      <ul class="ds-search-results__grid">
         {%- for product in products -%}
           <li
             class="ds-search-results__cell predictive-search-results__card"

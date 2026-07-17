@@ -2961,6 +2961,15 @@
     border: 0 !important;
     background: transparent !important;
     will-change: auto !important;
+    /* Horizon's styles.css sizes this class `width:60cqi; padding:var(--padding-sm)`
+       and `flex:0 0 auto` for its own card design. We cannot drop the class --
+       predictive-search.js queries it to build the keyboard-nav list -- so the
+       sizing is neutralised here instead, or each cell blows out to 60% of the
+       modal and overflows its grid track. */
+    width: auto !important;
+    padding: 0 !important;
+    flex: initial !important;
+    min-width: 0;
   }
   /* Same for the list/wrapper containers — strip any vendor padding/spacing */
   .ds-search-modal .predictive-search-results__list,
