@@ -1,0 +1,98 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "ds-pdp-pixelperfect",
+      "settings": {
+        "color_scheme": "scheme-1"
+      }
+    },
+    "faq": {
+      "type": "ds-pdp-faq",
+      "blocks": {
+        "faq_compat": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Does this work with my version of Photoshop?",
+            "answer": "UXP plugins require Photoshop 23.3 or later on Mac and Windows. CS6 and older Photoshop versions are not supported."
+          }
+        },
+        "faq_install": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How do I install the .ccx file?",
+            "answer": "Double-click the .ccx file you downloaded. Photoshop opens, prompts you to install, and the plugin appears under the Plugins menu. No restart needed for most installs."
+          }
+        },
+        "faq_seats": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I use the plugin on multiple machines?",
+            "answer": "Yes — one designer on up to 2 of your own devices (e.g., laptop + desktop). For 5+ seats or studio-wide installation, email blainepatedesign@gmail.com for a custom Studio quote."
+          }
+        },
+        "faq_commercial": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I use the output commercially?",
+            "answer": "Yes. Pixel Perfect ships with a single license that covers both personal and commercial use — client work, products you sell, paid ads, anything monetized. There is no separate commercial tier to buy. See the License page for the full breakdown."
+          }
+        },
+        "faq_updates": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Will I get updates?",
+            "answer": "Yes — lifetime updates within the current major version. Major upgrades (v2, v3, etc.) may be priced separately when they ship."
+          }
+        },
+        "faq_refund": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What's the refund policy?",
+            "answer": "Digital downloads — all sales final. Defective or non-functional files are replaced at no charge; email blainepatedesign@gmail.com. EU buyers have a 14-day right of withdrawal before downloading per Article 16(m) of the Consumer Rights Directive."
+          }
+        }
+      },
+      "block_order": [
+        "faq_compat",
+        "faq_install",
+        "faq_seats",
+        "faq_commercial",
+        "faq_updates",
+        "faq_refund"
+      ],
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Common questions",
+        "num_label": "07",
+        "subhead": ""
+      }
+    },
+    "related": {
+      "type": "ds-pdp-related",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "More tools",
+        "num_label": "08",
+        "subhead": "",
+        "products_to_show": 3,
+        "collection_source": "",
+        "view_all_label": "View all products",
+        "view_all_url": ""
+      }
+    }
+  },
+  "order": [
+    "main",
+    "faq",
+    "related"
+  ]
+}

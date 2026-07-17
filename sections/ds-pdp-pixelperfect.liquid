@@ -1,0 +1,644 @@
+{%- comment -%}
+  sections/ds-pdp-pixelperfect.liquid -- "The Workbench" PDP for Pixel Perfect.
+
+  A dedicated, single-product page: sticky buy rail + scrolling instrument
+  column, closing on a drifting frame wall. Ported from the approved mock
+  (scratchpad/plugin-workbench-v9.html) with the static parts wired to real
+  product data.
+
+  WHY ONE BIG SECTION: the rail and the main column are one CSS grid, and the
+  rail's position:sticky resolves against that grid's containing block. Split
+  across two sections, Shopify's per-section <div id="shopify-section-..."> lands
+  between them and the sticky silently dies. Keep them together.
+
+  Styles live in assets/ds-pdp-pixelperfect.css (static -- the plugin frames are
+  <img>, not background-image, so no Liquid is needed in the CSS and it caches).
+
+  DO NOT "simplify" the add-to-cart markup below. product-form.js declares
+  requiredRefs = ['variantId', 'liveRegion']; component.js throws MissingRefError
+  if either is missing, which leaves the element un-upgraded and the form falls
+  back to a full-page POST to /cart -- with no console error. The leading slash
+  in on:submit="/handleSubmit" is load-bearing for the same reason.
+{%- endcomment -%}
+
+{%- liquid
+  assign cs = section.settings.color_scheme | default: 'scheme-1'
+  # NOT a Liquid global -- must be assigned or every current_variant.* is blank.
+  assign current_variant = product.selected_or_first_available_variant
+-%}
+
+{{ 'ds-pdp-pixelperfect.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-form.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+
+<div class="p2-page color-{{ cs }}">
+  <div class="p2-shell">
+
+    <!-- ============== LEFT RAIL — BUY ============== -->
+    <aside class="p2-rail" aria-label="Buy Pixel Perfect">
+        <div class="p2-art" data-gal>
+        <div class="p2-art-stage">
+          <img class="p2-art-img" src="{{ product.featured_image | image_url: width: 1000 }}"
+               alt="{{ product.featured_image.alt | default: product.title | escape }}"
+               width="1000" height="1000" fetchpriority="high" decoding="async">
+        </div>
+        <button class="p2-art-nav p2-art-nav--prev" type="button" data-gal="prev" aria-label="Previous image">&larr;</button>
+        <button class="p2-art-nav p2-art-nav--next" type="button" data-gal="next" aria-label="Next image">&rarr;</button>
+        <div class="p2-art-count" aria-hidden="true"><span data-gal-i>1</span><i>/</i><span>{{ product.images.size }}</span></div>
+      </div>
+
+      <h1 class="p2-title">{{ product.title }}</h1>
+
+      <div class="p2-price">
+        <span class="p2-amt">{{ current_variant.price | money }}</span>
+        <span class="p2-once">One payment.<br>No subscription.</span>
+      </div>
+
+      <div class="p2-buys">
+        <product-form-component
+          data-section-id="{{ section.id }}"
+          data-product-id="{{ product.id }}"
+          on:submit="/handleSubmit"
+          data-skeleton-title="{{ product.title | escape }}"
+          data-skeleton-image="{%- if product.featured_image -%}{{ product.featured_image | image_url: width: 192 }}{%- endif -%}"
+        >
+          <div class="visually-hidden" aria-live="assertive" role="status" aria-atomic="true" ref="liveRegion"></div>
+          {%- form 'product', product, class: 'p2-form', novalidate: 'novalidate' -%}
+            <input type="hidden" name="id" ref="variantId" value="{{ current_variant.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <button class="p2-btn p2-btn--buy" id="p2-add" type="submit" name="add"
+                    {% unless current_variant.available %}disabled{% endunless %}>
+              {%- if current_variant.available -%}+ Add to cart{%- else -%}Sold out{%- endif -%}
+            </button>
+          {%- endform -%}
+        </product-form-component>
+      </div>
+        <div class="p2-desc" data-desc>
+          <p class="p2-desc-lab">Description</p>
+          <div class="p2-desc-body" data-desc-body>{{ product.description }}</div>
+          <button class="p2-desc-more" type="button" data-desc-toggle aria-expanded="false">Read more</button>
+        </div>
+        <dl class="p2-spec">
+          <div><dt>Licence</dt><dd>One. Personal + commercial.</dd></div>
+          <div><dt>Delivery</dt><dd>Instant download</dd></div>
+        </dl>
+
+      
+
+      
+    </aside>
+
+    <!-- ============== RIGHT COLUMN ============== -->
+    <div class="p2-main">
+
+      <!-- ---------- 01 · DEMO ---------- -->
+      <section class="p2-sec" id="p2-demo" aria-labelledby="p2-demo-h">
+        <div class="p2-eyebrow"><span><b>01</b> / Two Modes</span></div>
+
+        <div class="p2-headrow">
+          <h2 class="p2-h" id="p2-demo-h">Two modes.<br><em>Side by side.</em></h2>
+          <p class="p2-dek">Move either control. Both panes update.</p>
+        </div>
+
+        <div class="p2-inst">
+          <div class="p2-stage">
+            <figure class="p2-pane p2-pane--v">
+              <img class="p2-img" id="p2-img-v" width="384" height="384"
+                   src="{{ 'ds-ppv-gV-1-3.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-1-3.webp"
+                   alt="Vector mode: square pixels at 13 px, flat single-colour fill." decoding="async">
+              <div class="p2-file" id="p2-file-v">ds-ppv-gV-1-3.webp</div>
+            </figure>
+
+            <div class="p2-rule" aria-hidden="true"></div>
+
+            <figure class="p2-pane p2-pane--i">
+              <img class="p2-img" id="p2-img-i" width="384" height="384"
+                   src="{{ 'ds-ppv-gI-1-3.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-1-3.webp"
+                   alt="Image mode: square pixels at 13 px, sampling the real tones." decoding="async">
+              <div class="p2-file" id="p2-file-i">ds-ppv-gI-1-3.webp</div>
+            </figure>
+
+            <figcaption class="p2-cap p2-cap--v">
+              <b>Vector</b>
+              <span>Flat fill, one colour + threshold.</span>
+            </figcaption>
+            <figcaption class="p2-cap p2-cap--i">
+              <b>Image</b>
+              <span>Real tones, samples the pixels.</span>
+            </figcaption>
+          </div>
+
+          <div class="p2-ctrl">
+            <div class="p2-ctrl-b p2-ctrl-b--size">
+              <div class="p2-ctrl-head">
+                <span class="p2-lab" id="p2-size-lab">Pixel Size</span>
+                <span class="p2-readout" id="p2-readout">13 PX</span>
+              </div>
+              <input class="p2-range" id="p2-range" type="range" min="1" max="5" step="1" value="3"
+                     aria-labelledby="p2-size-lab" aria-valuetext="13 pixels">
+              <div class="p2-ticks">
+                <button class="p2-tick" type="button" data-p2-px="1">7</button>
+                <button class="p2-tick" type="button" data-p2-px="2">9</button>
+                <button class="p2-tick" type="button" data-p2-px="3" aria-current="true">13</button>
+                <button class="p2-tick" type="button" data-p2-px="4">17</button>
+                <button class="p2-tick" type="button" data-p2-px="5">24</button>
+              </div>
+            </div>
+
+            <div class="p2-ctrl-rule" aria-hidden="true"></div>
+
+            <div class="p2-ctrl-b p2-ctrl-b--shape">
+              <div class="p2-ctrl-head">
+                <span class="p2-lab">Shape</span>
+                <span class="p2-readout" id="p2-shape-readout">Square</span>
+              </div>
+              <div class="p2-steprow">
+                <div class="p2-step">
+                  <button class="p2-arrow" id="p2-prev" type="button" aria-label="Previous shape">&#8249;</button>
+                  <div class="p2-chipg" id="p2-chipg" role="img" aria-live="polite" aria-label="Shape: square">
+                    <svg data-shape="0" viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12"/></svg>
+                    <svg data-shape="1" viewBox="0 0 20 20" aria-hidden="true" hidden><circle cx="10" cy="10" r="6.2"/></svg>
+                    <svg data-shape="2" viewBox="0 0 20 20" aria-hidden="true" hidden><path d="M8.4 3h3.2v5.4H17v3.2h-5.4V17H8.4v-5.4H3V8.4h5.4z"/></svg>
+                    <svg data-shape="3" viewBox="0 0 20 20" aria-hidden="true" hidden><path d="M10 7.74 14.13 3.6l2.27 2.27L12.26 10l4.14 4.13-2.27 2.27L10 12.26 5.87 16.4 3.6 14.13 7.74 10 3.6 5.87 5.87 3.6z"/></svg>
+                  </div>
+                  <button class="p2-arrow" id="p2-next" type="button" aria-label="Next shape">&#8250;</button>
+                </div>
+                <span class="p2-shapename" id="p2-shapename">01 / 04</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p2-strip">
+            <span>Non-destructive</span>
+            <span>Output: real pixel layer</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 02 · OUTPUT ---------- -->
+      <section class="p2-sec" aria-labelledby="p2-out-h">
+        <div class="p2-eyebrow"><span><b>02</b> / Output</span></div>
+
+        <div class="p2-headrow">
+          <h2 class="p2-h" id="p2-out-h">Your artwork.<br><em>Rebuilt on a grid.</em></h2>
+          <p class="p2-dek">Drag the divider.</p>
+        </div>
+
+        <div class="p2-card">
+          <div class="p2-card-art p2-ba" id="p2-ba" style="--p2-x:50%"
+               role="slider" tabindex="0" aria-label="Before and after divider"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="50% raw artwork">
+            <img id="p2-ba-after" width="1400" height="1400" src="{% if section.settings.ba_after %}{{ section.settings.ba_after | image_url: width: 1400 }}{% else %}{{ 'Artboard_3.png' | file_url }}{% endif %}"
+                 alt="The artwork after Pixel Perfect, rebuilt as a pixel layer." decoding="async">
+            <div class="p2-ba-over">
+              <img id="p2-ba-before" width="1400" height="1400" src="{% if section.settings.ba_before %}{{ section.settings.ba_before | image_url: width: 1400 }}{% else %}{{ 'before.png' | file_url }}{% endif %}"
+                   alt="The raw artwork before Pixel Perfect." decoding="async">
+            </div>
+            <div class="p2-ba-tag p2-ba-tag--l">Raw</div>
+            <div class="p2-ba-tag p2-ba-tag--r">Pixel Perfect</div>
+            <div class="p2-ba-bar"><span class="p2-ba-grab"></span></div>
+          </div>
+
+          <div class="p2-card-side">
+            <div class="p2-ctlrow" role="group" aria-label="Show before or after">
+              <span class="p2-lab">Show</span>
+              <button class="p2-chip" type="button" data-p2-ba="100" aria-pressed="true">Before</button>
+              <button class="p2-chip" type="button" data-p2-ba="0" aria-pressed="false">After</button>
+            </div>
+
+            <div class="p2-ctlrow" role="group" aria-label="Choose a file pair">
+              <span class="p2-lab">File</span>
+              <button class="p2-chip" type="button" data-p2-pair="1" aria-pressed="true">01</button>
+              <button class="p2-chip" type="button" data-p2-pair="2" aria-pressed="false">02</button>
+            </div>
+
+            <dl class="p2-card-rows">
+              <div><dt>Showing</dt><dd id="p2-out-show">Raw layer</dd></div>
+              <div><dt>In</dt><dd class="p2-fname" id="p2-out-in">before.png</dd></div>
+              <div><dt>Out</dt><dd class="p2-fname" id="p2-out-out">Artboard_3.png</dd></div>
+            </dl>
+
+            <p class="p2-card-note">On the grid. No blur. No half pixels.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 03 · RAW LAYER ---------- -->
+      <section class="p2-sec" aria-labelledby="p2-raw-h">
+        <div class="p2-eyebrow"><span><b>03</b> / Raw Layer</span></div>
+
+        <div class="p2-headrow">
+          <h2 class="p2-h" id="p2-raw-h">It adds a layer.<br><em>It takes nothing.</em></h2>
+          <p class="p2-dek">Toggle the eyes. Source intact.</p>
+        </div>
+
+        <div class="p2-card">
+          <div class="p2-card-art p2-lyrart">
+            <img id="p2-lyr-shot" width="1400" height="1400" src="{% if section.settings.lyr_shot %}{{ section.settings.lyr_shot | image_url: width: 1400 }}{% else %}{{ 'Artboard_4.png' | file_url }}{% endif %}"
+                 alt="The Pixel Perfect output layer." decoding="async">
+            <div class="p2-lyr-empty" id="p2-lyr-empty" hidden>No visible layers</div>
+            <div class="p2-ba-tag" id="p2-lyr-tag">Pixel Perfect / pixel</div>
+          </div>
+
+          <div class="p2-card-side">
+            <div class="p2-panel">
+              <div class="p2-panel-head">
+                <span>Layers</span>
+                <b>biw.psd</b>
+              </div>
+              <ul class="p2-lyr-list">
+                <li class="p2-lyr-row" id="p2-row-top">
+                  <button class="p2-eye" type="button" data-p2-eye="top" aria-pressed="true"
+                          aria-label="Toggle the Pixel Perfect output layer"></button>
+                  <span class="p2-lyr-thumb"><img width="1400" height="1400" src="{% if section.settings.lyr_shot %}{{ section.settings.lyr_shot | image_url: width: 1400 }}{% else %}{{ 'Artboard_4.png' | file_url }}{% endif %}" alt="" decoding="async"></span>
+                  <span class="p2-lyr-name">Pixel Perfect</span>
+                  <span class="p2-lyr-kind">Pixel</span>
+                </li>
+                <li class="p2-lyr-row" id="p2-row-src">
+                  <button class="p2-eye" type="button" data-p2-eye="src" aria-pressed="true"
+                          aria-label="Toggle your source layer"></button>
+                  <span class="p2-lyr-thumb"><img width="1400" height="1400" src="{% if section.settings.lyr_alt %}{{ section.settings.lyr_alt | image_url: width: 1400 }}{% else %}{{ 'biw.png' | file_url }}{% endif %}" alt="" decoding="async"></span>
+                  <span class="p2-lyr-name">biw</span>
+                  <span class="p2-lyr-kind">Source</span>
+                </li>
+              </ul>
+            </div>
+
+            <dl class="p2-card-rows">
+              <div><dt>Source layer</dt><dd>Stays. Untouched.</dd></div>
+              <div><dt>Output</dt><dd>A real pixel layer</dd></div>
+              <div><dt>Handling</dt><dd>Move it. Mask it. Blend it.</dd></div>
+            </dl>
+
+            <p class="p2-card-note">Nothing flattened. Nothing replaced.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 04 · THE POINT ---------- -->
+      <section class="p2-sec" aria-labelledby="p2-beat-h">
+        <div class="p2-eyebrow"><span><b>04</b> / The Point</span></div>
+
+        <h2 class="p2-beat-h" id="p2-beat-h">24 clicks in Photoshop.<br><em>Made into one.</em></h2>
+
+        <div class="p2-count" aria-hidden="true">
+          <div class="p2-count-row">
+            <span class="p2-lab">By hand</span>
+            <span class="p2-cells" id="p2-cells-a"></span>
+            <span class="p2-count-n">24</span>
+          </div>
+          <div class="p2-count-row">
+            <span class="p2-lab">In the panel</span>
+            <span class="p2-cells"><span class="p2-cell p2-cell--on"></span></span>
+            <span class="p2-count-n">01</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 05 · NOTE ---------- -->
+      <section class="p2-sec" aria-labelledby="p2-note-h">
+        <div class="p2-eyebrow"><span id="p2-note-h"><b>05</b> / Why I built this</span></div>
+        <div class="p2-notecard">
+          <p class="p2-note-body">I know the pain. The clicking. The undoing. The grid landing a pixel off.</p>
+          <p class="p2-note-body">So I built the panel I kept wishing existed.</p>
+          <p class="p2-note-body"><em>Now it&rsquo;s yours.</em></p>
+          <div class="p2-note-rule"></div>
+          <p class="p2-note-sign">Disrupted Minds Studio</p>
+        </div>
+      </section>
+
+      <!-- ---------- 06 · COMPATIBILITY ---------- -->
+      <section class="p2-sec" aria-labelledby="p2-compat-h">
+        <div class="p2-eyebrow">
+          <span><b>06</b> / Compatibility</span>
+        </div>
+        <div class="p2-headrow">
+          <h2 class="p2-h p2-h--quiet" id="p2-compat-h">What it runs on.<br><em>And what it doesn&rsquo;t.</em></h2>
+        </div>
+        <div class="p2-compat">
+          <div class="p2-compat-col">
+            <p class="p2-compat-h">Works with</p>
+            <ul>
+              <li>Photoshop 23.3 and newer</li>
+              <li>UXP plugin (.ccx)</li>
+              <li>macOS + Windows</li>
+              <li>Creative Cloud install</li>
+            </ul>
+          </div>
+          <div class="p2-compat-col p2-compat-col--no">
+            <p class="p2-compat-h">Does not work with</p>
+            <ul>
+              <li>Affinity Photo</li>
+              <li>CEP / .jsx panels</li>
+              <li>Photoshop 23.2 and older</li>
+            </ul>
+          </div>
+        </div>
+        <p class="p2-compat-foot">Check yours: Photoshop &rsaquo; About Photoshop.</p>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ============== CTA BAND — THE WALL ============== -->
+  <section class="p2-cta" aria-labelledby="p2-cta-h">
+    <div class="p2-cta-eyebrow">
+      <span><b>07</b> / Every frame here is output</span>
+      <span>Index // 40 Frames</span>
+    </div>
+
+    <div class="p2-wall" id="p2-wall">
+      <div class="p2-rows" aria-hidden="true">
+        <div class="p2-row">
+          <div class="p2-track p2-track--l" data-p2-track><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-1-1.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-1-1.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-2-3.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-2-3.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-3-5.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-3-5.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-4-2.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-4-2.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-1-4.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-1-4.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-2-1.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-2-1.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-3-3.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-3-3.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-4-5.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-4-5.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-1-2.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-1-2.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-2-4.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-2-4.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-3-1.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-3-1.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-4-3.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-4-3.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-1-5.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-1-5.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-2-2.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-2-2.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-3-4.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-3-4.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-4-1.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-4-1.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-1-3.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-1-3.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-2-5.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-2-5.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-3-2.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-3-2.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gV-4-4.webp' | asset_url }}" data-ppsrc="ds-ppv-gV-4-4.webp" alt="" decoding="async"></div>
+        </div>
+        <div class="p2-row">
+          <div class="p2-track p2-track--r" data-p2-track><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-4-4.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-4-4.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-3-2.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-3-2.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-2-5.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-2-5.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-1-3.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-1-3.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-4-1.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-4-1.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-3-4.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-3-4.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-2-2.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-2-2.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-1-5.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-1-5.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-4-3.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-4-3.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-3-1.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-3-1.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-2-4.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-2-4.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-1-2.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-1-2.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-4-5.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-4-5.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-3-3.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-3-3.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-2-1.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-2-1.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-1-4.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-1-4.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-4-2.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-4-2.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-3-5.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-3-5.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-2-3.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-2-3.webp" alt="" decoding="async"><img class="p2-tile" width="384" height="384" loading="lazy" src="{{ 'ds-ppv-gI-1-1.webp' | asset_url }}" data-ppsrc="ds-ppv-gI-1-1.webp" alt="" decoding="async"></div>
+        </div>
+      </div>
+
+      <div class="p2-scrim"></div>
+
+      <div class="p2-hero">
+        <h2 class="p2-cta-h" id="p2-cta-h">Nothing here<br>is a mockup.</h2>
+        <p class="p2-cta-sub">Four shapes. Two modes. Five sizes.<b>straight out of the panel</b>.</p>
+        <button class="p2-cta-btn" type="button" id="p2-add-2">+ Add to cart — $25</button>
+      </div>
+    </div><div class="p2-cta-foot"><span>One licence &middot; Personal + commercial &middot; Instant download</span></div>
+  </section>
+</div>
+
+
+{%- comment -%}
+  The viewer swaps frames by assigning a BARE filename to img.src. In the mock a
+  harness intercepted that; here we hand it a Liquid-built filename -> asset_url
+  map instead, so the swap stays a one-line change to the approved JS.
+{%- endcomment -%}
+<script>
+  window.P2FRAMES = window.P2FRAMES || {};
+  {%- assign p2_modes = 'V,I' | split: ',' -%}
+  {%- for md in p2_modes -%}{%- for s in (1..4) -%}{%- for p in (1..5) -%}
+    {%- capture p2fn -%}ds-ppv-g{{ md }}-{{ s }}-{{ p }}.webp{%- endcapture -%}
+  window.P2FRAMES["{{ p2fn }}"] = "{{ p2fn | asset_url }}";
+  {%- endfor -%}{%- endfor -%}{%- endfor -%}
+</script>
+<script>
+(function(){
+  var page = document.currentScript.previousElementSibling;
+  while(page && !(page.classList && page.classList.contains('p2-page'))) page = page.previousElementSibling;
+  if(!page) page = document.querySelector('.p2-page');
+  if(!page || page.dataset.p2Ready) return;
+  page.dataset.p2Ready = '1';
+
+  var $  = function(id){ return page.querySelector('#' + id); };
+  var $$ = function(sel){ return [].slice.call(page.querySelectorAll(sel)); };
+
+  /* ============ 01 · split viewer (shared slider + stepper) ============ */
+  var PX     = [7, 9, 13, 17, 24];
+  var SHAPES = ['Square', 'Circle', 'Plus', 'Cross'];
+  var shape = 0, size = 2;                       /* square, 13 PX */
+
+  var imgV = $('p2-img-v'), imgI = $('p2-img-i');
+  var fileV = $('p2-file-v'), fileI = $('p2-file-i');
+
+  var readout = $('p2-readout'), range = $('p2-range');
+  var chipg = $('p2-chipg'), shapeReadout = $('p2-shape-readout'), shapeName = $('p2-shapename');
+  var ticks = $$('.p2-tick');
+  var chipSvgs = $$('#p2-chipg svg');
+
+  function frame(mode, s, p){ return 'ds-ppv-g' + mode + '-' + (s + 1) + '-' + (p + 1) + '.webp'; }
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+
+  function setSrc(el, name){ el.setAttribute('data-ppsrc', name); el.src = (window.P2FRAMES && window.P2FRAMES[name]) || name; }
+
+  function renderViewer(){
+    var px = PX[size], name = SHAPES[shape];
+    var stateTxt = name + ' / ' + px + ' PX';
+    var fV = frame('V', shape, size), fI = frame('I', shape, size);
+
+    setSrc(imgV, fV);
+    setSrc(imgI, fI);
+    imgV.alt = 'Vector mode: ' + name.toLowerCase() + ' pixels at ' + px + ' px, flat single-colour fill.';
+    imgI.alt = 'Image mode: ' + name.toLowerCase() + ' pixels at ' + px + ' px, sampling the real tones.';
+    fileV.textContent = fV;
+    fileI.textContent = fI;
+
+
+    readout.textContent = px + ' PX';
+    shapeReadout.textContent = name;
+    shapeName.textContent = pad(shape + 1) + ' / 04';
+    chipg.setAttribute('aria-label', 'Shape: ' + name.toLowerCase());
+
+    range.value = String(size + 1);
+    range.setAttribute('aria-valuetext', px + ' pixels');
+
+    ticks.forEach(function(t, i){
+      if(i === size) t.setAttribute('aria-current', 'true');
+      else t.removeAttribute('aria-current');
+    });
+    /* `hidden` is an HTMLElement IDL prop and does NOT reflect on SVGElement —
+       set the attribute explicitly or the glyph silently never changes. */
+    chipSvgs.forEach(function(s, j){
+      if(j === shape) s.removeAttribute('hidden');
+      else s.setAttribute('hidden', '');
+    });
+  }
+
+  range.addEventListener('input', function(){
+    size = Math.min(4, Math.max(0, parseInt(range.value, 10) - 1));
+    renderViewer();
+  });
+  ticks.forEach(function(t){
+    t.addEventListener('click', function(){
+      size = parseInt(t.getAttribute('data-p2-px'), 10) - 1;
+      renderViewer();
+    });
+  });
+  $('p2-prev').addEventListener('click', function(){
+    shape = (shape + SHAPES.length - 1) % SHAPES.length; renderViewer();
+  });
+  $('p2-next').addEventListener('click', function(){
+    shape = (shape + 1) % SHAPES.length; renderViewer();
+  });
+  renderViewer();
+
+  /* ============ 02 · OUTPUT before / after ============ */
+  var PAIRS = {
+    '1': { raw:'before.png', out:'Artboard_3.png' },
+    '2': { raw:'biw.png',    out:'Artboard_4.png' }
+  };
+  var ba = $('p2-ba');
+  var baBefore = $('p2-ba-before'), baAfter = $('p2-ba-after');
+  var outShow = $('p2-out-show'), outIn = $('p2-out-in'), outOut = $('p2-out-out');
+  var x = 50;
+
+  function pressGroup(attr, key){
+    $$('[data-p2-' + attr + ']').forEach(function(b){
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-p2-' + attr) === String(key)));
+    });
+  }
+  function setX(v){
+    x = Math.max(0, Math.min(100, v));
+    ba.style.setProperty('--p2-x', x + '%');
+    var raw = x >= 50;
+    pressGroup('ba', raw ? '100' : '0');
+    outShow.textContent = raw ? 'Raw layer' : 'Pixel layer';
+    ba.setAttribute('aria-valuenow', Math.round(x));
+    ba.setAttribute('aria-valuetext', Math.round(x) + '% raw artwork');
+  }
+  function setPair(k){
+    setSrc(baBefore, PAIRS[k].raw);
+    setSrc(baAfter,  PAIRS[k].out);
+    outIn.textContent  = PAIRS[k].raw;
+    outOut.textContent = PAIRS[k].out;
+    pressGroup('pair', k);
+  }
+
+  $$('[data-p2-ba]').forEach(function(b){
+    b.addEventListener('click', function(){ setX(+b.getAttribute('data-p2-ba')); });
+  });
+  $$('[data-p2-pair]').forEach(function(b){
+    b.addEventListener('click', function(){ setPair(b.getAttribute('data-p2-pair')); });
+  });
+
+  var dragging = false;
+  function atPointer(e){
+    var r = ba.getBoundingClientRect();
+    setX((e.clientX - r.left) / r.width * 100);
+  }
+  ba.addEventListener('pointerdown', function(e){
+    dragging = true;
+    if(ba.setPointerCapture) ba.setPointerCapture(e.pointerId);
+    atPointer(e); e.preventDefault();
+  });
+  ba.addEventListener('pointermove', function(e){ if(dragging) atPointer(e); });
+  ba.addEventListener('pointerup',     function(){ dragging = false; });
+  ba.addEventListener('pointercancel', function(){ dragging = false; });
+  ba.addEventListener('keydown', function(e){
+    var step = e.shiftKey ? 10 : 4;
+    if(e.key === 'ArrowLeft'){ setX(x - step); e.preventDefault(); }
+    else if(e.key === 'ArrowRight'){ setX(x + step); e.preventDefault(); }
+    else if(e.key === 'Home'){ setX(0); e.preventDefault(); }
+    else if(e.key === 'End'){ setX(100); e.preventDefault(); }
+  });
+  setPair('1');
+  setX(50);
+
+  /* ============ 03 · RAW LAYER — the layers panel ============ */
+  var shot = $('p2-lyr-shot'), empty = $('p2-lyr-empty'), lyrTag = $('p2-lyr-tag');
+  var rowTop = $('p2-row-top'), rowSrc = $('p2-row-src');
+  var vis = { top:true, src:true };
+
+  function renderLayers(){
+    rowTop.setAttribute('data-p2-off', vis.top ? '0' : '1');
+    rowSrc.setAttribute('data-p2-off', vis.src ? '0' : '1');
+
+    if(vis.top){
+      setSrc(shot, 'Artboard_4.png');
+      shot.alt = 'The Pixel Perfect output layer: the artwork rebuilt as pixels.';
+      lyrTag.textContent = 'Pixel Perfect / pixel';
+      empty.hidden = true;  shot.hidden = false;
+    } else if(vis.src){
+      setSrc(shot, 'biw.png');
+      shot.alt = 'Your source layer, untouched underneath.';
+      lyrTag.textContent = 'biw / source';
+      empty.hidden = true;  shot.hidden = false;
+    } else {
+      lyrTag.textContent = 'Nothing visible';
+      empty.hidden = false; shot.hidden = true;
+    }
+  }
+  $$('[data-p2-eye]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var k = b.getAttribute('data-p2-eye');
+      vis[k] = !vis[k];
+      b.setAttribute('aria-pressed', String(vis[k]));
+      renderLayers();
+    });
+  });
+  renderLayers();
+
+  /* ============ 04 · the 24 cells ============ */
+  var cellsA = $('p2-cells-a');
+  if(cellsA){
+    for(var c = 0; c < 24; c++){
+      var cell = document.createElement('span');
+      cell.className = 'p2-cell';
+      cellsA.appendChild(cell);
+    }
+  }
+
+  /* ============ CTA band · seamless drifting wall ============ */
+  var wall = $('p2-wall');
+  $$('[data-p2-track]').forEach(function(t){
+    var dup = document.createDocumentFragment();
+    t.querySelectorAll('.p2-tile').forEach(function(img){ dup.appendChild(img.cloneNode(false)); });
+    t.appendChild(dup);
+  });
+  if(wall) wall.classList.add('is-looped');
+
+  /* ============ buy buttons (demo wiring) ============ */
+  $$('#p2-add, #p2-add-2').forEach(function(b){
+    var label = b.textContent, t = null;
+    b.addEventListener('click', function(){
+      b.textContent = 'In cart';
+      clearTimeout(t);
+      t = setTimeout(function(){ b.textContent = label; }, 1600);
+    });
+  });
+})();
+</script>
+<script>
+(function(){
+  var FRAMES=[{%- for img in product.images -%}"{{ img | image_url: width: 1000 }}"{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}];
+  var root=document.querySelector('[data-gal]'); if(!root) return;
+  var img=root.querySelector('.p2-art-img'), n=root.querySelector('[data-gal-i]'), i=0;
+  function go(d){
+    i=(i+d+FRAMES.length)%FRAMES.length;
+    img.src=FRAMES[i];
+    img.alt='Pixel Perfect — product image '+(i+1)+' of '+FRAMES.length;
+    if(n) n.textContent=i+1;
+  }
+  root.querySelectorAll('[data-gal="prev"],[data-gal="next"]').forEach(function(b){
+    b.addEventListener('click',function(e){e.preventDefault();go(b.dataset.gal==='next'?1:-1);});
+  });
+  root.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'){e.preventDefault();go(1);}
+    if(e.key==='ArrowLeft'){e.preventDefault();go(-1);}
+  });
+  FRAMES.forEach(function(f){var p=new Image();p.src=f;});   // preload so swaps are instant
+})();
+</script>
+<script>
+(function(){
+  var root=document.querySelector('[data-desc]'); if(!root) return;
+  var body=root.querySelector('[data-desc-body]'), btn=root.querySelector('[data-desc-toggle]');
+  // only offer the toggle if the text actually overflows the clamp
+  if(body.scrollHeight <= body.clientHeight + 2){ btn.hidden = true; return; }
+  btn.addEventListener('click', function(){
+    var open = root.classList.toggle('is-open');
+    btn.textContent = open ? 'Read less' : 'Read more';
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+})();
+</script>
+{% schema %}
+{
+  "name": "PDP — Pixel Perfect",
+  "tag": "section",
+  "class": "ds-section ds-section--pdp-pixelperfect",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "color_scheme", "id": "color_scheme", "default": "scheme-1", "label": "Color scheme" },
+    { "type": "header", "content": "Output card (before / after)" },
+    { "type": "paragraph", "content": "Optional. Leave empty to use the Files images (before.png / Artboard_3.png)." },
+    { "type": "image_picker", "id": "ba_before", "label": "Before — raw artwork" },
+    { "type": "image_picker", "id": "ba_after",  "label": "After — Pixel Perfect output" },
+    { "type": "header", "content": "Raw layer card" },
+    { "type": "paragraph", "content": "Optional. Leave empty to use the Files images (Artboard_4.png / biw.png)." },
+    { "type": "image_picker", "id": "lyr_shot", "label": "Output layer screenshot" },
+    { "type": "image_picker", "id": "lyr_alt",  "label": "Secondary artwork" }
+  ],
+  "presets": [ { "name": "PDP — Pixel Perfect" } ]
+}
+{% endschema %}
