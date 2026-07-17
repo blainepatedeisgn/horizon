@@ -153,15 +153,11 @@
                 <span class="p2-readout" id="p2-shape-readout">Square</span>
               </div>
               <div class="p2-steprow">
-                <div class="p2-step">
-                  <button class="p2-arrow" id="p2-prev" type="button" aria-label="Previous shape">&#8249;</button>
-                  <div class="p2-chipg" id="p2-chipg" role="img" aria-live="polite" aria-label="Shape: square">
-                    <svg data-shape="0" viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12"/></svg>
-                    <svg data-shape="1" viewBox="0 0 20 20" aria-hidden="true" hidden><circle cx="10" cy="10" r="6.2"/></svg>
-                    <svg data-shape="2" viewBox="0 0 20 20" aria-hidden="true" hidden><path d="M8.4 3h3.2v5.4H17v3.2h-5.4V17H8.4v-5.4H3V8.4h5.4z"/></svg>
-                    <svg data-shape="3" viewBox="0 0 20 20" aria-hidden="true" hidden><path d="M10 7.74 14.13 3.6l2.27 2.27L12.26 10l4.14 4.13-2.27 2.27L10 12.26 5.87 16.4 3.6 14.13 7.74 10 3.6 5.87 5.87 3.6z"/></svg>
-                  </div>
-                  <button class="p2-arrow" id="p2-next" type="button" aria-label="Next shape">&#8250;</button>
+                <div class="p2-step" id="p2-chipg" role="group" aria-label="Shape">
+                  <button class="p2-shape" type="button" data-shape="0" aria-label="Square" aria-pressed="true"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12"/></svg></button>
+                    <button class="p2-shape" type="button" data-shape="1" aria-label="Circle" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.2"/></svg></button>
+                    <button class="p2-shape" type="button" data-shape="2" aria-label="Plus" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.4 3h3.2v5.4H17v3.2h-5.4V17H8.4v-5.4H3V8.4h5.4z"/></svg></button>
+                    <button class="p2-shape" type="button" data-shape="3" aria-label="Cross" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 7.74 14.13 3.6l2.27 2.27L12.26 10l4.14 4.13-2.27 2.27L10 12.26 5.87 16.4 3.6 14.13 7.74 10 3.6 5.87 5.87 3.6z"/></svg></button>
                 </div>
                 <span class="p2-shapename" id="p2-shapename">01 / 04</span>
               </div>
@@ -413,7 +409,7 @@
   var readout = $('p2-readout'), range = $('p2-range');
   var chipg = $('p2-chipg'), shapeReadout = $('p2-shape-readout'), shapeName = $('p2-shapename');
   var ticks = $$('.p2-tick');
-  var chipSvgs = $$('#p2-chipg svg');
+  var shapeBtns = $$('#p2-chipg .p2-shape');
 
   function frame(mode, s, p){ return 'ds-ppv-g' + mode + '-' + (s + 1) + '-' + (p + 1) + '.webp'; }
   function pad(n){ return (n < 10 ? '0' : '') + n; }
@@ -436,7 +432,7 @@
     readout.textContent = px + ' PX';
     shapeReadout.textContent = name;
     shapeName.textContent = pad(shape + 1) + ' / 04';
-    chipg.setAttribute('aria-label', 'Shape: ' + name.toLowerCase());
+
 
     range.value = String(size + 1);
     range.setAttribute('aria-valuetext', px + ' pixels');
@@ -447,10 +443,7 @@
     });
     /* `hidden` is an HTMLElement IDL prop and does NOT reflect on SVGElement —
        set the attribute explicitly or the glyph silently never changes. */
-    chipSvgs.forEach(function(s, j){
-      if(j === shape) s.removeAttribute('hidden');
-      else s.setAttribute('hidden', '');
-    });
+    shapeBtns.forEach(function(b, j){ b.setAttribute('aria-pressed', j === shape ? 'true' : 'false'); });
   }
 
   range.addEventListener('input', function(){
@@ -463,11 +456,8 @@
       renderViewer();
     });
   });
-  $('p2-prev').addEventListener('click', function(){
-    shape = (shape + SHAPES.length - 1) % SHAPES.length; renderViewer();
-  });
-  $('p2-next').addEventListener('click', function(){
-    shape = (shape + 1) % SHAPES.length; renderViewer();
+  shapeBtns.forEach(function(b){
+    b.addEventListener('click', function(){ shape = +b.dataset.shape; renderViewer(); });
   });
   renderViewer();
 

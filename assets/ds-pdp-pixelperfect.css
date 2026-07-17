@@ -33,20 +33,20 @@
 .p2-page *{box-sizing:border-box;}
 
 /* ---------- shell ---------- */
-.p2-shell{max-width:1320px;margin:0 auto;padding:0 16px;}
+.p2-shell{margin:0 auto;padding:0 var(--pad-x,16px);}
 .p2-main{min-width:0;}
 
 @media (min-width:980px){
   .p2-page{--p2-gut:30px;}
   .p2-shell{
     display:grid;grid-template-columns:340px minmax(0,1fr);
-    align-items:start;padding:0 30px;
+    align-items:start;
   }
   .p2-rail{
     position:sticky;top:0;align-self:start;
     max-height:100vh;overflow-y:auto;overscroll-behavior:contain;
     scrollbar-width:thin;scrollbar-color:var(--p2-line2) transparent;
-    padding:30px 30px 30px 0;
+    padding:14px 30px 12px 0;
   }
   .p2-rail::-webkit-scrollbar{width:6px;}
   .p2-rail::-webkit-scrollbar-thumb{background:var(--p2-line2);}
@@ -77,14 +77,14 @@
 }
 
 /* ================= LEFT RAIL — the buy block ================= */
-.p2-rail{padding:20px 0 14px;border-bottom:1px solid var(--p2-line);}
+.p2-rail{padding:14px 0 12px;border-bottom:1px solid var(--p2-line);}
 @media (min-width:980px){.p2-rail{border-bottom:0;}}
 
 
 .p2-art img{width:100%;height:100%;object-fit:contain;display:block;}
 
 .p2-title{
-  margin:20px 0 0;font-weight:800;letter-spacing:-.03em;line-height:1;
+  margin:14px 0 0;font-weight:800;letter-spacing:-.03em;line-height:1;
   font-size:clamp(30px,6vw,38px);
 }
 .p2-kind{
@@ -93,7 +93,7 @@
 }
 .p2-price{
   display:flex;align-items:baseline;justify-content:space-between;gap:12px;
-  margin:18px 0 0;padding:13px 0;
+  margin:12px 0 0;padding:10px 0;
   border-top:1px solid var(--p2-line);border-bottom:1px solid var(--p2-line);
 }
 .p2-amt{font-size:26px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
@@ -113,7 +113,7 @@
 .p2-spec dt{color:var(--p2-mut);}
 .p2-spec dd{margin:0;color:var(--p2-fg);letter-spacing:.05em;}
 
-.p2-buys{display:grid;gap:8px;margin-top:18px;}
+.p2-buys{display:grid;gap:8px;margin-top:12px;}
 .p2-btn{
   display:inline-flex;align-items:center;justify-content:center;gap:.5em;width:100%;
   font-family:var(--p2-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
@@ -212,24 +212,20 @@
 .p2-tick[aria-current="true"]{color:var(--p2-fg);}
 .p2-tick:focus-visible{outline:1px solid var(--p2-fg);outline-offset:1px;}
 
-/* shape stepper */
+/* shape chips -- all four shown at once; the active one carries the accent */
 .p2-steprow{display:flex;align-items:center;}
 .p2-step{display:flex;align-items:center;border:1px solid var(--p2-line2);width:max-content;}
-.p2-arrow{
+.p2-shape{
   -webkit-appearance:none;appearance:none;background:transparent;border:0;color:var(--p2-fg);
   cursor:pointer;width:42px;height:42px;display:grid;place-items:center;
-  font-family:var(--p2-mono);font-size:16px;line-height:1;
+  border-right:1px solid var(--p2-line2);
   transition:background .12s linear,color .12s linear;
 }
-.p2-arrow:hover{background:var(--p2-acc);color:var(--p2-ink);}
-.p2-arrow:focus-visible{outline:1px solid var(--p2-fg);outline-offset:-2px;}
-.p2-chipg{
-  width:42px;height:42px;display:grid;place-items:center;
-  background:var(--p2-acc);color:var(--p2-ink);
-  border-left:1px solid var(--p2-line2);border-right:1px solid var(--p2-line2);
-}
-.p2-chipg svg{width:20px;height:20px;display:block;fill:currentColor;}
-.p2-chipg svg[hidden]{display:none;}
+.p2-shape:last-child{border-right:0;}
+.p2-shape svg{width:20px;height:20px;display:block;fill:currentColor;}
+.p2-shape:hover{background:var(--p2-line);}
+.p2-shape[aria-pressed="true"]{background:var(--p2-acc);color:var(--p2-ink);}
+.p2-shape:focus-visible{outline:1px solid var(--p2-fg);outline-offset:-2px;}
 .p2-shapename{
   font-family:var(--p2-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
   color:var(--p2-mut);margin-left:14px;font-variant-numeric:tabular-nums;
@@ -252,10 +248,10 @@
 }
 @media (min-width:900px){
   .p2-cap{padding:16px 18px 18px;}
-  .p2-ctrl{grid-template-columns:1fr 1px auto;}
+  .p2-ctrl{grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);}
   .p2-ctrl-b{padding:22px 20px;}
   .p2-ctrl-rule{height:auto;background:var(--p2-line2);}
-  .p2-ctrl-b--shape{min-width:330px;}
+
   .p2-strip{padding:13px 20px;}
 }
 
@@ -420,7 +416,7 @@
 .p2-cta{position:relative;isolation:isolate;border-top:1px solid var(--p2-line);}
 .p2-cta-eyebrow{
   display:flex;justify-content:space-between;align-items:baseline;gap:12px;
-  max-width:1320px;margin:0 auto;padding:14px 16px;
+  margin:0 auto;padding:14px var(--pad-x,16px);
   font-family:var(--p2-mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--p2-mut);
 }
 .p2-cta-eyebrow b{font-weight:400;color:var(--p2-fg);}
@@ -451,7 +447,7 @@
   /* mobile: the hero sits directly on the tiles, so the scrim carries the contrast */
   background:linear-gradient(180deg,var(--p2-bg) 0%,rgba(12,7,8,.86) 22%,rgba(12,7,8,.86) 78%,var(--p2-bg) 100%);
 }
-.p2-hero{position:relative;z-index:2;max-width:1320px;margin:0 auto;padding:30px 16px 32px;}
+.p2-hero{position:relative;z-index:2;margin:0 auto;padding:30px var(--pad-x,16px) 32px;}
 .p2-cta-h{
   margin:0 0 14px;font-weight:800;letter-spacing:-.03em;line-height:.96;
   font-size:clamp(30px,7.6vw,44px);text-wrap:balance;
@@ -474,7 +470,7 @@
 
 
 .p2-cta-foot{
-  max-width:1320px;margin:0 auto;padding:20px 18px;
+  margin:0 auto;padding:20px var(--pad-x,18px);
   /* stacked on mobile — inline spans would run the two clauses together */
   display:grid;gap:6px;
   font-family:var(--p2-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--p2-mut);
@@ -536,7 +532,7 @@
 .p2-h--quiet{font-size:clamp(22px,3vw,32px);letter-spacing:-.02em;}
 @media(min-width:980px){ .p2-compat{grid-template-columns:1fr 1fr;} }
 
-@media (max-height:700px){
+@media (max-height:760px){
   .p2-rail{position:static;max-height:none;overflow:visible;}
 }
 
@@ -544,7 +540,7 @@
    while the left had a 30px inset. Match the left, and widen the shell gutter to
    the site's own rhythm (homepage uses --pad-x: clamp(16px,5vw,80px)). */
 @media (min-width:980px){
-  .p2-shell{padding-left:clamp(24px,3.4vw,48px);padding-right:clamp(24px,3.4vw,48px);}
+  .p2-shell{padding-left:var(--pad-x);padding-right:var(--pad-x);}
   .p2-main .p2-sec{padding-right:var(--p2-gut);}
 }
 
@@ -565,7 +561,7 @@
 /* Description in the rail — mirrors the live PDP's clamp + toggle.
    Replaces the old one-line fine print; the licence/delivery facts still
    close the page in the bottom CTA band. */
-.p2-desc{margin-top:18px;padding-top:12px;border-top:1px solid var(--p2-line);}
+.p2-desc{margin-top:12px;padding-top:10px;border-top:1px solid var(--p2-line);}
 .p2-desc-lab{margin:0 0 6px;font-family:var(--p2-mono);font-size:9px;letter-spacing:.18em;
   text-transform:uppercase;color:var(--p2-mut);}
 .p2-desc-body{font-family:var(--p2-mono);font-size:11px;line-height:1.6;color:var(--p2-mut);
@@ -583,7 +579,7 @@
 
 /* Compact spec — only the two facts section 06 does NOT state. Host/Format/
    Platform live there; repeating them here is what blew the rail past 100vh. */
-.p2-spec{margin:18px 0 0;padding:0;display:grid;gap:1px;background:var(--p2-line);
+.p2-spec{margin:12px 0 0;padding:0;display:grid;gap:1px;background:var(--p2-line);
   border:1px solid var(--p2-line);font-family:var(--p2-mono);font-size:10px;
   letter-spacing:.1em;text-transform:uppercase;}
 .p2-spec div{display:grid;grid-template-columns:60px minmax(0,1fr);gap:10px;
