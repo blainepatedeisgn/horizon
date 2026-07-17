@@ -44,7 +44,7 @@
         </div>
         <button class="p2-art-nav p2-art-nav--prev" type="button" data-gal="prev" aria-label="Previous image">&larr;</button>
         <button class="p2-art-nav p2-art-nav--next" type="button" data-gal="next" aria-label="Next image">&rarr;</button>
-        <div class="p2-art-count" aria-hidden="true"><span data-gal-i>1</span><i>/</i><span>{{ product.images.size }}</span></div>
+        <div class="p2-art-count" aria-hidden="true"><span data-gal-i>1</span><i>/</i><span>{{ product.media.size }}</span></div>
       </div>
 
       <h1 class="p2-title">{{ product.title }}</h1>
@@ -504,23 +504,79 @@
 </script>
 <script>
 (function(){
-  var FRAMES=[{%- for img in product.images -%}"{{ img | image_url: width: 1000 }}"{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}];
+  {%- comment -%}
+    product.images excludes video entirely -- the reason the demo was invisible
+    here while the stock PDP showed it. Mirror ds-product-main: walk product.media
+    and pick the mp4 source, exactly as sections/ds-product-main.liquid:281-292 does.
+  {%- endcomment -%}
+  var MEDIA=[
+  {%- for media in product.media -%}
+    {%- assign is_video = false -%}{%- assign vsrc = '' -%}
+    {%- if media.media_type == 'video' -%}
+      {%- assign is_video = true -%}
+      {%- for source in media.sources -%}
+        {%- if source.format == 'mp4' -%}{%- assign vsrc = source.url -%}{%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+    {type:"{% if is_video and vsrc != '' %}video{% else %}image{% endif %}",
+     src:"{% if is_video and vsrc != '' %}{{ vsrc }}{% else %}{{ media.preview_image | image_url: width: 1000 }}{% endif %}",
+     poster:"{{ media.preview_image | image_url: width: 1000 }}"}{%- unless forloop.last -%},{%- endunless -%}
+  {%- endfor -%}];
   var root=document.querySelector('[data-gal]'); if(!root) return;
-  var img=root.querySelector('.p2-art-img'), n=root.querySelector('[data-gal-i]'), i=0;
-  function go(d){
-    i=(i+d+FRAMES.length)%FRAMES.length;
-    img.src=FRAMES[i];
-    img.alt='Pixel Perfect — product image '+(i+1)+' of '+FRAMES.length;
+  var stage=root.querySelector('.p2-art-stage'), n=root.querySelector('[data-gal-i]'), i=0;
+  if(!MEDIA.length) return;
+
+  function current(){ return stage.querySelector('.p2-art-img'); }
+
+  function show(k){
+    i=(k+MEDIA.length)%MEDIA.length;
+    var m=MEDIA[i], cur=current();
+    // tear down the outgoing video's listener before replacing it, or every
+    // swap leaks a visibilitychange handler that outlives the element
+    if(cur && cur.tagName==='VIDEO' && typeof cur._dsCleanup==='function') cur._dsCleanup();
+
+    var el;
+    if(m.type==='video'){
+      el=document.createElement('video');
+      el.className='p2-art-img';
+      el.autoplay=true; el.loop=true; el.playsInline=true; el.preload='auto';
+      el.setAttribute('playsinline',''); el.setAttribute('disableRemotePlayback','');
+      el.muted=true;                       // JS prop, not just the attribute -- Chrome/Safari require it for autoplay
+      if(m.poster) el.poster=m.poster;
+      el.src=m.src;
+      // play() rejects silently if called before there is data. Retry at each
+      // escalating readiness moment, and again if the tab regains focus.
+      function attempt(){ if(!el.paused) return; var p=el.play();
+        if(p&&p.catch) p.catch(function(){}); }
+      el.addEventListener('loadedmetadata',attempt);
+      el.addEventListener('canplay',attempt);
+      el.addEventListener('canplaythrough',attempt);
+      var onVis=function(){ if(!document.hidden) attempt(); };
+      document.addEventListener('visibilitychange',onVis);
+      el._dsCleanup=function(){ document.removeEventListener('visibilitychange',onVis); };
+    } else {
+      el=document.createElement('img');
+      el.className='p2-art-img'; el.decoding='async'; el.src=m.src;
+    }
+    el.alt='Pixel Perfect — '+(m.type==='video'?'demo video':'product image '+(i+1)+' of '+MEDIA.length);
+    if(cur) cur.replaceWith(el); else stage.appendChild(el);
     if(n) n.textContent=i+1;
   }
+
   root.querySelectorAll('[data-gal="prev"],[data-gal="next"]').forEach(function(b){
-    b.addEventListener('click',function(e){e.preventDefault();go(b.dataset.gal==='next'?1:-1);});
+    b.addEventListener('click',function(e){e.preventDefault();show(i+(b.dataset.gal==='next'?1:-1));});
   });
   root.addEventListener('keydown',function(e){
-    if(e.key==='ArrowRight'){e.preventDefault();go(1);}
-    if(e.key==='ArrowLeft'){e.preventDefault();go(-1);}
+    if(e.key==='ArrowRight'){e.preventDefault();show(i+1);}
+    if(e.key==='ArrowLeft'){e.preventDefault();show(i-1);}
   });
-  FRAMES.forEach(function(f){var p=new Image();p.src=f;});   // preload so swaps are instant
+
+  // Land on media 2 (the demo) so the plugin is visible without a click, while
+  // media 1 stays the cover art everywhere else. Same behaviour as the stock
+  // PDP's auto_advance_to_second.
+  if(MEDIA.length>1) show(1); else show(0);
+
+  MEDIA.forEach(function(m){ if(m.type==='image'){ var pre=new Image(); pre.src=m.src; } });
 })();
 </script>
 <script>

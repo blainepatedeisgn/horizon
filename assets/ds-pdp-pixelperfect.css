@@ -466,6 +466,12 @@
   aspect-ratio:1/1;overflow:hidden;}
 .p2-art-stage{position:absolute;inset:0;}
 .p2-art-img{display:block;width:100%;height:100%;object-fit:cover;}
+video.p2-art-img{background:var(--p2-bg);}
+/* Safari paints a play overlay over autoplaying video; the rail art is an
+   ambient loop, not a player. */
+video.p2-art-img::-webkit-media-controls,
+video.p2-art-img::-webkit-media-controls-start-playback-button,
+video.p2-art-img::-webkit-media-controls-overlay-play-button{display:none!important;-webkit-appearance:none;}
 .p2-art-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;
   width:34px;height:34px;display:grid;place-items:center;padding:0;cursor:pointer;
   background:rgba(12,7,8,.55);border:1px solid var(--p2-line2);color:var(--p2-fg);
